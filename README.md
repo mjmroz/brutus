@@ -13,12 +13,13 @@
 
 Please contact Josh Speagle (<j.speagle@utoronto.ca>) with any questions.
 
-### Installation
+## Installation
 
 The most recent stable release can be installed via `pip` by running
 
-```
-## NOTE: I AM CURRENTLY IN THE MIDST OF A LARGE-SCALE REFACTOR AND THE MAIN DOCUMENTATION AND REPOSITORY WILL BE UNSTABLE. PLEASE REFER TO THE LAST STABLE RELEASE IN THE MEANTIME AND AVOID INSTALLING FROM GITHUB
+> ## ⚠️ NOTE: Large-Scale Refactor in Progress
+>
+> I am currently in the midst of a large-scale refactor and the main documentation and repository will be unstable. Please refer to the last stable release in the meantime and avoid installing from GitHub.
 
 ## Key Features
 
@@ -34,7 +35,7 @@ The most recent stable release can be installed via `pip` by running
 
 🌟 **Publication Ready**: Designed for ease of use in research workflows
 
-## Installation
+## Detailed Installation
 
 ### Requirements
 
