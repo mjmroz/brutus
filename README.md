@@ -17,6 +17,10 @@ Please contact Josh Speagle (<j.speagle@utoronto.ca>) with any questions.
 
 The most recent stable release can be installed via `pip` by running
 
+```bash
+pip install astro-brutus
+```
+
 > ## ⚠️ NOTE: Large-Scale Refactor in Progress
 >
 > I am currently in the midst of a large-scale refactor and the main documentation and repository will be unstable. Please refer to the last stable release in the meantime and avoid installing from GitHub.
