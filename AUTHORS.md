@@ -1,4 +1,4 @@
-Authors:
+# Authors
 
 - [Josh Speagle](https://github.com/joshspeagle)
 

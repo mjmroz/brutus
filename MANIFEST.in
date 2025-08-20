@@ -1,1 +1,26 @@
-include LICENSE README.md AUTHORS.md brutus/PSMrLF_lnprior.dat
+# Include package metadata and documentation
+include LICENSE
+include README.md
+include AUTHORS.md
+include CHANGELOG.md
+include pyproject.toml
+
+# Include data files
+include src/brutus/PSMrLF_lnprior.dat
+
+# Include package data recursively
+recursive-include src/brutus *.dat *.txt *.h5
+
+# Exclude development and build files
+exclude setup.py.old
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *~
+recursive-exclude * .git*
+exclude .gitignore
+
+# Exclude test files from distribution
+recursive-exclude tests *
+exclude tox.ini
+exclude .travis.yml
+exclude .github

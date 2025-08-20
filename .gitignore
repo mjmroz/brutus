@@ -59,3 +59,4 @@ __pycache__
 *.dat
 speed/*
 *.npy
+*/calib/*
