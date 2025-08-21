@@ -9,13 +9,7 @@ handling asinh magnitudes ("luptitudes"), and computing photometric likelihoods.
 """
 
 import numpy as np
-from numba import jit
 from scipy.special import gammaln, xlogy
-
-try:
-    from scipy.special import logsumexp
-except ImportError:
-    from scipy.misc import logsumexp
 
 __all__ = [
     "magnitude",
@@ -24,7 +18,6 @@ __all__ = [
     "inv_luptitude",
     "add_mag",
     "phot_loglike",
-    "photometric_offsets",
 ]
 
 

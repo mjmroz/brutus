@@ -6,8 +6,6 @@ Available filters.
 
 """
 
-from __future__ import print_function, division
-
 # Define the set of filters available for the provided MIST models.
 # The Bayestar models are only defined for PanSTARRS `grizy` and 2MASS.
 gaia = ["Gaia_G_MAW", "Gaia_BP_MAWf", "Gaia_RP_MAW"]
