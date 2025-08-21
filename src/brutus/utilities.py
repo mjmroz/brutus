@@ -795,9 +795,8 @@ def quantile(x, q, weights=None):
             raise ValueError("Dimension mismatch: len(weights) != len(x).")
         idx = np.argsort(x)  # sort samples
         sw = weights[idx]  # sort weights
-        cdf = np.cumsum(sw)[:-1]  # compute CDF
+        cdf = np.cumsum(sw)  # compute CDF
         cdf /= cdf[-1]  # normalize CDF
-        cdf = np.append(0, cdf)  # ensure proper span
         quantiles = np.interp(q, cdf, x[idx]).tolist()
         return quantiles
 
@@ -937,7 +936,8 @@ def sample_multivariate_normal(mean, cov, size=1, eps=1e-30, rstate=None):
 
     # If we have a single distribution, just revert to `numpy.random` version.
     if len(np.shape(mean)) == 1:
-        return rstate.multivariate_normal(mean, cov, size=size)
+        samples = rstate.multivariate_normal(mean, cov, size=size)
+        return samples.T  # Transpose to match expected (dim, size) format
 
     # Otherwise, proceed with the Cholesky decomposition.
     N, d = np.shape(mean)

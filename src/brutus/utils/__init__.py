@@ -34,8 +34,12 @@ try:
         truncnorm_logpdf,
     )
 
-    # Still need to move these from original utils.py:
-    from ..utils import quantile, sample_multivariate_normal, draw_sar
+    # Sampling utilities
+    from .sampling import (
+        quantile,
+        sample_multivariate_normal,
+        draw_sar,
+    )
 
     __all__ = [
         # Photometry functions
@@ -56,7 +60,7 @@ try:
         "chisquare_logpdf",
         "truncnorm_pdf",
         "truncnorm_logpdf",
-        # Sampling utilities (to be reorganized)
+        # Sampling utilities
         "quantile",
         "sample_multivariate_normal",
         "draw_sar",
