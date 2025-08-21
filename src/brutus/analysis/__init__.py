@@ -2,22 +2,28 @@
 # -*- coding: utf-8 -*-
 
 """
-brutus analysis module: Fitting algorithms and statistical analysis.
+brutus analysis module: Advanced analysis workflows and statistical methods.
 
-This module contains classes and functions for fitting individual stars
-and stellar clusters, including the core brute-force Bayesian inference
-algorithms.
+This module contains functionality for complex analysis workflows including
+photometric offset computation, stellar parameter optimization, and
+statistical analysis tools.
 """
 
-# For now, import from the original locations to maintain compatibility
-# These will be moved here in Week 2
+# Import analysis utilities
 try:
-    from ..fitting import BruteForce, loglike, lnpost
-    from ..cluster import isochrone_loglike
-    
+    from .offsets import photometric_offsets, PhotometricOffsetsConfig
+
     __all__ = [
-        'BruteForce', 'loglike', 'lnpost', 'isochrone_loglike'
+        # Photometric offset analysis
+        "photometric_offsets",
+        "PhotometricOffsetsConfig",
     ]
 except ImportError:
-    # During transition, the modules might not be available yet
+    # During development, modules might not be available yet
     __all__ = []
+
+# TODO: Add imports for other analysis modules when they are reorganized:
+# from .individual import BruteForce
+# from .clusters import isochrone_loglike
+# from .priors import *
+# from .sampling import *

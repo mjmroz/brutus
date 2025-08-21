@@ -287,131 +287,24 @@ def phot_loglike(flux, err, mfluxes, mask=None, dim_prior=False):
 
     # Apply dimensionality prior if requested.
     if dim_prior:
-        # Compute log-pdf of chi2 distribution.
+        # Compute log-pdf of chi2 distribution in a vectorized way.
         dof = Ndim - 3  # effective degrees of freedom
-        mask_valid_dof = dof > 0
+        a = 0.5 * dof[:, None]  # shape (Nobj, 1)
+        mask_valid_dof = dof > 0  # shape (Nobj,)
 
+        # Broadcast chi2 to (Nobj, Nmod)
         lnl_dim = np.full_like(lnl, -np.inf)
-        for i in range(Nobj):
-            if mask_valid_dof[i]:
-                a = 0.5 * dof[i]
-                lnl_dim[i] = (
-                    xlogy(a - 1.0, chi2[i])
-                    - (chi2[i] / 2.0)
-                    - gammaln(a)
-                    - (np.log(2.0) * a)
-                )
+        valid_idx = np.where(mask_valid_dof)[0]
+        if valid_idx.size > 0:
+            chi2_valid = chi2[valid_idx]
+            a_valid = a[valid_idx]
+            lnl_dim[valid_idx] = (
+                xlogy(a_valid - 1.0, chi2_valid)
+                - (chi2_valid / 2.0)
+                - gammaln(a_valid)
+                - (np.log(2.0) * a_valid)
+            )
 
         lnl = lnl_dim
 
     return lnl
-
-
-def photometric_offsets(
-    phot,
-    err,
-    mask,
-    models,
-    idxs,
-    reds,
-    dreds,
-    dists,
-    sel=None,
-    weights=None,
-    mask_fit=None,
-    Nmc=150,
-    old_offsets=None,
-    dim_prior=True,
-    prior_mean=None,
-    prior_std=None,
-    verbose=True,
-    rstate=None,
-):
-    """
-    Compute (multiplicative) photometric offsets between data and model.
-
-    Parameters
-    ----------
-    phot : `~numpy.ndarray` of shape `(Nobj, Nfilt)`
-        The observed fluxes for all our objects.
-
-    err : `~numpy.ndarray` of shape `(Nobj, Nfilt)`
-        The associated flux errors for all our objects.
-
-    mask : `~numpy.ndarray` of shape `(Nobj, Nfilt)`
-        The associated band mask for all our objects.
-
-    models : `~numpy.ndarray` of shape `(Nmodels, Nfilt, Ncoeffs)`
-        Array of magnitude polynomial coefficients used to generate
-        reddened photometry.
-
-    idxs : `~numpy.ndarray` of shape `(Nobj, Nsamps)`
-        Set of models fit to each object.
-
-    reds : `~numpy.ndarray` of shape `(Nobj, Nsamps)`
-        Associated set of reddenings (Av values) derived for each object.
-
-    dreds : `~numpy.ndarray` of shape `(Nobj, Nsamps)`
-        Associated set of reddening curve shapes (Rv values) derived
-        for each object.
-
-    dists : `~numpy.ndarray` of shape `(Nobj, Nsamps)`
-        Associated set of distances (kpc) derived for each object.
-
-    sel : `~numpy.ndarray` of shape `(Nobj)`, optional
-        Boolean selection array of objects that should be used when
-        computing offsets. If not provided, all objects will be used.
-
-    weights : `~numpy.ndarray` of shape `(Nobj, Nsamps)`, optional
-        Associated set of weights for each sample.
-
-    mask_fit : `~numpy.ndarray` of shape `(Nfilt)`, optional
-        Boolean selection array indicating the filters that were used
-        in the fit. If a filter was used, the models will be re-weighted
-        ignoring that band when computing the photometric offsets. If a filter
-        was not used, then no additional re-weighting will be applied.
-        If not provided, by default all bands will be assumed to have been
-        used.
-
-    Nmc : int, optional
-        Number of realizations used to bootstrap the sample and
-        average over the model realizations. Default is `150`.
-
-    old_offsets : `~numpy.ndarray` of shape `(Nfilt)`, optional
-        Multiplicative photometric offsets that were applied to
-        the data (i.e. `phot *= old_offsets`). If provided, these will be
-        "backed out" before computing new offsets. Default is `None`.
-
-    dim_prior : bool, optional
-        Whether to apply the dimensionality prior when computing the
-        log-likelihood. Default is `True`.
-
-    prior_mean : `~numpy.ndarray` of shape `(Nfilt)`, optional
-        Prior means for the offsets in each band. Default is `None`.
-
-    prior_std : `~numpy.ndarray` of shape `(Nfilt)`, optional
-        Prior standard deviations for the offsets in each band.
-        Default is `None`.
-
-    verbose : bool, optional
-        Whether to print progress. Default is `True`.
-
-    rstate : `~numpy.random.RandomState`, optional
-        Random state for reproducible results.
-
-    Returns
-    -------
-    offsets : `~numpy.ndarray` of shape `(Nfilt)`
-        Array of constants that will be *multiplied* to the *data* to account
-        for offsets (i.e. multiplicative flux offsets).
-
-    """
-    # This is a complex function that would require the _get_seds function
-    # and other dependencies. For now, we'll include a placeholder.
-    # TODO: Implement this function fully after moving _get_seds
-
-    raise NotImplementedError(
-        "photometric_offsets requires _get_seds function which will be "
-        "moved to core/sed_utils.py. This function will be completed "
-        "after the SED utilities are reorganized."
-    )
