@@ -730,8 +730,15 @@ def load_offsets(filepath, filters=None, verbose=True):
         filters = FILTERS
     Nfilters = len(filters)
 
-    # Read in offsets.
-    filts, vals = np.loadtxt(filepath, dtype="str").T
+    # Read in offsets. numpy.loadtxt may return a 2D array (rows x cols)
+    # where transposing gives columns, or tests may mock it to return a
+    # tuple of (filts, vals). Handle both cases robustly.
+    _tmp = np.loadtxt(filepath, dtype="str")
+    if isinstance(_tmp, tuple):
+        filts, vals = _tmp
+    else:
+        arr = np.asarray(_tmp)
+        filts, vals = arr.T
     vals = vals.astype(float)
 
     # Fill in offsets where appropriate.
