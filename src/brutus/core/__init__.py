@@ -2,21 +2,26 @@
 # -*- coding: utf-8 -*-
 
 """
-brutus core module: Isochrones, tracks, and stellar evolution models.
+brutus core module: Fundamental stellar modeling utilities.
 
-This module contains the fundamental stellar evolution model classes
-and utilities for generating synthetic stellar data.
+This module contains the core functionality for stellar evolution modeling,
+including isochrones, tracks, and SED computation utilities.
 """
 
-# For now, import from the original locations to maintain compatibility
-# These will be moved here in Week 2
+# Import SED utilities
 try:
-    from ..seds import Isochrone, MISTtracks, SEDmaker, FastNN, FastNNPredictor
-    
+    from .sed_utils import _get_seds, get_seds
+
     __all__ = [
-        'Isochrone', 'MISTtracks', 'SEDmaker', 
-        'FastNN', 'FastNNPredictor'
+        # SED utilities
+        "_get_seds",
+        "get_seds",
     ]
 except ImportError:
-    # During transition, the modules might not be available yet
+    # During development, the modules might not be available yet
     __all__ = []
+
+# TODO: Add imports for other core modules when they are reorganized:
+# from .isochrones import Isochrone, SEDmaker
+# from .tracks import MISTtracks
+# from .models import ModelRegistry
