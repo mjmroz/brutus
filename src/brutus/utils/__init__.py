@@ -8,18 +8,58 @@ This module contains utility functions that were previously scattered
 throughout the codebase, now organized by functionality.
 """
 
-# For now, import from the original locations to maintain compatibility
-# These will be moved and organized in Week 2
+# Import from reorganized modules
 try:
-    from ..utils import (
-        magnitude, inv_magnitude, luptitude, inv_luptitude,
-        quantile, sample_multivariate_normal,
-        _chisquare_logpdf, _inverse3
+    # Photometry functions
+    from .photometry import (
+        magnitude,
+        inv_magnitude,
+        luptitude,
+        inv_luptitude,
+        add_mag,
+        phot_loglike,
+        photometric_offsets,
     )
-    
+
+    # Mathematical functions
+    from .math import (
+        _function_wrapper,
+        adjoint3,
+        dot3,
+        inverse_transpose3,
+        inverse3,
+        isPSD,
+        chisquare_logpdf,
+        truncnorm_pdf,
+        truncnorm_logpdf,
+    )
+
+    # Still need to move these from original utils.py:
+    from ..utils import quantile, sample_multivariate_normal, draw_sar
+
     __all__ = [
-        'magnitude', 'inv_magnitude', 'luptitude', 'inv_luptitude',
-        'quantile', 'sample_multivariate_normal'
+        # Photometry functions
+        "magnitude",
+        "inv_magnitude",
+        "luptitude",
+        "inv_luptitude",
+        "add_mag",
+        "phot_loglike",
+        "photometric_offsets",
+        # Mathematical functions
+        "_function_wrapper",
+        "adjoint3",
+        "dot3",
+        "inverse_transpose3",
+        "inverse3",
+        "isPSD",
+        "chisquare_logpdf",
+        "truncnorm_pdf",
+        "truncnorm_logpdf",
+        # Sampling utilities (to be reorganized)
+        "quantile",
+        "sample_multivariate_normal",
+        "draw_sar",
     ]
 except ImportError:
     # During transition, the modules might not be available yet

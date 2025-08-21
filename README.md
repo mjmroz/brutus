@@ -1,6 +1,6 @@
 # brutus
 
-**Et tu, Brute?**_
+*Et tu, Brute?*
 
 ![brutus logo](https://github.com/joshspeagle/brutus/blob/master/brutus_logo.png?raw=true)
 

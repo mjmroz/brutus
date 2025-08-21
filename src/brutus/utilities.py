@@ -9,7 +9,6 @@ Utility functions.
 from __future__ import division, print_function
 
 import pathlib
-import os
 import sys
 from math import erf, gamma, log, sqrt
 
@@ -17,9 +16,8 @@ import h5py
 import numpy as np
 from numba import jit
 from scipy.special import gammaln, xlogy
-from six.moves import range
 
-from .data import strato
+from brutus.data_old import strato
 
 try:
     from scipy.special import logsumexp
@@ -28,16 +26,37 @@ except ImportError:
 
 from .filters import FILTERS
 
-__all__ = ["_function_wrapper", "_adjoint3", "_inverse_transpose3",
-           "_inverse3", "_dot3", "_isPSD", "_chisquare_logpdf",
-           "_truncnorm_pdf", "_truncnorm_logpdf", "_get_seds",
-           "fetch_isos", "fetch_tracks", "fetch_dustmaps",
-           "fetch_grids", "fetch_offsets", "fetch_nns",
-           "load_models", "load_offsets",
-           "quantile", "draw_sar", "sample_multivariate_normal",
-           "magnitude", "inv_magnitude",
-           "luptitude", "inv_luptitude", "add_mag", "get_seds",
-           "phot_loglike", "photometric_offsets"]
+__all__ = [
+    "_function_wrapper",
+    "_adjoint3",
+    "_inverse_transpose3",
+    "_inverse3",
+    "_dot3",
+    "_isPSD",
+    "_chisquare_logpdf",
+    "_truncnorm_pdf",
+    "_truncnorm_logpdf",
+    "_get_seds",
+    "fetch_isos",
+    "fetch_tracks",
+    "fetch_dustmaps",
+    "fetch_grids",
+    "fetch_offsets",
+    "fetch_nns",
+    "load_models",
+    "load_offsets",
+    "quantile",
+    "draw_sar",
+    "sample_multivariate_normal",
+    "magnitude",
+    "inv_magnitude",
+    "luptitude",
+    "inv_luptitude",
+    "add_mag",
+    "get_seds",
+    "phot_loglike",
+    "photometric_offsets",
+]
 
 
 class _function_wrapper(object):
@@ -48,7 +67,7 @@ class _function_wrapper(object):
 
     """
 
-    def __init__(self, func, args, kwargs, name='input'):
+    def __init__(self, func, args, kwargs, name="input"):
         self.func = func
         self.args = args
         self.kwargs = kwargs
@@ -59,6 +78,7 @@ class _function_wrapper(object):
             return self.func(x, *self.args, **self.kwargs)
         except:
             import traceback
+
             print("Exception while calling {0} function:".format(self.name))
             print("  params:", x)
             print("  args:", self.args)
@@ -90,7 +110,7 @@ def _dot3(A, B):
 
     """
 
-    return np.einsum('...i,...i->...', A, B)
+    return np.einsum("...i,...i->...", A, B)
 
 
 def _inverse_transpose3(A):
@@ -167,8 +187,8 @@ def _chisquare_logpdf(x, df, loc=0, scale=1):
         keys = y <= 0
         y[keys] = 0.1  # placeholder value, will actually return -np.inf
 
-    ans = - log(2 ** (df / 2.) * gamma(df / 2.))
-    ans = ans + (df / 2. - 1.) * np.log(y) - y / 2. - log(scale)
+    ans = -log(2 ** (df / 2.0) * gamma(df / 2.0))
+    ans = ans + (df / 2.0 - 1.0) * np.log(y) - y / 2.0 - log(scale)
 
     if not is_scalar:
         ans[keys] = -np.inf
@@ -213,7 +233,7 @@ def _truncnorm_pdf(x, a, b, loc=0.0, scale=1.0):
     alpha = (_a - loc) / scale
     beta = (_b - loc) / scale
 
-    phix = np.exp(-0.5 * xi ** 2) / np.sqrt(2. * np.pi)
+    phix = np.exp(-0.5 * xi**2) / np.sqrt(2.0 * np.pi)
     Phia = 0.5 * (1 + erf(alpha / np.sqrt(2)))
     Phib = 0.5 * (1 + erf(beta / np.sqrt(2)))
 
@@ -268,8 +288,7 @@ def _truncnorm_logpdf(x, a, b, loc=0.0, scale=1.0):
     beta = (_b - loc) / scale
 
     lnphi = -log(sqrt(2 * np.pi)) - 0.5 * np.square(xi)
-    lndenom = (log(scale / 2.0) + log(erf(beta / np.sqrt(2))
-                                      - erf(alpha / sqrt(2))))
+    lndenom = log(scale / 2.0) + log(erf(beta / np.sqrt(2)) - erf(alpha / sqrt(2)))
 
     ans = np.subtract(lnphi, lndenom)
 
@@ -325,7 +344,7 @@ def _get_seds(mag_coeffs, av, rv, return_flux=False):
     rvecs = np.zeros((Nmodels, Nbands))
     drvecs = np.zeros((Nmodels, Nbands))
 
-    fac = -0.4 * log(10.)
+    fac = -0.4 * log(10.0)
 
     for i in range(Nmodels):
         for j in range(Nbands):
@@ -340,7 +359,7 @@ def _get_seds(mag_coeffs, av, rv, return_flux=False):
 
             # Convert to flux.
             if return_flux:
-                seds[i][j] = 10. ** (-0.4 * seds[i][j])
+                seds[i][j] = 10.0 ** (-0.4 * seds[i][j])
                 rvecs[i][j] *= fac * seds[i][j]
                 drvecs[i][j] *= fac * seds[i][j]
 
@@ -517,9 +536,15 @@ def fetch_nns(target_dir=".", model="c3k"):
     return _fetch(name, target_dir)
 
 
-def load_models(filepath, filters=None, labels=None,
-                include_ms=True, include_postms=True, include_binaries=False,
-                verbose=True):
+def load_models(
+    filepath,
+    filters=None,
+    labels=None,
+    include_ms=True,
+    include_postms=True,
+    include_binaries=False,
+    verbose=True,
+):
     """
 
     Parameters
@@ -575,42 +600,53 @@ def load_models(filepath, filters=None, labels=None,
     if filters is None:
         filters = FILTERS
     if labels is None:
-        labels = ['mini', 'feh', 'eep', 'smf',
-                  'loga', 'logl', 'logt', 'logg',
-                  'Mr', 'agewt']
+        labels = [
+            "mini",
+            "feh",
+            "eep",
+            "smf",
+            "loga",
+            "logl",
+            "logt",
+            "logg",
+            "Mr",
+            "agewt",
+        ]
 
     # Read in models.
     try:
-        f = h5py.File(filepath, 'r', libver='latest', swmr=True)
+        f = h5py.File(filepath, "r", libver="latest", swmr=True)
     except:
-        f = h5py.File(filepath, 'r')
+        f = h5py.File(filepath, "r")
         pass
-    mag_coeffs = f['mag_coeffs']
+    mag_coeffs = f["mag_coeffs"]
 
-    models = np.zeros((len(mag_coeffs), len(filters), len(mag_coeffs[0][0])),
-                      dtype='float32')
+    models = np.zeros(
+        (len(mag_coeffs), len(filters), len(mag_coeffs[0][0])), dtype="float32"
+    )
     for i, filt in enumerate(filters):
         try:
             models[:, i] = mag_coeffs[filt]  # fitted magnitude coefficients
             if verbose:
-                sys.stderr.write('\rReading filter {}           '.format(filt))
+                sys.stderr.write("\rReading filter {}           ".format(filt))
                 sys.stderr.flush()
         except:
             pass
     if verbose:
-        sys.stderr.write('\n')
+        sys.stderr.write("\n")
 
     # Remove extraneous/undefined filters.
-    sel = np.all(models == 0., axis=(0, 2))
+    sel = np.all(models == 0.0, axis=(0, 2))
     models = models[:, ~sel, :]
 
     # Read in labels.
-    combined_labels = np.full(len(models), np.nan,
-                              dtype=np.dtype([(n, np.float) for n in labels]))
+    combined_labels = np.full(
+        len(models), np.nan, dtype=np.dtype([(n, np.float) for n in labels])
+    )
     label_mask = np.zeros(1, dtype=np.dtype([(n, np.bool) for n in labels]))
     try:
         # Grab "labels" (inputs).
-        flabels = f['labels'][:]
+        flabels = f["labels"][:]
         for n in flabels.dtype.names:
             if n in labels:
                 combined_labels[n] = flabels[n]
@@ -619,7 +655,7 @@ def load_models(filepath, filters=None, labels=None,
         pass
     try:
         # Grab "parameters" (predictions from labels).
-        fparams = f['parameters'][:]
+        fparams = f["parameters"][:]
         for n in fparams.dtype.names:
             if n in labels:
                 combined_labels[n] = fparams[n]
@@ -630,28 +666,30 @@ def load_models(filepath, filters=None, labels=None,
     labels2 = [l for i, l in zip(combined_labels[0], labels) if ~np.isnan(i)]
 
     # Apply cuts.
-    sel = np.ones(len(combined_labels), dtype='bool')
+    sel = np.ones(len(combined_labels), dtype="bool")
     if include_ms and include_postms:
-        sel = np.ones(len(combined_labels), dtype='bool')
+        sel = np.ones(len(combined_labels), dtype="bool")
     elif not include_ms and not include_postms:
-        raise ValueError("If you don't include the Main Sequence and "
-                         "Post-Main Sequence models you have nothing left!")
+        raise ValueError(
+            "If you don't include the Main Sequence and "
+            "Post-Main Sequence models you have nothing left!"
+        )
     elif include_postms:
         try:
-            sel = combined_labels['eep'] > 454.
+            sel = combined_labels["eep"] > 454.0
         except:
             pass
     elif include_ms:
         try:
-            sel = combined_labels['eep'] <= 454.
+            sel = combined_labels["eep"] <= 454.0
         except:
             pass
     else:
         raise RuntimeError("Something has gone horribly wrong!")
-    if not include_binaries and 'smf' in labels2:
+    if not include_binaries and "smf" in labels2:
         try:
-            sel *= combined_labels['smf'] == 0.
-            labels2 = [x for x in labels2 if x != 'smf']
+            sel *= combined_labels["smf"] == 0.0
+            labels2 = [x for x in labels2 if x != "smf"]
         except:
             pass
 
@@ -693,7 +731,7 @@ def load_offsets(filepath, filters=None, verbose=True):
     Nfilters = len(filters)
 
     # Read in offsets.
-    filts, vals = np.loadtxt(filepath, dtype='str').T
+    filts, vals = np.loadtxt(filepath, dtype="str").T
     vals = vals.astype(float)
 
     # Fill in offsets where appropriate.
@@ -703,14 +741,16 @@ def load_offsets(filepath, filters=None, verbose=True):
         if len(filt_idx) == 1:
             offsets[i] = vals[filt_idx[0]]  # insert offset
         elif len(filt_idx) == 0:
-            offsets[i] = 1.  # assume no offset if not calibrated
+            offsets[i] = 1.0  # assume no offset if not calibrated
         else:
-            raise ValueError("Something went wrong when extracting "
-                             "offsets for filter {}.".format(filt))
+            raise ValueError(
+                "Something went wrong when extracting "
+                "offsets for filter {}.".format(filt)
+            )
 
     if verbose:
         for filt, zp in zip(filters, offsets):
-            sys.stderr.write('{0} ({1:3.2}%)\n'.format(filt, 100 * (zp - 1.)))
+            sys.stderr.write("{0} ({1:3.2}%)\n".format(filt, 100 * (zp - 1.0)))
 
     return offsets
 
@@ -762,8 +802,16 @@ def quantile(x, q, weights=None):
         return quantiles
 
 
-def draw_sar(scales, avs, rvs, covs_sar, ndraws=500, avlim=(0., 6.),
-             rvlim=(1., 8.), rstate=None):
+def draw_sar(
+    scales,
+    avs,
+    rvs,
+    covs_sar,
+    ndraws=500,
+    avlim=(0.0, 6.0),
+    rvlim=(1.0, 8.0),
+    rstate=None,
+):
     """
     Generate random draws from the joint scale and Av posterior for a
     given object.
@@ -823,12 +871,15 @@ def draw_sar(scales, avs, rvs, covs_sar, ndraws=500, avlim=(0., 6.),
         # Loop in case a significant chunk of draws are out-of-boudns.
         while len(s_temp) < ndraws:
             # Draw samples.
-            s_mc, a_mc, r_mc = rstate.multivariate_normal([s, a, r],
-                                                          c, size=ndraws).T
+            s_mc, a_mc, r_mc = rstate.multivariate_normal([s, a, r], c, size=ndraws).T
             # Flag draws that are out of bounds.
-            inbounds = ((s_mc >= 0.) &
-                        (a_mc >= avlim[0]) & (a_mc <= avlim[1]) &
-                        (r_mc >= rvlim[0]) & (r_mc <= rvlim[1]))
+            inbounds = (
+                (s_mc >= 0.0)
+                & (a_mc >= avlim[0])
+                & (a_mc <= avlim[1])
+                & (r_mc >= rvlim[0])
+                & (r_mc <= rvlim[1])
+            )
             s_mc, a_mc, r_mc = s_mc[inbounds], a_mc[inbounds], r_mc[inbounds]
             # Add to pre-existing samples.
             s_temp = np.append(s_temp, s_mc)
@@ -905,7 +956,7 @@ def sample_multivariate_normal(mean, cov, size=1, eps=1e-30, rstate=None):
     return ans
 
 
-def magnitude(phot, err, zeropoints=1.):
+def magnitude(phot, err, zeropoints=1.0):
     """
     Convert photometry to AB magnitudes.
 
@@ -935,12 +986,12 @@ def magnitude(phot, err, zeropoints=1.):
     mag = -2.5 * np.log10(phot / zeropoints)
 
     # Compute errors.
-    mag_err = 2.5 / np.log(10.) * err / phot
+    mag_err = 2.5 / np.log(10.0) * err / phot
 
     return mag, mag_err
 
 
-def inv_magnitude(mag, err, zeropoints=1.):
+def inv_magnitude(mag, err, zeropoints=1.0):
     """
     Convert AB magnitudes to photometry.
 
@@ -967,15 +1018,15 @@ def inv_magnitude(mag, err, zeropoints=1.):
     """
 
     # Compute magnitudes.
-    phot = 10**(-0.4 * mag) * zeropoints
+    phot = 10 ** (-0.4 * mag) * zeropoints
 
     # Compute errors.
-    phot_err = err * 0.4 * np.log(10.) * phot
+    phot_err = err * 0.4 * np.log(10.0) * phot
 
     return phot, phot_err
 
 
-def luptitude(phot, err, skynoise=1., zeropoints=1.):
+def luptitude(phot, err, skynoise=1.0, zeropoints=1.0):
     """
     Convert photometry to asinh magnitudes (i.e. "Luptitudes"). See Lupton et
     al. (1999) for more details.
@@ -1007,17 +1058,22 @@ def luptitude(phot, err, skynoise=1., zeropoints=1.):
     """
 
     # Compute asinh magnitudes.
-    mag = -2.5 / np.log(10.) * (np.arcsinh(phot / (2. * skynoise)) +
-                                np.log(skynoise / zeropoints))
+    mag = (
+        -2.5
+        / np.log(10.0)
+        * (np.arcsinh(phot / (2.0 * skynoise)) + np.log(skynoise / zeropoints))
+    )
 
     # Compute errors.
-    mag_err = np.sqrt(np.square(2.5 * np.log10(np.e) * err) /
-                      (np.square(2. * skynoise) + np.square(phot)))
+    mag_err = np.sqrt(
+        np.square(2.5 * np.log10(np.e) * err)
+        / (np.square(2.0 * skynoise) + np.square(phot))
+    )
 
     return mag, mag_err
 
 
-def inv_luptitude(mag, err, skynoise=1., zeropoints=1.):
+def inv_luptitude(mag, err, skynoise=1.0, zeropoints=1.0):
     """
     Convert asinh magnitudes ("Luptitudes") to photometry.
 
@@ -1048,17 +1104,19 @@ def inv_luptitude(mag, err, skynoise=1., zeropoints=1.):
     """
 
     # Compute photometry.
-    phot = (2. * skynoise) * np.sinh(np.log(10.) / -2.5 * mag -
-                                     np.log(skynoise / zeropoints))
+    phot = (2.0 * skynoise) * np.sinh(
+        np.log(10.0) / -2.5 * mag - np.log(skynoise / zeropoints)
+    )
 
     # Compute errors.
-    phot_err = np.sqrt((np.square(2. * skynoise) + np.square(phot)) *
-                       np.square(err)) / (2.5 * np.log10(np.e))
+    phot_err = np.sqrt(
+        (np.square(2.0 * skynoise) + np.square(phot)) * np.square(err)
+    ) / (2.5 * np.log10(np.e))
 
     return phot, phot_err
 
 
-def add_mag(mag1, mag2, f1=1., f2=1.):
+def add_mag(mag1, mag2, f1=1.0, f2=1.0):
     """
     Return combined magnitude from adding together individual components
     with corresponding weights.
@@ -1079,15 +1137,21 @@ def add_mag(mag1, mag2, f1=1., f2=1.):
 
     """
 
-    flux1, flux2 = 10**(-0.4 * mag1), 10**(-0.4 * mag2)
+    flux1, flux2 = 10 ** (-0.4 * mag1), 10 ** (-0.4 * mag2)
     flux_tot = f1 * flux1 + f2 * flux2
     mag_tot = -2.5 * np.log10(flux_tot)
 
     return mag_tot
 
 
-def get_seds(mag_coeffs, av=None, rv=None, return_flux=False,
-             return_rvec=False, return_drvec=False):
+def get_seds(
+    mag_coeffs,
+    av=None,
+    rv=None,
+    return_flux=False,
+    return_rvec=False,
+    return_drvec=False,
+):
     """
     Compute reddened SEDs from the provided magnitude coefficients.
 
@@ -1146,8 +1210,7 @@ def get_seds(mag_coeffs, av=None, rv=None, return_flux=False,
     elif isinstance(rv, (int, float)):
         rv = np.full(Nmodels, rv)
 
-    seds, rvecs, drvecs = _get_seds(mag_coeffs, av, rv,
-                                    return_flux=return_flux)
+    seds, rvecs, drvecs = _get_seds(mag_coeffs, av, rv, return_flux=return_flux)
 
     if return_rvec and return_drvec:
         return seds, rvecs, drvecs
@@ -1203,23 +1266,37 @@ def phot_loglike(data, data_err, data_mask, models, dim_prior=True):
 
     # Compute multivariate normal logpdf.
     lnl = -0.5 * chi2
-    lnl += -0.5 * (Ndim * np.log(2. * np.pi) +
-                   np.sum(np.log(tot_var), axis=1))
+    lnl += -0.5 * (Ndim * np.log(2.0 * np.pi) + np.sum(np.log(tot_var), axis=1))
 
     # Apply dimensionality prior.
     if dim_prior:
         # Compute logpdf of chi2 distribution.
         a = 0.5 * (Ndim - 3)  # effective dof
-        lnl = xlogy(a - 1., chi2) - (chi2 / 2.) - gammaln(a) - (np.log(2.) * a)
+        lnl = xlogy(a - 1.0, chi2) - (chi2 / 2.0) - gammaln(a) - (np.log(2.0) * a)
 
     return lnl
 
 
-def photometric_offsets(phot, err, mask, models, idxs, reds, dreds, dists,
-                        sel=None, weights=None, mask_fit=None, Nmc=150,
-                        old_offsets=None, dim_prior=True,
-                        prior_mean=None, prior_std=None, verbose=True,
-                        rstate=None):
+def photometric_offsets(
+    phot,
+    err,
+    mask,
+    models,
+    idxs,
+    reds,
+    dreds,
+    dists,
+    sel=None,
+    weights=None,
+    mask_fit=None,
+    Nmc=150,
+    old_offsets=None,
+    dim_prior=True,
+    prior_mean=None,
+    prior_std=None,
+    verbose=True,
+    rstate=None,
+):
     """
     Compute (multiplicative) photometric offsets between data and model.
 
@@ -1312,11 +1389,11 @@ def photometric_offsets(phot, err, mask, models, idxs, reds, dreds, dists,
     Nobj, Nfilt = phot.shape
     Nsamps = idxs.shape[1]
     if sel is None:
-        sel = np.ones(Nobj, dtype='bool')
+        sel = np.ones(Nobj, dtype="bool")
     if weights is None:
-        weights = np.ones((Nobj, Nsamps), dtype='float')
+        weights = np.ones((Nobj, Nsamps), dtype="float")
     if mask_fit is None:
-        mask_fit = np.ones(Nfilt, dtype='bool')
+        mask_fit = np.ones(Nfilt, dtype="bool")
     if old_offsets is None:
         old_offsets = np.ones(Nfilt)
     if rstate is None:
@@ -1328,13 +1405,14 @@ def photometric_offsets(phot, err, mask, models, idxs, reds, dreds, dists,
             rstate = np.random
 
     # Generate SEDs.
-    seds = get_seds(models[idxs.flatten()], av=reds.flatten(),
-                    rv=dreds.flatten(), return_flux=True)
-    seds /= dists.flatten()[:, None]**2  # scale based on distance
+    seds = get_seds(
+        models[idxs.flatten()], av=reds.flatten(), rv=dreds.flatten(), return_flux=True
+    )
+    seds /= dists.flatten()[:, None] ** 2  # scale based on distance
     seds = seds.reshape(Nobj, Nsamps, Nfilt)  # reshape back
 
     # Compute photometric ratios.
-    ratios, nratio = np.ones(Nfilt), np.zeros(Nfilt, dtype='int')
+    ratios, nratio = np.ones(Nfilt), np.zeros(Nfilt, dtype="int")
     ratios_err = np.zeros(Nfilt)
     for i in range(Nfilt):
         # Subselect objects with reliable data.
@@ -1343,13 +1421,21 @@ def photometric_offsets(phot, err, mask, models, idxs, reds, dreds, dists,
             # 1. observed in the band,
             # 2. selected by user argument, and
             # 3. with >3 bands of photometry *excluding* the current band.
-            s = np.where(mask[:, i] & sel & (np.sum(mask, axis=1) > 3 + 1) &
-                         (np.sum(weights, axis=1) > 0))[0]
+            s = np.where(
+                mask[:, i]
+                & sel
+                & (np.sum(mask, axis=1) > 3 + 1)
+                & (np.sum(weights, axis=1) > 0)
+            )[0]
         else:
             # Band was not used in the fit. We will use the same criteria as
             # above, but do not need to impose an additional band restriction.
-            s = np.where(mask[:, i] & sel & (np.sum(mask, axis=1) > 3) &
-                         (np.sum(weights, axis=1) > 0))[0]
+            s = np.where(
+                mask[:, i]
+                & sel
+                & (np.sum(mask, axis=1) > 3)
+                & (np.sum(weights, axis=1) > 0)
+            )[0]
         n = len(s)
         nratio[i] = n
         if n > 0:
@@ -1359,10 +1445,18 @@ def photometric_offsets(phot, err, mask, models, idxs, reds, dreds, dists,
                 # Compute weights from ignoring current band.
                 mtemp = np.array(mask)
                 mtemp[:, i] = False
-                lnl = np.array([phot_loglike(p * old_offsets, e * old_offsets,
-                                             mt, sed, dim_prior=dim_prior)
-                                for p, e, mt, sed in zip(phot[s], err[s],
-                                                         mtemp[s], seds[s])])
+                lnl = np.array(
+                    [
+                        phot_loglike(
+                            p * old_offsets,
+                            e * old_offsets,
+                            mt,
+                            sed,
+                            dim_prior=dim_prior,
+                        )
+                        for p, e, mt, sed in zip(phot[s], err[s], mtemp[s], seds[s])
+                    ]
+                )
                 levid = logsumexp(lnl, axis=1)
                 logwt = lnl - levid[:, None]
                 wt = np.exp(logwt)
@@ -1371,14 +1465,15 @@ def photometric_offsets(phot, err, mask, models, idxs, reds, dreds, dists,
                 wt = np.ones((n, Nsamps))
             wt *= weights[s]
             wt /= wt.sum(axis=1)[:, None]
-            wt_obj = np.array(np.sum(weights[s], axis=1) > 0, dtype='float')
+            wt_obj = np.array(np.sum(weights[s], axis=1) > 0, dtype="float")
             wt_obj /= sum(wt_obj)
             # Bootstrap results.
             offsets = []
             for j in range(Nmc):
                 if verbose:
-                    sys.stderr.write('\rBand {0} ({1}/{2})     '
-                                     .format(i + 1, j + 1, Nmc))
+                    sys.stderr.write(
+                        "\rBand {0} ({1}/{2})     ".format(i + 1, j + 1, Nmc)
+                    )
                     sys.stderr.flush()
                 # Resample objects.
                 ridx = rstate.choice(n, size=n, p=wt_obj)
@@ -1389,7 +1484,7 @@ def photometric_offsets(phot, err, mask, models, idxs, reds, dreds, dists,
             # Compute median (of median).
             ratios[i], ratios_err[i] = np.median(offsets), np.std(offsets)
     if verbose:
-        sys.stderr.write('\n')
+        sys.stderr.write("\n")
 
     # Apply prior.
     if prior_mean is not None and prior_std is not None:
