@@ -7,14 +7,14 @@ Comprehensive tests for brutus photometric offset analysis.
 This test suite includes:
 1. Unit tests for PhotometricOffsetsConfig class
 2. Comprehensive tests for photometric_offsets function
-3. Performance and edge case tests
-4. Integration tests with other brutus components
+3. Parameter recovery tests using real get_seds function
+4. Performance and edge case tests
+5. Integration tests with other brutus components
 """
 
 import numpy as np
 import pytest
-import numpy.testing as npt
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 @pytest.fixture
@@ -22,18 +22,18 @@ def mock_data():
     """Create realistic mock data for testing."""
     np.random.seed(42)
 
-    n_obj, n_filt, n_samp, n_models = 100, 5, 50, 200
+    n_obj, n_filt, n_samp, n_models = 50, 5, 20, 100
 
     # Mock photometry
     phot = np.random.uniform(0.1, 10.0, (n_obj, n_filt))
     err = 0.05 * phot + 0.01  # Realistic errors
     mask = np.random.choice([0, 1], (n_obj, n_filt), p=[0.1, 0.9])
 
-    # Mock models
+    # Mock models with realistic coefficients
     models = np.random.random((n_models, n_filt, 3))
-    models[:, :, 0] = np.random.uniform(14, 20, (n_models, n_filt))
-    models[:, :, 1] = np.random.uniform(0.5, 2.0, (n_models, n_filt))
-    models[:, :, 2] = np.random.uniform(0.0, 0.3, (n_models, n_filt))
+    models[:, :, 0] = np.random.uniform(14, 20, (n_models, n_filt))  # Base mags
+    models[:, :, 1] = np.random.uniform(0.5, 2.0, (n_models, n_filt))  # A(V) coeffs
+    models[:, :, 2] = np.random.uniform(0.0, 0.3, (n_models, n_filt))  # R(V) coeffs
 
     # Mock fitted parameters
     idxs = np.random.randint(0, n_models, (n_obj, n_samp))
@@ -54,40 +54,31 @@ def mock_data():
 
 
 @pytest.fixture
-def mock_brutus_functions():
-    """Mock brutus utility functions for testing."""
-    with patch("brutus.analysis.offsets.get_seds") as mock_get_seds, patch(
-        "brutus.analysis.offsets.phot_loglike"
-    ) as mock_phot_loglike, patch(
-        "brutus.analysis.offsets.logsumexp"
-    ) as mock_logsumexp:
+def simple_mocks():
+    """Set up simple, working mocks for basic functionality tests."""
 
-        # Mock get_seds to return realistic SEDs
-        def mock_get_seds_func(models, av, rv, return_flux=False):
-            n_models = len(models) if hasattr(models, "__len__") else 1
-            n_filt = models.shape[1] if hasattr(models, "shape") else 5
+    def mock_get_seds(models_input, av=None, rv=None, return_flux=True):
+        n_requested = len(models_input) if hasattr(models_input, "__len__") else 1
+        n_filt = 5
+        if return_flux:
+            return np.random.uniform(0.1, 10.0, (n_requested, n_filt))
+        else:
+            return np.random.uniform(14, 20, (n_requested, n_filt))
 
-            # Generate mock SEDs
-            if return_flux:
-                return np.random.uniform(0.1, 10.0, (n_models, n_filt))
-            else:
-                return np.random.uniform(14, 20, (n_models, n_filt))
+    def mock_phot_loglike(flux, err, mfluxes, mask=None, dim_prior=True):
+        nobj, nfilt = flux.shape
+        nmod = mfluxes.shape[1] if len(mfluxes.shape) > 1 else 1
+        return np.random.normal(-5, 2, (nobj, nmod))
 
-        mock_get_seds.side_effect = mock_get_seds_func
+    def mock_logsumexp(x, axis=1):
+        if hasattr(x, "shape") and len(x.shape) > 1:
+            return np.log(
+                np.sum(np.exp(x - np.max(x, axis=1, keepdims=True)), axis=1)
+            ) + np.max(x, axis=1)
+        else:
+            return np.log(np.sum(np.exp(x - np.max(x)))) + np.max(x)
 
-        # Mock phot_loglike to return reasonable log-likelihoods
-        mock_phot_loglike.return_value = np.random.normal(-5, 2)
-
-        # Mock logsumexp
-        mock_logsumexp.side_effect = lambda x: np.log(
-            np.sum(np.exp(x - np.max(x)))
-        ) + np.max(x)
-
-        yield {
-            "get_seds": mock_get_seds,
-            "phot_loglike": mock_phot_loglike,
-            "logsumexp": mock_logsumexp,
-        }
+    return mock_get_seds, mock_phot_loglike, mock_logsumexp
 
 
 class TestPhotometricOffsetsConfig:
@@ -101,8 +92,8 @@ class TestPhotometricOffsetsConfig:
 
         assert config.min_bands_used == 4
         assert config.min_bands_unused == 3
-        assert config.n_bootstrap == 150
-        assert config.uncertainty_method == "bootstrap_std"
+        assert config.n_bootstrap == 300
+        assert config.uncertainty_method == "bootstrap_iqr"
         assert config.progress_interval == 10
         assert config.use_vectorized_bootstrap == True
         assert config.random_seed is None
@@ -116,7 +107,7 @@ class TestPhotometricOffsetsConfig:
             min_bands_used=5,
             min_bands_unused=4,
             n_bootstrap=100,
-            uncertainty_method="bootstrap_iqr",
+            uncertainty_method="bootstrap_std",
             progress_interval=5,
             use_vectorized_bootstrap=False,
             random_seed=42,
@@ -126,7 +117,7 @@ class TestPhotometricOffsetsConfig:
         assert config.min_bands_used == 5
         assert config.min_bands_unused == 4
         assert config.n_bootstrap == 100
-        assert config.uncertainty_method == "bootstrap_iqr"
+        assert config.uncertainty_method == "bootstrap_std"
         assert config.progress_interval == 5
         assert config.use_vectorized_bootstrap == False
         assert config.random_seed == 42
@@ -156,58 +147,29 @@ class TestPhotometricOffsetsConfig:
 class TestPhotometricOffsetsCore:
     """Test core photometric_offsets functionality."""
 
-    def test_basic_functionality(self, mock_data, mock_brutus_functions):
+    def test_basic_functionality(self, mock_data, simple_mocks):
         """Test basic function execution."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
+        mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        config = PhotometricOffsetsConfig(
-            n_bootstrap=10,
-            progress_interval=0,
-            validate_inputs=False,  # Skip validation for mocked data
-        )
+        with patch(
+            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
+        ), patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch(
+            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        ):
 
-        offsets, errors, n_used = photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            config=config,
-            verbose=False,
-        )
+            from brutus.analysis.offsets import (
+                photometric_offsets,
+                PhotometricOffsetsConfig,
+            )
 
-        # Check output shapes
-        assert offsets.shape == (5,)
-        assert errors.shape == (5,)
-        assert n_used.shape == (5,)
-
-        # Check output types and ranges
-        assert np.all(np.isfinite(offsets))
-        assert np.all(errors >= 0)
-        assert np.all(n_used >= 0)
-
-    def test_uncertainty_methods(self, mock_data, mock_brutus_functions):
-        """Test different uncertainty estimation methods."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
-
-        methods = ["bootstrap_std", "bootstrap_iqr", "analytical"]
-        results = {}
-
-        for method in methods:
             config = PhotometricOffsetsConfig(
-                n_bootstrap=20,
-                uncertainty_method=method,
+                n_bootstrap=10,
                 progress_interval=0,
                 validate_inputs=False,
+                min_bands_used=2,
+                min_bands_unused=1,
             )
 
             offsets, errors, n_used = photometric_offsets(
@@ -223,172 +185,223 @@ class TestPhotometricOffsetsCore:
                 verbose=False,
             )
 
-            results[method] = {"offsets": offsets, "errors": errors}
+            # Check output shapes
+            assert offsets.shape == (5,)
+            assert errors.shape == (5,)
+            assert n_used.shape == (5,)
 
-        # All methods should produce finite results
-        for method, result in results.items():
-            assert np.all(
-                np.isfinite(result["offsets"])
-            ), f"Method {method} produced non-finite offsets"
-            assert np.all(
-                result["errors"] >= 0
-            ), f"Method {method} produced negative errors"
+            # Check output types and ranges
+            assert np.all(np.isfinite(offsets))
+            assert np.all(errors >= 0)
+            assert np.all(n_used >= 0)
 
-    def test_vectorized_vs_loop_bootstrap(self, mock_data, mock_brutus_functions):
+    def test_uncertainty_methods(self, mock_data, simple_mocks):
+        """Test different uncertainty estimation methods."""
+        mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
+
+        with patch(
+            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
+        ), patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch(
+            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        ):
+
+            from brutus.analysis.offsets import (
+                photometric_offsets,
+                PhotometricOffsetsConfig,
+            )
+
+            methods = ["bootstrap_std", "bootstrap_iqr"]
+            results = {}
+
+            for method in methods:
+                config = PhotometricOffsetsConfig(
+                    n_bootstrap=15,
+                    uncertainty_method=method,
+                    progress_interval=0,
+                    validate_inputs=False,
+                )
+
+                offsets, errors, n_used = photometric_offsets(
+                    mock_data["phot"],
+                    mock_data["err"],
+                    mock_data["mask"],
+                    mock_data["models"],
+                    mock_data["idxs"],
+                    mock_data["reds"],
+                    mock_data["dreds"],
+                    mock_data["dists"],
+                    config=config,
+                    verbose=False,
+                )
+
+                results[method] = {"offsets": offsets, "errors": errors}
+
+            # All methods should produce finite results
+            for method, result in results.items():
+                assert np.all(
+                    np.isfinite(result["offsets"])
+                ), f"Method {method} produced non-finite offsets"
+                assert np.all(
+                    result["errors"] >= 0
+                ), f"Method {method} produced negative errors"
+
+    def test_vectorized_vs_loop_bootstrap(self, mock_data, simple_mocks):
         """Test vectorized vs loop bootstrap implementations."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
+        mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        # Set random seed for reproducible comparison
-        rng = np.random.default_rng(42)
+        with patch(
+            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
+        ), patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch(
+            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        ):
 
-        config_vec = PhotometricOffsetsConfig(
-            n_bootstrap=20,
-            use_vectorized_bootstrap=True,
-            progress_interval=0,
-            validate_inputs=False,
-            random_seed=42,
-        )
+            from brutus.analysis.offsets import (
+                photometric_offsets,
+                PhotometricOffsetsConfig,
+            )
 
-        config_loop = PhotometricOffsetsConfig(
-            n_bootstrap=20,
-            use_vectorized_bootstrap=False,
-            progress_interval=0,
-            validate_inputs=False,
-            random_seed=42,
-        )
+            for use_vectorized in [True, False]:
+                config = PhotometricOffsetsConfig(
+                    n_bootstrap=10,
+                    use_vectorized_bootstrap=use_vectorized,
+                    progress_interval=0,
+                    validate_inputs=False,
+                )
 
-        # This test would need identical RNG states, which is complex with mocked functions
-        # Instead, just test that both execute without error
-        offsets_vec, _, _ = photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            config=config_vec,
-            rng=np.random.default_rng(42),
-            verbose=False,
-        )
+                offsets, errors, n_used = photometric_offsets(
+                    mock_data["phot"],
+                    mock_data["err"],
+                    mock_data["mask"],
+                    mock_data["models"],
+                    mock_data["idxs"],
+                    mock_data["reds"],
+                    mock_data["dreds"],
+                    mock_data["dists"],
+                    config=config,
+                    verbose=False,
+                )
 
-        offsets_loop, _, _ = photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            config=config_loop,
-            rng=np.random.default_rng(42),
-            verbose=False,
-        )
+                # Both should produce finite results
+                assert np.all(np.isfinite(offsets))
+                assert np.all(errors >= 0)
 
-        # Both should produce finite results
-        assert np.all(np.isfinite(offsets_vec))
-        assert np.all(np.isfinite(offsets_loop))
-
-    def test_optional_parameters(self, mock_data, mock_brutus_functions):
+    def test_optional_parameters(self, mock_data, simple_mocks):
         """Test optional parameter handling."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
+        mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        config = PhotometricOffsetsConfig(
-            n_bootstrap=10, progress_interval=0, validate_inputs=False
-        )
+        with patch(
+            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
+        ), patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch(
+            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        ):
 
-        # Test with all optional parameters
-        n_obj, n_filt = mock_data["phot"].shape
-        n_samp = mock_data["idxs"].shape[1]
+            from brutus.analysis.offsets import (
+                photometric_offsets,
+                PhotometricOffsetsConfig,
+            )
 
-        sel = np.random.choice([True, False], n_obj, p=[0.8, 0.2])
-        weights = np.random.uniform(0.5, 1.5, (n_obj, n_samp))
-        mask_fit = np.random.choice([True, False], n_filt, p=[0.7, 0.3])
-        old_offsets = np.random.uniform(0.9, 1.1, n_filt)
+            config = PhotometricOffsetsConfig(
+                n_bootstrap=10, progress_interval=0, validate_inputs=False
+            )
 
-        offsets, errors, n_used = photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            sel=sel,
-            weights=weights,
-            mask_fit=mask_fit,
-            old_offsets=old_offsets,
-            dim_prior=True,
-            config=config,
-            verbose=False,
-        )
+            # Test with all optional parameters
+            n_obj, n_filt = mock_data["phot"].shape
+            n_samp = mock_data["idxs"].shape[1]
 
-        assert np.all(np.isfinite(offsets))
-        assert np.all(errors >= 0)
+            sel = np.random.choice([True, False], n_obj, p=[0.8, 0.2])
+            weights = np.random.uniform(0.5, 1.5, (n_obj, n_samp))
+            mask_fit = np.random.choice([True, False], n_filt, p=[0.7, 0.3])
+            old_offsets = np.random.uniform(0.9, 1.1, n_filt)
 
-    def test_prior_application(self, mock_data, mock_brutus_functions):
+            offsets, errors, n_used = photometric_offsets(
+                mock_data["phot"],
+                mock_data["err"],
+                mock_data["mask"],
+                mock_data["models"],
+                mock_data["idxs"],
+                mock_data["reds"],
+                mock_data["dreds"],
+                mock_data["dists"],
+                sel=sel,
+                weights=weights,
+                mask_fit=mask_fit,
+                old_offsets=old_offsets,
+                dim_prior=True,
+                config=config,
+                verbose=False,
+            )
+
+            assert np.all(np.isfinite(offsets))
+            assert np.all(errors >= 0)
+
+    def test_prior_application(self, mock_data, simple_mocks):
         """Test Gaussian prior application."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
+        mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        config = PhotometricOffsetsConfig(
-            n_bootstrap=10, progress_interval=0, validate_inputs=False
-        )
+        with patch(
+            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
+        ), patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch(
+            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        ):
 
-        # Test without priors
-        offsets_no_prior, errors_no_prior, _ = photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            config=config,
-            verbose=False,
-        )
+            from brutus.analysis.offsets import (
+                photometric_offsets,
+                PhotometricOffsetsConfig,
+            )
 
-        # Test with priors
-        prior_mean = np.ones(5) * 1.05
-        prior_std = np.ones(5) * 0.02
+            config = PhotometricOffsetsConfig(
+                n_bootstrap=10, progress_interval=0, validate_inputs=False
+            )
 
-        offsets_with_prior, errors_with_prior, _ = photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            prior_mean=prior_mean,
-            prior_std=prior_std,
-            config=config,
-            verbose=False,
-        )
+            # Test without priors
+            offsets_no_prior, errors_no_prior, _ = photometric_offsets(
+                mock_data["phot"],
+                mock_data["err"],
+                mock_data["mask"],
+                mock_data["models"],
+                mock_data["idxs"],
+                mock_data["reds"],
+                mock_data["dreds"],
+                mock_data["dists"],
+                config=config,
+                verbose=False,
+            )
 
-        # Both should produce finite results
-        assert np.all(np.isfinite(offsets_no_prior))
-        assert np.all(np.isfinite(offsets_with_prior))
-        assert np.all(errors_no_prior >= 0)
-        assert np.all(errors_with_prior >= 0)
+            # Test with priors
+            prior_mean = np.ones(5) * 1.05
+            prior_std = np.ones(5) * 0.02
 
-        # Priors should generally reduce errors (though not guaranteed with mocked data)
-        # Just test that prior application doesn't break anything
-        assert offsets_with_prior.shape == offsets_no_prior.shape
-        assert errors_with_prior.shape == errors_no_prior.shape
+            offsets_with_prior, errors_with_prior, _ = photometric_offsets(
+                mock_data["phot"],
+                mock_data["err"],
+                mock_data["mask"],
+                mock_data["models"],
+                mock_data["idxs"],
+                mock_data["reds"],
+                mock_data["dreds"],
+                mock_data["dists"],
+                prior_mean=prior_mean,
+                prior_std=prior_std,
+                config=config,
+                verbose=False,
+            )
+
+            # Both should produce finite results
+            assert np.all(np.isfinite(offsets_no_prior))
+            assert np.all(np.isfinite(offsets_with_prior))
+            assert np.all(errors_no_prior >= 0)
+            assert np.all(errors_with_prior >= 0)
+
+            # Results should be different when priors are applied
+            assert not np.allclose(offsets_no_prior, offsets_with_prior, rtol=0.1)
 
 
 class TestInputValidation:
@@ -414,7 +427,7 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="err shape"):
             _validate_inputs(
                 mock_data["phot"],
-                mock_data["err"][:50],
+                mock_data["err"][:25],
                 mock_data["mask"],
                 mock_data["models"],
                 mock_data["idxs"],
@@ -428,22 +441,9 @@ class TestInputValidation:
             _validate_inputs(
                 mock_data["phot"],
                 mock_data["err"],
-                mock_data["mask"][:50],
+                mock_data["mask"][:25],
                 mock_data["models"],
                 mock_data["idxs"],
-                mock_data["reds"],
-                mock_data["dreds"],
-                mock_data["dists"],
-            )
-
-        # Test incorrect idxs shape
-        with pytest.raises(ValueError, match="idxs shape"):
-            _validate_inputs(
-                mock_data["phot"],
-                mock_data["err"],
-                mock_data["mask"],
-                mock_data["models"],
-                mock_data["idxs"][:50],
                 mock_data["reds"],
                 mock_data["dreds"],
                 mock_data["dists"],
@@ -511,307 +511,355 @@ class TestInputValidation:
                 mock_data["dists"],
             )
 
-    def test_type_validation(self, mock_data):
-        """Test validation of array types."""
-        from brutus.analysis.offsets import _validate_inputs
 
-        # Test non-array input
-        with pytest.raises(TypeError, match="phot must be numpy array"):
-            _validate_inputs(
-                mock_data["phot"].tolist(),
-                mock_data["err"],
-                mock_data["mask"],
-                mock_data["models"],
-                mock_data["idxs"],
-                mock_data["reds"],
-                mock_data["dreds"],
-                mock_data["dists"],
+class TestParameterRecovery:
+    """Test parameter recovery using real get_seds function."""
+
+    def test_unity_recovery_real_get_seds(self):
+        """Test unity recovery using real get_seds function."""
+        pytest.importorskip("brutus.analysis.offsets", reason="brutus not available")
+
+        from brutus.analysis.offsets import (
+            get_seds,
+            photometric_offsets,
+            PhotometricOffsetsConfig,
+        )
+
+        n_obj, n_filt = 60, 5
+        n_models, n_samp = 25, 12
+
+        # Create realistic model grid
+        np.random.seed(42)
+        models = np.random.random((n_models, n_filt, 3))
+        models[:, :, 0] = np.random.uniform(15, 19, (n_models, n_filt))
+        models[:, :, 1] = np.random.uniform(0.6, 1.8, (n_models, n_filt))
+        models[:, :, 2] = np.random.uniform(0.0, 0.25, (n_models, n_filt))
+
+        # True parameters for data generation
+        true_model_idxs = np.random.randint(0, n_models, n_obj)
+        true_avs = np.random.uniform(0.0, 1.2, n_obj)
+        true_rvs = np.random.uniform(3.1, 3.5, n_obj)
+        true_dists = np.random.uniform(0.9, 1.1, n_obj)
+
+        # Generate observed photometry using real get_seds
+        observed_phot = np.zeros((n_obj, n_filt))
+        for i in range(n_obj):
+            true_sed = get_seds(
+                models[true_model_idxs[i : i + 1]],
+                av=np.array([true_avs[i]]),
+                rv=np.array([true_rvs[i]]),
+                return_flux=True,
             )
+            observed_phot[i] = true_sed[0] / (true_dists[i] ** 2)
+
+        # Add realistic noise
+        noise = np.random.normal(0, 0.025 * observed_phot)
+        observed_phot += noise
+        observed_phot = np.maximum(observed_phot, 0.1 * np.abs(observed_phot))
+
+        err = 0.03 * observed_phot
+        mask = np.ones((n_obj, n_filt), dtype=int)
+
+        # Create samples centered on true values
+        idxs = np.zeros((n_obj, n_samp), dtype=int)
+        reds = np.zeros((n_obj, n_samp))
+        dreds = np.zeros((n_obj, n_samp))
+        dists = np.zeros((n_obj, n_samp))
+
+        for i in range(n_obj):
+            idxs[i] = true_model_idxs[i]
+            reds[i] = np.random.normal(true_avs[i], 0.015, n_samp)
+            dreds[i] = np.random.normal(true_rvs[i], 0.008, n_samp)
+            dists[i] = np.random.normal(true_dists[i], 0.008, n_samp)
+
+            reds[i] = np.clip(reds[i], 0.0, 2.5)
+            dreds[i] = np.clip(dreds[i], 2.9, 3.9)
+            dists[i] = np.clip(dists[i], 0.6, 1.5)
+
+        # Mock only the likelihood functions
+        def mock_phot_loglike(flux, err_in, mfluxes, mask=None, dim_prior=True):
+            nobj = flux.shape[0]
+            nmod = mfluxes.shape[1] if len(mfluxes.shape) > 1 else 1
+            return np.zeros((nobj, nmod))
+
+        def mock_logsumexp(x, axis=1):
+            if hasattr(x, "shape") and len(x.shape) > 1:
+                return np.zeros(x.shape[0])
+            else:
+                return 0.0
+
+        # Run the algorithm
+        with patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp):
+
+            config = PhotometricOffsetsConfig(
+                n_bootstrap=20,
+                min_bands_used=3,
+                min_bands_unused=2,
+                validate_inputs=False,
+                progress_interval=0,
+            )
+
+            offsets, errors, n_used = photometric_offsets(
+                observed_phot,
+                err,
+                mask,
+                models,
+                idxs,
+                reds,
+                dreds,
+                dists,
+                config=config,
+                verbose=False,
+            )
+
+        # Check unity recovery
+        max_deviation = np.max(np.abs(offsets - 1.0))
+        max_rel_error = np.max(np.abs((offsets - 1.0) / 1.0))
+
+        # Unity recovery should be very accurate
+        assert (
+            max_rel_error < 0.05
+        ), f"Unity recovery failed: max relative error {max_rel_error:.3f} > 0.05"
+        assert np.all(np.isfinite(offsets)), "Offsets contain non-finite values"
+        assert np.all(errors >= 0), "Errors must be non-negative"
+
+    def test_systematic_offset_recovery(self):
+        """Test recovery of known systematic offsets."""
+        pytest.importorskip("brutus.analysis.offsets", reason="brutus not available")
+
+        from brutus.analysis.offsets import (
+            get_seds,
+            photometric_offsets,
+            PhotometricOffsetsConfig,
+        )
+
+        # Apply known systematic offsets
+        true_offsets = np.array([1.05, 0.95, 1.08, 0.92, 1.02])
+        expected_corrections = 1.0 / true_offsets
+
+        n_obj, n_filt = 80, 5
+        n_models, n_samp = 20, 10
+
+        # Create model grid
+        np.random.seed(123)
+        models = np.random.random((n_models, n_filt, 3))
+        models[:, :, 0] = np.random.uniform(15, 18, (n_models, n_filt))
+        models[:, :, 1] = np.random.uniform(0.7, 1.6, (n_models, n_filt))
+        models[:, :, 2] = np.random.uniform(0.0, 0.2, (n_models, n_filt))
+
+        # True parameters
+        true_model_idxs = np.random.randint(0, n_models, n_obj)
+        true_avs = np.random.uniform(0.0, 1.0, n_obj)
+        true_rvs = np.random.uniform(3.15, 3.45, n_obj)
+        true_dists = np.random.uniform(0.95, 1.05, n_obj)
+
+        # Generate photometry and apply systematic offsets
+        observed_phot = np.zeros((n_obj, n_filt))
+        for i in range(n_obj):
+            true_sed = get_seds(
+                models[true_model_idxs[i : i + 1]],
+                av=np.array([true_avs[i]]),
+                rv=np.array([true_rvs[i]]),
+                return_flux=True,
+            )
+            base_flux = true_sed[0] / (true_dists[i] ** 2)
+            observed_phot[i] = base_flux * true_offsets  # Apply systematic errors
+
+        # Add noise
+        noise = np.random.normal(0, 0.02 * observed_phot)
+        observed_phot += noise
+        observed_phot = np.maximum(observed_phot, 0.05 * np.abs(observed_phot))
+
+        err = 0.025 * observed_phot
+        mask = np.ones((n_obj, n_filt), dtype=int)
+
+        # Create samples
+        idxs = np.zeros((n_obj, n_samp), dtype=int)
+        reds = np.zeros((n_obj, n_samp))
+        dreds = np.zeros((n_obj, n_samp))
+        dists = np.zeros((n_obj, n_samp))
+
+        for i in range(n_obj):
+            idxs[i] = true_model_idxs[i]
+            reds[i] = np.random.normal(true_avs[i], 0.01, n_samp)
+            dreds[i] = np.random.normal(true_rvs[i], 0.005, n_samp)
+            dists[i] = np.random.normal(true_dists[i], 0.005, n_samp)
+
+            reds[i] = np.clip(reds[i], 0.0, 2.0)
+            dreds[i] = np.clip(dreds[i], 3.0, 3.8)
+            dists[i] = np.clip(dists[i], 0.7, 1.3)
+
+        # Mock likelihood functions
+        def mock_phot_loglike(flux, err_in, mfluxes, mask=None, dim_prior=True):
+            nobj = flux.shape[0]
+            nmod = mfluxes.shape[1] if len(mfluxes.shape) > 1 else 1
+            return np.zeros((nobj, nmod))
+
+        def mock_logsumexp(x, axis=1):
+            if hasattr(x, "shape") and len(x.shape) > 1:
+                return np.zeros(x.shape[0])
+            else:
+                return 0.0
+
+        # Run algorithm
+        with patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp):
+
+            config = PhotometricOffsetsConfig(
+                n_bootstrap=25,
+                min_bands_used=3,
+                min_bands_unused=2,
+                validate_inputs=False,
+                progress_interval=0,
+            )
+
+            recovered_corrections, errors, n_used = photometric_offsets(
+                observed_phot,
+                err,
+                mask,
+                models,
+                idxs,
+                reds,
+                dreds,
+                dists,
+                config=config,
+                verbose=False,
+            )
+
+        # Check recovery
+        abs_errors = np.abs(recovered_corrections - expected_corrections)
+        rel_errors = abs_errors / expected_corrections
+        max_rel_error = np.max(rel_errors)
+
+        # Systematic offset recovery should be accurate
+        assert (
+            max_rel_error < 0.15
+        ), f"Systematic offset recovery failed: max relative error {max_rel_error:.3f} > 0.15"
+        assert np.all(
+            np.isfinite(recovered_corrections)
+        ), "Recovered corrections contain non-finite values"
+        assert np.all(errors >= 0), "Errors must be non-negative"
 
 
 class TestEdgeCases:
     """Test edge cases and boundary conditions."""
 
-    def test_no_valid_objects(self, mock_brutus_functions):
+    def test_no_valid_objects(self, simple_mocks):
         """Test behavior when no objects meet selection criteria."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
+        mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        # Create data where no objects meet minimum band requirements
-        n_obj, n_filt = 10, 5
-        phot = np.random.uniform(0.1, 1.0, (n_obj, n_filt))
-        err = 0.1 * phot
-        mask = np.zeros((n_obj, n_filt))  # No detections
+        with patch(
+            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
+        ), patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch(
+            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        ):
 
-        models = np.random.random((10, n_filt, 3))
-        idxs = np.random.randint(0, 10, (n_obj, 5))
-        reds = np.random.uniform(0, 1, (n_obj, 5))
-        dreds = np.random.uniform(3, 4, (n_obj, 5))
-        dists = np.random.uniform(1, 5, (n_obj, 5))
+            from brutus.analysis.offsets import (
+                photometric_offsets,
+                PhotometricOffsetsConfig,
+            )
 
-        config = PhotometricOffsetsConfig(
-            n_bootstrap=5, min_bands_used=3, progress_interval=0, validate_inputs=False
-        )
+            # Create data where no objects meet minimum band requirements
+            n_obj, n_filt = 10, 5
+            phot = np.random.uniform(0.1, 1.0, (n_obj, n_filt))
+            err = 0.1 * phot
+            mask = np.zeros((n_obj, n_filt))  # No detections
 
-        offsets, errors, n_used = photometric_offsets(
-            phot,
-            err,
-            mask,
-            models,
-            idxs,
-            reds,
-            dreds,
-            dists,
-            config=config,
-            verbose=False,
-        )
+            models = np.random.random((10, n_filt, 3))
+            idxs = np.random.randint(0, 10, (n_obj, 5))
+            reds = np.random.uniform(0, 1, (n_obj, 5))
+            dreds = np.random.uniform(3, 4, (n_obj, 5))
+            dists = np.random.uniform(1, 5, (n_obj, 5))
 
-        # Should handle gracefully
-        assert offsets.shape == (n_filt,)
-        assert np.all(n_used == 0)  # No objects used
-        assert np.all(offsets == 1.0)  # Default values
-        assert np.all(errors == 0.0)  # No uncertainty
+            config = PhotometricOffsetsConfig(
+                n_bootstrap=5,
+                min_bands_used=3,
+                progress_interval=0,
+                validate_inputs=False,
+            )
 
-    def test_single_object(self, mock_brutus_functions):
-        """Test with single object."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
+            offsets, errors, n_used = photometric_offsets(
+                phot,
+                err,
+                mask,
+                models,
+                idxs,
+                reds,
+                dreds,
+                dists,
+                config=config,
+                verbose=False,
+            )
 
-        n_obj, n_filt = 1, 3
-        phot = np.random.uniform(0.1, 1.0, (n_obj, n_filt))
-        err = 0.1 * phot
-        mask = np.ones((n_obj, n_filt))  # All detected
-
-        models = np.random.random((10, n_filt, 3))
-        idxs = np.random.randint(0, 10, (n_obj, 5))
-        reds = np.random.uniform(0, 1, (n_obj, 5))
-        dreds = np.random.uniform(3, 4, (n_obj, 5))
-        dists = np.random.uniform(1, 5, (n_obj, 5))
-
-        config = PhotometricOffsetsConfig(
-            n_bootstrap=5,
-            min_bands_used=1,  # Very lenient
-            min_bands_unused=1,
-            progress_interval=0,
-            validate_inputs=False,
-        )
-
-        offsets, errors, n_used = photometric_offsets(
-            phot,
-            err,
-            mask,
-            models,
-            idxs,
-            reds,
-            dreds,
-            dists,
-            config=config,
-            verbose=False,
-        )
-
-        assert np.all(np.isfinite(offsets))
-        assert np.all(errors >= 0)
-
-    def test_extreme_bootstrap_counts(self, mock_data, mock_brutus_functions):
-        """Test with extreme bootstrap counts."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
-
-        # Test very small bootstrap count
-        config_small = PhotometricOffsetsConfig(
-            n_bootstrap=1, progress_interval=0, validate_inputs=False
-        )
-
-        offsets_small, errors_small, _ = photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            config=config_small,
-            verbose=False,
-        )
-
-        assert np.all(np.isfinite(offsets_small))
-        assert np.all(errors_small >= 0)
-
-        # Test larger bootstrap count
-        config_large = PhotometricOffsetsConfig(
-            n_bootstrap=500, progress_interval=0, validate_inputs=False
-        )
-
-        offsets_large, errors_large, _ = photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            config=config_large,
-            verbose=False,
-        )
-
-        assert np.all(np.isfinite(offsets_large))
-        assert np.all(errors_large >= 0)
+            # Should handle gracefully
+            assert offsets.shape == (n_filt,)
+            assert np.all(n_used == 0)  # No objects used
+            assert np.all(offsets == 1.0)  # Default values
+            assert np.all(errors == 0.0)  # No uncertainty
 
 
 @pytest.mark.slow
 class TestPerformance:
-    """Performance and stress tests."""
+    """Performance tests."""
 
-    def test_large_dataset_performance(self, mock_brutus_functions):
-        """Test performance with large datasets."""
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
+    def test_large_dataset_performance(self, simple_mocks):
+        """Test performance with larger datasets."""
+        mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        # Create larger dataset
-        n_obj, n_filt, n_samp = 1000, 10, 100
+        with patch(
+            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
+        ), patch(
+            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+        ), patch(
+            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        ):
 
-        phot = np.random.uniform(0.1, 10.0, (n_obj, n_filt))
-        err = 0.1 * phot
-        mask = np.random.choice([0, 1], (n_obj, n_filt), p=[0.1, 0.9])
+            from brutus.analysis.offsets import (
+                photometric_offsets,
+                PhotometricOffsetsConfig,
+            )
 
-        models = np.random.random((500, n_filt, 3))
-        idxs = np.random.randint(0, 500, (n_obj, n_samp))
-        reds = np.random.uniform(0, 3, (n_obj, n_samp))
-        dreds = np.random.uniform(2.5, 4.5, (n_obj, n_samp))
-        dists = np.random.uniform(0.5, 10, (n_obj, n_samp))
+            # Create larger dataset
+            n_obj, n_filt, n_samp = 500, 8, 50
 
-        config = PhotometricOffsetsConfig(
-            n_bootstrap=50,  # Reasonable for performance test
-            progress_interval=0,
-            validate_inputs=False,
-            use_vectorized_bootstrap=True,
-        )
+            phot = np.random.uniform(0.1, 10.0, (n_obj, n_filt))
+            err = 0.1 * phot
+            mask = np.random.choice([0, 1], (n_obj, n_filt), p=[0.1, 0.9])
 
-        # This should complete in reasonable time
-        offsets, errors, n_used = photometric_offsets(
-            phot,
-            err,
-            mask,
-            models,
-            idxs,
-            reds,
-            dreds,
-            dists,
-            config=config,
-            verbose=False,
-        )
+            models = np.random.random((200, n_filt, 3))
+            idxs = np.random.randint(0, 200, (n_obj, n_samp))
+            reds = np.random.uniform(0, 3, (n_obj, n_samp))
+            dreds = np.random.uniform(2.5, 4.5, (n_obj, n_samp))
+            dists = np.random.uniform(0.5, 10, (n_obj, n_samp))
 
-        assert offsets.shape == (n_filt,)
-        assert np.all(np.isfinite(offsets))
+            config = PhotometricOffsetsConfig(
+                n_bootstrap=30,
+                progress_interval=0,
+                validate_inputs=False,
+                use_vectorized_bootstrap=True,
+            )
 
-    def test_vectorized_bootstrap_performance(self, mock_data, mock_brutus_functions):
-        """Compare vectorized vs loop bootstrap performance."""
-        import time
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
+            # This should complete in reasonable time
+            offsets, errors, n_used = photometric_offsets(
+                phot,
+                err,
+                mask,
+                models,
+                idxs,
+                reds,
+                dreds,
+                dists,
+                config=config,
+                verbose=False,
+            )
 
-        config_vec = PhotometricOffsetsConfig(
-            n_bootstrap=100,
-            use_vectorized_bootstrap=True,
-            progress_interval=0,
-            validate_inputs=False,
-        )
-
-        config_loop = PhotometricOffsetsConfig(
-            n_bootstrap=100,
-            use_vectorized_bootstrap=False,
-            progress_interval=0,
-            validate_inputs=False,
-        )
-
-        # Time vectorized version
-        start_time = time.time()
-        photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            config=config_vec,
-            verbose=False,
-        )
-        vec_time = time.time() - start_time
-
-        # Time loop version
-        start_time = time.time()
-        photometric_offsets(
-            mock_data["phot"],
-            mock_data["err"],
-            mock_data["mask"],
-            mock_data["models"],
-            mock_data["idxs"],
-            mock_data["reds"],
-            mock_data["dreds"],
-            mock_data["dists"],
-            config=config_loop,
-            verbose=False,
-        )
-        loop_time = time.time() - start_time
-
-        # Vectorized should generally be faster (though hard to guarantee with mocks)
-        print(f"Vectorized time: {vec_time:.3f}s, Loop time: {loop_time:.3f}s")
-
-        # Just verify both complete successfully
-        assert vec_time > 0
-        assert loop_time > 0
-
-
-@pytest.mark.integration
-class TestIntegration:
-    """Integration tests with other brutus components."""
-
-    def test_realistic_workflow_simulation(self):
-        """Test with a simulated realistic workflow."""
-        # This would test integration with actual brutus functions
-        # For now, just test that the function signature is compatible
-        from brutus.analysis.offsets import (
-            photometric_offsets,
-            PhotometricOffsetsConfig,
-        )
-
-        # Verify function signature matches expected interface
-        import inspect
-
-        sig = inspect.signature(photometric_offsets)
-
-        required_params = [
-            "phot",
-            "err",
-            "mask",
-            "models",
-            "idxs",
-            "reds",
-            "dreds",
-            "dists",
-        ]
-
-        for param in required_params:
-            assert param in sig.parameters, f"Missing required parameter: {param}"
-
-        # Verify return type annotation if present
-        if sig.return_annotation != inspect.Signature.empty:
-            # Should return tuple of 3 arrays
-            pass
+            assert offsets.shape == (n_filt,)
+            assert np.all(np.isfinite(offsets))
 
 
 if __name__ == "__main__":

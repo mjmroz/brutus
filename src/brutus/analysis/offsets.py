@@ -21,7 +21,6 @@ from typing import Optional, Tuple
 try:
     from ..core.sed_utils import get_seds
     from ..utils.photometry import phot_loglike
-    from ..utils.sampling import quantile
     from scipy.special import logsumexp
 except ImportError:
     # Fallback for development/testing
@@ -32,9 +31,6 @@ except ImportError:
 
     def phot_loglike(*args, **kwargs):
         raise NotImplementedError("phot_loglike not available")
-
-    def quantile(*args, **kwargs):
-        raise NotImplementedError("quantile not available")
 
     def logsumexp(*args, **kwargs):
         raise NotImplementedError("logsumexp not available")
@@ -448,29 +444,23 @@ def photometric_offsets(
             # Recompute likelihoods excluding current band
             model_weights = np.zeros((n, nsamps))
 
-            for j, obj_idx in enumerate(obj_indices):
-                # Create temporary mask excluding current band
-                temp_mask = mask[obj_idx].copy()
-                temp_mask[i] = False
+            # Process all objects at once
+            temp_masks = mask[obj_indices].copy()  # (N_objects, Nfilt)
+            temp_masks[:, i] = False  # Exclude current band for all
 
-                # Compute likelihoods for each model
-                lnl = np.array(
-                    [
-                        phot_loglike(
-                            phot[obj_idx] * old_offsets,
-                            err[obj_idx] * old_offsets,
-                            temp_mask,
-                            seds[obj_idx, k],
-                            dim_prior=dim_prior,
-                        )
-                        for k in range(nsamps)
-                    ]
-                )
+            obj_phot = phot[obj_indices] * old_offsets[None, :]  # (N_objects, Nfilt)
+            obj_err = err[obj_indices] * old_offsets[None, :]  # (N_objects, Nfilt)
+            obj_seds = seds[obj_indices]  # (N_objects, Nsamps, Nfilt)
 
-                # Convert to weights
-                log_evidence = logsumexp(lnl)
-                log_weights = lnl - log_evidence
-                model_weights[j] = np.exp(log_weights)
+            # Single vectorized call for all objects and models
+            lnl_all = phot_loglike(
+                obj_phot, obj_err, obj_seds, mask=temp_masks, dim_prior=dim_prior
+            )  # Shape: (N_objects, Nsamps)
+
+            # Process all results at once
+            for j in range(n):
+                log_evidence = logsumexp(lnl_all[j])
+                model_weights[j] = np.exp(lnl_all[j] - log_evidence)
         else:
             # Use uniform weights
             model_weights = np.ones((n, nsamps))
