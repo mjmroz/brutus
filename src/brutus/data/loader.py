@@ -92,15 +92,15 @@ def load_models(
     Examples
     --------
     >>> from brutus.data import load_models
-    >>> models, labels, mask = load_models('./data/grid_mist_v9.h5')
+    >>> models, labels, mask = load_models('./data/DATAFILES/grid_mist_v9.h5')
     >>> print(f"Loaded {len(models)} models with {models.shape[1]} filters")
 
     >>> # Load only main sequence models
-    >>> ms_models, ms_labels, _ = load_models('./data/grid_mist_v9.h5',
+    >>> ms_models, ms_labels, _ = load_models('./data/DATAFILES/grid_mist_v9.h5',
     ...                                       include_postms=False)
 
     >>> # Load specific filters
-    >>> gri_models, _, _ = load_models('./data/grid_mist_v9.h5',
+    >>> gri_models, _, _ = load_models('./data/DATAFILES/grid_mist_v9.h5',
     ...                                filters=['g', 'r', 'i'])
     """
     # Initialize values.
@@ -245,11 +245,11 @@ def load_offsets(filepath, filters=None, verbose=True):
     Examples
     --------
     >>> from brutus.data import load_offsets
-    >>> offsets = load_offsets('./data/offsets_mist_v9.txt')
+    >>> offsets = load_offsets('./data/DATAFILES/offsets_mist_v9.txt')
     >>> print(f"Loaded offsets for {len(offsets)} filters")
 
     >>> # Load specific filters
-    >>> gri_offsets = load_offsets('./data/offsets_mist_v9.txt',
+    >>> gri_offsets = load_offsets('./data/DATAFILES/offsets_mist_v9.txt',
     ...                            filters=['g', 'r', 'i'])
 
     >>> # Check which filters have significant offsets

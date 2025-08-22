@@ -17,6 +17,7 @@ from copy import deepcopy
 from itertools import product
 import h5py
 from scipy.interpolate import RegularGridInterpolator
+from pathlib import Path
 
 try:
     from scipy import polyfit
@@ -56,7 +57,7 @@ class MISTtracks(object):
     ----------
     mistfile : str, optional
         The name of the HDF5 file containing the MIST tracks. Default is
-        `MIST_1.2_EEPtrk.h5` and is extracted from `data/DATAFILES/`.
+        `MIST_1.2_EEPtrk.h5` and is extracted from `brutus/data/DATAFILES/`.
 
     predictions : iterable of shape `(4)`, optional
         The names of the parameters to output at the request location in
@@ -100,7 +101,10 @@ class MISTtracks(object):
 
         # Import MIST grid.
         if mistfile is None:
-            mistfile = "data/DATAFILES/MIST_1.2_EEPtrk.h5"
+            package_root = Path(
+                __file__
+            ).parent.parent.parent  # Get the package root directory
+            mistfile = package_root / "data" / "DATAFILES" / "MIST_1.2_EEPtrk.h5"
         self.mistfile = mistfile
         with h5py.File(self.mistfile, "r") as misth5:
             self.make_lib(misth5, verbose=verbose)
@@ -413,11 +417,11 @@ class SEDmaker(MISTtracks):
     nnfile : str, optional
         The neural network file used to generate fast predictions.
         If not provided, this will default to `nnMIST_BC.h5` and is extracted
-        from `data/DATAFILES/`.
+        from `brutus/data/DATAFILES/`.
 
     mistfile : str, optional
         The name of the HDF5 file containing the MIST tracks. Default is
-        `MIST_1.2_EEPtrk.h5` and is extracted from the `data/DATAFILES/`.
+        `MIST_1.2_EEPtrk.h5` and is extracted from the `brutus/data/DATAFILES/`.
 
     predictions : iterable of shape `(4)`, optional
         The names of the parameters to output at the request location in
@@ -968,7 +972,7 @@ class FastNN(object):
 
     nnfile : str, optional
         The neutral network file. Default is `nnMIST_BC.h5` stored under
-        `data/DATAFILES/`.
+        `brutus/data/DATAFILES/`.
 
     verbose : bool, optional
         Whether to print progress. Default is `True`.
@@ -981,7 +985,10 @@ class FastNN(object):
         if filters is None:
             filters = np.array(FILTERS)
         if nnfile is None:
-            nnfile = "data/DATAFILES/nnMIST_BC.h5"
+            package_root = Path(
+                __file__
+            ).parent.parent.parent  # Get the package root directory
+            nnfile = package_root / "data" / "DATAFILES" / "nnMIST_BC.h5"
 
         # Read in NN data.
         if verbose:
@@ -1088,7 +1095,7 @@ class FastNNPredictor(FastNN):
 
     nnfile : str, optional
         The neutral network file. Default is `nnMIST_BC.h5` stored under
-        `data/DATAFILES/`.
+        `brutus/data/DATAFILES/`.
 
     verbose : bool, optional
         Whether to print progress. Default is `True`.
@@ -1103,7 +1110,10 @@ class FastNNPredictor(FastNN):
         self.filters = filters
         self.NFILT = len(filters)
         if nnfile is None:
-            nnfile = "data/DATAFILES/nnMIST_BC.h5"
+            package_root = Path(
+                __file__
+            ).parent.parent.parent  # Get the package root directory
+            nnfile = package_root / "data" / "DATAFILES" / "nnMIST_BC.h5"
         super(FastNNPredictor, self).__init__(
             filters=filters, nnfile=nnfile, verbose=verbose
         )
@@ -1202,11 +1212,11 @@ class Isochrone(object):
     nnfile : str, optional
         The neural network file used to generate fast predictions.
         If not provided, this will default to `nnMIST_BC.h5` and is extracted
-        from `data/DATAFILES/`.
+        from `brutus/data/DATAFILES/`.
 
     mistfile : str, optional
         The name of the HDF5 file containing the MIST tracks. Default is
-        `MIST_1.2_iso.h5` and is extracted from the `data/DATAFILES/`.
+        `MIST_1.2_iso.h5` and is extracted from the `brutus/data/DATAFILES/`.
 
     predictions : iterable of shape `(4)`, optional
         The names of the parameters to output at the request location in
@@ -1231,9 +1241,15 @@ class Isochrone(object):
         if verbose:
             sys.stderr.write("Filters: {}\n".format(filters))
         if nnfile is None:
-            nnfile = "data/DATAFILES/nnMIST_BC.h5"
+            package_root = Path(
+                __file__
+            ).parent.parent.parent  # Get the package root directory
+            nnfile = package_root / "data" / "DATAFILES" / "nnMIST_BC.h5"
         if mistfile is None:
-            mistfile = "data/DATAFILES/MIST_1.2_iso_vvcrit0.0.h5"
+            package_root = Path(
+                __file__
+            ).parent.parent.parent  # Get the package root directory
+            mistfile = package_root / "data" / "DATAFILES" / "MIST_1.2_iso_vvcrit0.0.h5"
         if predictions is None:
             predictions = [
                 "mini",

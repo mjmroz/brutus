@@ -125,11 +125,11 @@ def fetch_isos(target_dir=".", iso="MIST_1.2_vvcrit0.0"):
     Examples
     --------
     >>> from brutus.data import fetch_isos
-    >>> iso_path = fetch_isos(target_dir='./data/')
+    >>> iso_path = fetch_isos(target_dir='./data/DATAFILES/')
     >>> print(f"Downloaded isochrones to: {iso_path}")
 
     >>> # Download rotating models
-    >>> rotating_path = fetch_isos(target_dir='./data/', iso='MIST_1.2_vvcrit0.4')
+    >>> rotating_path = fetch_isos(target_dir='./data/DATAFILES/', iso='MIST_1.2_vvcrit0.4')
     """
     if iso == "MIST_1.2_vvcrit0.0":
         name = "MIST_1.2_iso_vvcrit0.0.h5"
@@ -170,7 +170,7 @@ def fetch_tracks(target_dir=".", track="MIST_1.2_vvcrit0.0"):
     Examples
     --------
     >>> from brutus.data import fetch_tracks
-    >>> track_path = fetch_tracks(target_dir='./data/')
+    >>> track_path = fetch_tracks(target_dir='./data/DATAFILES/')
     >>> print(f"Downloaded tracks to: {track_path}")
     """
     if track == "MIST_1.2_vvcrit0.0":
@@ -210,7 +210,7 @@ def fetch_dustmaps(target_dir=".", dustmap="bayestar19"):
     Examples
     --------
     >>> from brutus.data import fetch_dustmaps
-    >>> dust_path = fetch_dustmaps(target_dir='./data/')
+    >>> dust_path = fetch_dustmaps(target_dir='./data/DATAFILES/')
     >>> print(f"Downloaded dust map to: {dust_path}")
     """
     if dustmap == "bayestar19":
@@ -253,11 +253,11 @@ def fetch_grids(target_dir=".", grid="mist_v9"):
     Examples
     --------
     >>> from brutus.data import fetch_grids
-    >>> grid_path = fetch_grids(target_dir='./data/')
+    >>> grid_path = fetch_grids(target_dir='./data/DATAFILES/')
     >>> print(f"Downloaded model grid to: {grid_path}")
 
     >>> # Download older version
-    >>> old_grid = fetch_grids(target_dir='./data/', grid='mist_v8')
+    >>> old_grid = fetch_grids(target_dir='./data/DATAFILES/', grid='mist_v8')
     """
     if grid == "mist_v9":
         name = "grid_mist_v9.h5"
@@ -303,7 +303,7 @@ def fetch_offsets(target_dir=".", grid="mist_v9"):
     Examples
     --------
     >>> from brutus.data import fetch_offsets
-    >>> offset_path = fetch_offsets(target_dir='./data/')
+    >>> offset_path = fetch_offsets(target_dir='./data/DATAFILES/')
     >>> print(f"Downloaded offsets to: {offset_path}")
     """
     if grid == "mist_v9":
@@ -348,7 +348,7 @@ def fetch_nns(target_dir=".", model="c3k"):
     Examples
     --------
     >>> from brutus.data import fetch_nns
-    >>> nn_path = fetch_nns(target_dir='./data/')
+    >>> nn_path = fetch_nns(target_dir='./data/DATAFILES/')
     >>> print(f"Downloaded neural network to: {nn_path}")
     """
     if model == "c3k":
