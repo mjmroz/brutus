@@ -31,6 +31,13 @@ except ImportError:
     # Tracks classes might not be available during transition
     MISTtracks = None
 
+# Import isochrones classes
+try:
+    from .isochrones import Isochrone
+except ImportError:
+    # Isochrone classes might not be available during transition
+    Isochrone = None
+
 # Build __all__ list dynamically based on what's available
 __all__ = []
 
@@ -47,5 +54,5 @@ if MISTtracks is not None:
     __all__.extend(["MISTtracks"])
 
 # TODO: Add imports for remaining core modules when they are reorganized:
-# from .isochrones import Isochrone, SEDmaker
+# from .isochrones import SEDmaker
 # from .models import ModelRegistry

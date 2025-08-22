@@ -1270,7 +1270,28 @@ class Isochrone(object):
             self.loga_grid = f["loga"][:]
             self.eep_grid = f["eep"][:]
             self.pred_grid = f["predictions"][:]
-            self.pred_labels = f["predictions"].attrs["labels"]
+            raw_labels = f["predictions"].attrs["labels"]
+            # Decode bytes to str if necessary
+            raw_labels = [
+                l.decode("utf-8") if isinstance(l, (bytes, bytearray)) else str(l)
+                for l in raw_labels
+            ]
+            # Map HDF5 long names to short labels to remain consistent
+            # with other modules (matching core.iso­chrones behavior).
+            hdf_to_short = {
+                "initial_mass": "mini",
+                "EEP": "eep",
+                "star_mass": "mass",
+                "log_L": "logl",
+                "log_Teff": "logt",
+                "log_R": "logr",
+                "log_g": "logg",
+                "[Fe/H]": "feh_surf",
+                "[a/Fe]": "afe_surf",
+            }
+            self.pred_labels = np.array(
+                [hdf_to_short.get(l, l) for l in raw_labels], dtype=object
+            )
 
         # Initialize interpolator.
         self.build_interpolator()
