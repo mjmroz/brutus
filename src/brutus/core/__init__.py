@@ -24,6 +24,13 @@ except ImportError:
     FastNN = None
     FastNNPredictor = None
 
+# Import tracks classes
+try:
+    from .tracks import MISTtracks
+except ImportError:
+    # Tracks classes might not be available during transition
+    MISTtracks = None
+
 # Build __all__ list dynamically based on what's available
 __all__ = []
 
@@ -35,7 +42,10 @@ if _get_seds is not None and get_seds is not None:
 if FastNN is not None and FastNNPredictor is not None:
     __all__.extend(["FastNN", "FastNNPredictor"])
 
-# TODO: Add imports for other core modules when they are reorganized:
+# Add tracks classes if available
+if MISTtracks is not None:
+    __all__.extend(["MISTtracks"])
+
+# TODO: Add imports for remaining core modules when they are reorganized:
 # from .isochrones import Isochrone, SEDmaker
-# from .tracks import MISTtracks
 # from .models import ModelRegistry
