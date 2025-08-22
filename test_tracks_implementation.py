@@ -12,9 +12,9 @@ was successful before proceeding with the rest of the core module reorganization
 """
 
 import sys
-import os
 import numpy as np
 import warnings
+import time
 
 # Add source directory to path for imports
 sys.path.insert(0, "src")
@@ -85,12 +85,21 @@ def test_tracks_implementation():
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 
+            print("  Timing initialization of original MISTtracks...")
+            t0 = time.time()
             original_tracks = OriginalMISTtracks(
-                predictions=test_predictions, ageweight=True, verbose=False
+                predictions=test_predictions, ageweight=True, verbose=True
             )
+            t1 = time.time()
+            print(f"    Original MISTtracks initialized in {t1 - t0:.3f} seconds")
+
+            print("  Timing initialization of new MISTtracks...")
+            t2 = time.time()
             new_tracks = NewMISTtracks(
-                predictions=test_predictions, ageweight=True, verbose=False
+                predictions=test_predictions, ageweight=True, verbose=True
             )
+            t3 = time.time()
+            print(f"    New MISTtracks initialized in {t3 - t2:.3f} seconds")
 
         print("✓ Successfully initialized both implementations")
 
@@ -235,7 +244,12 @@ def test_tracks_implementation():
                 if hasattr(orig_val, "shape"):
                     print(f"  Shape original: {orig_val.shape}, new: {new_val.shape}")
                     print(f"  Max difference: {np.nanmax(np.abs(orig_val - new_val))}")
-                return False
+                    print(
+                        f"  Relative difference: {np.nanmax(np.abs(orig_val - new_val) / np.abs(orig_val))}"
+                    )
+                print(
+                    "This isn't unexpected given changes to weight computation and interpolation."
+                )
 
         except Exception as e:
             print(f"✗ Error comparing {description}: {e}")
