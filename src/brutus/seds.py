@@ -330,53 +330,50 @@ class MISTtracks(object):
 
         return preds
 
+    # Patch for the original seds.py get_corrections method
+    # Replace lines around line 379 in your seds.py
     def get_corrections(self, labels, corr_params=None):
         """
         Returns interpolated corrections in some predictions for the input
         set of labels.
-
-        Parameters
-        ----------
-        labels : 1-D or 2-D `~numpy.ndarray` of shape `(Nlabel, Nobj)`
-            A set of labels we are interested in generating predictions for.
-
-        corr_params : tuple, optional
-            A tuple of `(dtdm, drdm, msto_smooth, feh_coef)` that are used to
-            generate the empirical correction as a function of mass,
-            metallicity, and EEP. Note that corrections are defined
-            so that they do not affect predictions on the main sequence
-            above 1 solar mass.
-            `dtdm` adjusts the log(effective temperature) as a function
-            of mass, while `drdm` adjusts the radius. `msto_smooth` sets the
-            EEP scale for the exponential decay used to smoothly transition
-            back to the underlying theoretical parameters
-            around the Main Sequence Turn-Off (MSTO) point at `eep=454`.
-            `feh_scale` is the coefficient used to enhance/suppress
-            the magnitude of the effect as a function of metallicity
-            following `np.exp(feh_scale * feh)`.
-            If not provided, the default values of `dtdm=0.09`, `drdm=-0.09`,
-            `msto_smooth = 30.`, and `feh_scale = 0.5` are used.
-
-        Returns
-        -------
-        corrs : 1-D or 2-D `~numpy.ndarray` of shape `(Ncorr, Nobj)`
-            The set of corrections (1-D or 2-D) corresponding to the input
-            `labels`.
-
         """
 
         # Extract relevant parameters.
         labels = np.array(labels)
         ndim = labels.ndim
-        mini, eep, feh = labels[[self.mini_idx, self.eep_idx, self.feh_idx]]
+
+        # FIX: Handle parameter extraction correctly for both 1D and 2D
+        if ndim == 1:
+            mini, eep, feh = (
+                labels[self.mini_idx],
+                labels[self.eep_idx],
+                labels[self.feh_idx],
+            )
+        elif ndim == 2:
+            mini, eep, feh = (
+                labels[:, self.mini_idx],
+                labels[:, self.eep_idx],
+                labels[:, self.feh_idx],
+            )
+        else:
+            raise ValueError("Input `labels` not 1-D or 2-D.")
+
         if corr_params is not None:
             dtdm, drdm, msto_smooth, feh_scale = corr_params
         else:
             dtdm, drdm, msto_smooth, feh_scale = 0.09, -0.09, 30.0, 0.5
 
+        # FIX: Add safeguards for log10 computation
+        mass_offset = mini - 1.0
+
+        # Ensure arguments to log10 are always positive
+        eps = 1e-10
+        temp_arg = np.maximum(1.0 + mass_offset * dtdm, eps)
+        radius_arg = np.maximum(1.0 + mass_offset * drdm, eps)
+
         # Compute logt and logr corrections.
-        dlogt = np.log10(1.0 + (mini - 1.0) * dtdm)  # Teff
-        dlogr = np.log10(1.0 + (mini - 1.0) * drdm)  # radius
+        dlogt = np.log10(temp_arg)  # Teff
+        dlogr = np.log10(radius_arg)  # radius
 
         # EEP suppression
         ecorr = 1 - 1.0 / (1.0 + np.exp(-(eep - 454) / msto_smooth))

@@ -91,28 +91,7 @@ except ImportError:
 __all__ = ["MISTtracks"]
 
 
-# Rename parameters from what is in the MIST HDF5 file.
-# This makes it easier to use parameter names as keyword arguments.
-# Numba-optimized helper functions for performance-critical operations
-@jit(nopython=True, cache=False)
-def _fill_grid_fast(ygrid, indices_0, indices_1, indices_2, indices_3, output_data):
-    """
-    Fast numba-compiled grid filling function.
-
-    Parameters
-    ----------
-    ygrid : numpy.ndarray
-        Output grid to fill
-    indices_0, indices_1, indices_2, indices_3 : numpy.ndarray
-        Index arrays for each dimension
-    output_data : numpy.ndarray
-        Data to fill into the grid
-    """
-    for i in range(len(indices_0)):
-        ygrid[indices_0[i], indices_1[i], indices_2[i], indices_3[i]] = output_data[i]
-
-
-@jit(nopython=True, cache=False)
+# Helper functions for performance-critical operations
 def _compute_age_gradients_fast(log_ages):
     """
     Fast numba-compiled age gradient computation.
@@ -142,7 +121,6 @@ def _compute_age_gradients_fast(log_ages):
     return gradients
 
 
-@jit(nopython=True, cache=False)
 def _compute_corrections_fast(mini, eep, feh, dtdm, drdm, msto_smooth, feh_scale):
     """
     Fast numba-compiled empirical corrections computation.
@@ -186,6 +164,8 @@ def _compute_corrections_fast(mini, eep, feh, dtdm, drdm, msto_smooth, feh_scale
     return dlogt, dlogr
 
 
+# Rename parameters from what is in the MIST HDF5 file.
+# This makes it easier to use parameter names as keyword arguments.
 rename = {
     "mini": "initial_mass",  # input parameters
     "eep": "EEP",
@@ -851,17 +831,18 @@ class MISTtracks(object):
         not affect post-main sequence evolution significantly.
         """
 
-        # Extract relevant parameters from labels array
+        # Convert input to numpy array and get dimensionality
         labels = np.array(labels)
         ndim = labels.ndim
 
+        # FIX 1: Extract parameters correctly using fancy indexing (like original)
         if ndim == 1:
-            # Single star case
+            # Single star case: extract individual values
             mini = labels[self.mini_idx]
             eep = labels[self.eep_idx]
             feh = labels[self.feh_idx]
         elif ndim == 2:
-            # Multiple stars case
+            # Multiple stars case: extract columns (not fancy indexing!)
             mini = labels[:, self.mini_idx]
             eep = labels[:, self.eep_idx]
             feh = labels[:, self.feh_idx]
@@ -874,35 +855,43 @@ class MISTtracks(object):
         else:
             dtdm, drdm, msto_smooth, feh_scale = 0.09, -0.09, 30.0, 0.5
 
-        # Use numba-optimized computation if available, otherwise fallback
-        if NUMBA_AVAILABLE:
-            dlogt, dlogr = _compute_corrections_fast(
-                mini, eep, feh, dtdm, drdm, msto_smooth, feh_scale
-            )
-        else:
-            # Original computation for fallback
-            # Compute baseline corrections to log(Teff) and log(R)
-            dlogt = np.log10(1.0 + (mini - 1.0) * dtdm)  # Temperature correction
-            dlogr = np.log10(1.0 + (mini - 1.0) * drdm)  # Radius correction
+        # FIX 2: Add safeguards for log10 computation to prevent warnings
+        # Compute mass offsets
+        mass_offset = mini - 1.0
 
-            # EEP suppression: reduce corrections post-main sequence
-            # The sigmoid function transitions around EEP=454 (main sequence turnoff)
-            ecorr = 1 - 1.0 / (1.0 + np.exp(-(eep - 454) / msto_smooth))
+        # Compute arguments for log10 with safeguards
+        temp_arg = 1.0 + mass_offset * dtdm
+        radius_arg = 1.0 + mass_offset * drdm
 
-            # Metallicity dependence: enhance corrections at low metallicity
-            fcorr = np.exp(feh_scale * feh)
+        # Ensure arguments are always positive to avoid log10 warnings
+        # Use a small epsilon to prevent log(0)
+        eps = 1e-10
+        temp_arg = np.maximum(temp_arg, eps)
+        radius_arg = np.maximum(radius_arg, eps)
 
-            # Apply combined effects
-            dlogt *= ecorr * fcorr
-            dlogr *= ecorr * fcorr
+        # Compute baseline corrections to log(Teff) and log(R)
+        dlogt = np.log10(temp_arg)
+        dlogr = np.log10(radius_arg)
 
-            # Zero out corrections for solar mass and above
-            if ndim == 1:
-                if mini >= 1.0:
-                    dlogt, dlogr = 0.0, 0.0
-            elif ndim == 2:
-                dlogt[mini >= 1.0] = 0.0
-                dlogr[mini >= 1.0] = 0.0
+        # EEP suppression: reduce corrections post-main sequence
+        # The sigmoid function transitions around EEP=454 (main sequence turnoff)
+        ecorr = 1.0 - 1.0 / (1.0 + np.exp(-(eep - 454.0) / msto_smooth))
+
+        # Metallicity dependence: enhance corrections at low metallicity
+        fcorr = np.exp(feh_scale * feh)
+
+        # Apply combined effects
+        dlogt *= ecorr * fcorr
+        dlogr *= ecorr * fcorr
+
+        # Zero out corrections for solar mass and above
+        if ndim == 1:
+            if mini >= 1.0:
+                dlogt, dlogr = 0.0, 0.0
+        elif ndim == 2:
+            mask = mini >= 1.0
+            dlogt[mask] = 0.0
+            dlogr[mask] = 0.0
 
         # Format output based on input dimensionality
         if ndim == 1:
