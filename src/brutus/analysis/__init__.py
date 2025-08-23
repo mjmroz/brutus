@@ -22,8 +22,8 @@ except ImportError:
     # During development, modules might not be available yet
     __all__ = []
 
-# TODO: Add imports for other analysis modules when they are reorganized:
-# from .individual import BruteForce
-# from .clusters import isochrone_loglike
-# from .priors import *
-# from .sampling import *
+# NOTE: Additional analysis modules will be added in Phase 2:
+# - individual.py: Individual star fitting (BruteForce class)
+# - clusters.py: Cluster fitting (isochrone_loglike function)  
+# - samplers.py: MCMC and nested sampling
+# - optimizers.py: Optimization methods

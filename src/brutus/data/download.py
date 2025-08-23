@@ -31,7 +31,7 @@ _dois = {
     "grid_mist_v9.h5": "10.7910/DVN/7BA4ZG/Z7MGA7",
     "grid_mist_v8.h5": "10.7910/DVN/7BA4ZG/NKVZFT",
     "grid_bayestar_v5.h5": "10.7910/DVN/7BA4ZG/LLZP0B",
-    # "offsets_mist_v9.txt": "10.7910/DVN/L7D1FY/XXXXXX",
+    # "offsets_mist_v9.txt": "DOI_PENDING",  # DOI not yet assigned
     "offsets_mist_v8.txt": "10.7910/DVN/L7D1FY/QTNKKN",
     "offsets_bs_v9.txt": "10.7910/DVN/L7D1FY/W4O6NJ",
     "nn_c3k.h5": "10.7910/DVN/MSCY2O/XHU1VJ",

@@ -218,7 +218,7 @@ def chisquare_logpdf(x, df, loc=0, scale=1):
             return -np.inf
     else:
         keys = y <= 0
-        y = np.where(keys, 0.1, y)  # placeholder value, will be set to -inf below
+        y = np.where(keys, 0.1, y)  # temporary value, will be set to -inf below
 
     # Compute log-pdf
     ans = -log(2 ** (df / 2.0) * gamma(df / 2.0))

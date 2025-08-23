@@ -15,17 +15,19 @@ The package is designed to be highly modular, with modules for:
 
 Usage
 -----
-For individual star fitting::
+For individual star modeling::
 
-    from brutus import BruteForce
-    fitter = BruteForce(models, labels, masks)
-    results = fitter.fit(photometry, errors)
+    from brutus.core import EEPTracks, StarEvolTrack
+    tracks = EEPTracks()
+    star = StarEvolTrack(tracks=tracks)
+    sed, params, params2 = star.get_seds(mini=1.0, eep=350, feh=0.0)
 
-For isochrone generation::
+For stellar population modeling::
 
-    from brutus import Isochrone
-    iso = Isochrone(filters=['g', 'r', 'i'])
-    sed, params = iso.get_isochrone(age=1e9, metallicity=0.0)
+    from brutus.core import Isochrone, StellarPop  
+    iso = Isochrone()
+    pop = StellarPop(isochrone=iso)
+    seds, params, params2 = pop.synthesize(feh=0.0, afe=0.0, loga=9.0)
 
 For data management::
 
@@ -97,20 +99,50 @@ def quick_star_fit(*args, **kwargs):
     """
     Convenience function for quick individual star fitting.
     
-    Note: This will be implemented in Phase 2.
+    This function will provide a simplified interface for common
+    individual star fitting workflows.
+    
+    Notes
+    -----
+    This functionality is planned for Phase 2 of the refactoring.
+    Currently, please use the core classes directly:
+    
+    >>> from brutus.core import EEPTracks, StarEvolTrack
+    >>> tracks = EEPTracks()
+    >>> star = StarEvolTrack(tracks=tracks)
+    
+    Raises
+    ------
+    NotImplementedError
+        Function not yet implemented in current refactoring phase.
     """
     raise NotImplementedError(
         "Convenience functions will be implemented in Phase 2. "
-        "Please use BruteForce class directly for now."
+        "Please use EEPTracks and StarEvolTrack classes directly for now."
     )
 
 def quick_cluster_fit(*args, **kwargs):
     """
     Convenience function for quick cluster fitting.
     
-    Note: This will be implemented in Phase 2.
+    This function will provide a simplified interface for common
+    stellar cluster fitting workflows.
+    
+    Notes
+    -----
+    This functionality is planned for Phase 2 of the refactoring.
+    Currently, please use the core classes directly:
+    
+    >>> from brutus.core import Isochrone, StellarPop
+    >>> iso = Isochrone()
+    >>> pop = StellarPop(isochrone=iso)
+    
+    Raises
+    ------
+    NotImplementedError
+        Function not yet implemented in current refactoring phase.
     """
     raise NotImplementedError(
         "Convenience functions will be implemented in Phase 2. "
-        "Please use isochrone_loglike function directly for now."
+        "Please use Isochrone and StellarPop classes directly for now."
     )
