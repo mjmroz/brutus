@@ -26,14 +26,14 @@ except ImportError:
 
 # Import tracks classes
 try:
-    from .tracks import MISTtracks
+    from .individual import EEPTracks
 except ImportError:
     # Tracks classes might not be available during transition
-    MISTtracks = None
+    EEPTracks = None
 
 # Import isochrones classes
 try:
-    from .isochrones import Isochrone
+    from .populations import Isochrone
 except ImportError:
     # Isochrone classes might not be available during transition
     Isochrone = None
@@ -50,9 +50,9 @@ if FastNN is not None and FastNNPredictor is not None:
     __all__.extend(["FastNN", "FastNNPredictor"])
 
 # Add tracks classes if available
-if MISTtracks is not None:
-    __all__.extend(["MISTtracks"])
+if EEPTracks is not None:
+    __all__.extend(["EEPTracks"])
 
-# TODO: Add imports for remaining core modules when they are reorganized:
-# from .isochrones import SEDmaker
-# from .models import ModelRegistry
+# Add isochrones classes if available
+if Isochrone is not None:
+    __all__.extend(["Isochrone"])
