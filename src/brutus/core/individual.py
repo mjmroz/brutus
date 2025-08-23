@@ -77,6 +77,8 @@ References
 
 import sys
 import warnings
+import pickle
+import os
 from pathlib import Path
 
 import numpy as np
@@ -143,6 +145,12 @@ class EEPTracks(object):
     verbose : bool, optional
         Whether to output progress messages during initialization. Default is `True`.
 
+    use_cache : bool, optional
+        Whether to use pickle caching to speed up loading. If True, will save
+        processed EEPTracks to a .pkl file for faster subsequent loads, and
+        load from cache if available and newer than the original file.
+        Default is `True`.
+
     Attributes
     ----------
     labels : list of str
@@ -186,6 +194,7 @@ class EEPTracks(object):
         predictions=["loga", "logl", "logt", "logg", "feh_surf", "afe_surf"],
         ageweight=True,
         verbose=True,
+        use_cache=True,
     ):
 
         # Define input parameter labels
@@ -207,10 +216,43 @@ class EEPTracks(object):
 
         # Set default file path
         if mistfile is None:
-            package_root = Path(__file__).parent.parent.parent
+            package_root = Path(__file__).parent.parent.parent.parent
             mistfile = package_root / "data" / "DATAFILES" / "MIST_1.2_EEPtrk.h5"
-        self.mistfile = mistfile
+        self.mistfile = Path(mistfile)
+        
+        # Generate cache file path based on original file and configuration
+        cache_key = f"{self.mistfile.stem}_ageweight{ageweight}_pred{''.join(predictions)}"
+        cache_file = self.mistfile.parent / f"{cache_key}.pkl"
+        
+        # Try to load from cache first
+        if use_cache and cache_file.exists():
+            try:
+                # Check if cache is newer than original file
+                cache_mtime = cache_file.stat().st_mtime
+                orig_mtime = self.mistfile.stat().st_mtime
+                
+                if cache_mtime > orig_mtime:
+                    if verbose:
+                        sys.stderr.write(f"Loading cached EEPTracks from {cache_file}...\n")
+                    
+                    with open(cache_file, 'rb') as f:
+                        cached_data = pickle.load(f)
+                    
+                    # Restore all cached attributes
+                    for attr, value in cached_data.items():
+                        setattr(self, attr, value)
+                    
+                    if verbose:
+                        sys.stderr.write("Cached EEPTracks loaded successfully!\n")
+                    return
+                else:
+                    if verbose:
+                        sys.stderr.write("Cache is older than data file, regenerating...\n")
+            except Exception as e:
+                if verbose:
+                    sys.stderr.write(f"Cache loading failed ({e}), loading from original file...\n")
 
+        # Load from original file
         if verbose:
             sys.stderr.write(f"Loading evolutionary tracks from {mistfile}...\n")
 
@@ -227,6 +269,41 @@ class EEPTracks(object):
 
             # Build interpolation grid
             self._build_interpolator()
+            
+            # Save to cache if enabled
+            if use_cache:
+                try:
+                    # Collect all relevant attributes for caching
+                    cache_data = {}
+                    cache_attrs = [
+                        'labels', 'predictions', 'ndim', 'npred', 'null',
+                        'mini_idx', 'eep_idx', 'feh_idx', 'logt_idx', 'logl_idx', 'logg_idx',
+                        '_ageidx', 'mistfile', 'grid_dims', 'interpolator'
+                    ]
+                    
+                    # Add dynamic attributes that get created during processing
+                    for attr in dir(self):
+                        if not attr.startswith('__') and attr not in cache_attrs:
+                            if hasattr(self, attr):
+                                value = getattr(self, attr)
+                                # Only cache serializable objects
+                                if not callable(value):
+                                    cache_attrs.append(attr)
+                    
+                    # Cache all attributes
+                    for attr in cache_attrs:
+                        if hasattr(self, attr):
+                            cache_data[attr] = getattr(self, attr)
+                    
+                    with open(cache_file, 'wb') as f:
+                        pickle.dump(cache_data, f)
+                    
+                    if verbose:
+                        sys.stderr.write(f"EEPTracks cached to {cache_file}\n")
+                
+                except Exception as e:
+                    if verbose:
+                        sys.stderr.write(f"Warning: Failed to cache EEPTracks ({e})\n")
 
         except Exception as e:
             raise RuntimeError(f"Failed to initialize EEPTracks: {e}")
@@ -628,7 +705,7 @@ class StarEvolTrack(object):
 
         # Set default neural network file
         if nnfile is None:
-            package_root = Path(__file__).parent.parent.parent
+            package_root = Path(__file__).parent.parent.parent.parent
             nnfile = package_root / "data" / "DATAFILES" / "nnMIST_BC.h5"
 
         # Initialize neural network predictor

@@ -44,40 +44,40 @@ __version__ = "0.9.0"
 # Core functionality - import from existing modules during transition
 # These imports maintain backward compatibility while we reorganize
 try:
-    # Core stellar evolution models
-    from .core import Isochrone, MISTtracks, SEDmaker
+    # Core stellar evolution models (refactored)
+    from .core import Isochrone, EEPTracks
     
-    # Analysis and fitting
-    from .analysis import BruteForce, isochrone_loglike
-    
-    # Dust mapping
-    from .dust import Bayestar
-    
-    # Data management  
+    # Data management (refactored)
     from .data import fetch_grids, fetch_isos, load_models
     
-    # Essential utilities
+    # Essential utilities (refactored)
     from .utils import magnitude, inv_magnitude
+    
+    # Analysis and fitting (not yet refactored)
+    # from .analysis import BruteForce, isochrone_loglike
+    
+    # Dust mapping (not yet refactored)
+    # from .dust import Bayestar
     
     # Make key classes easily accessible
     __all__ = [
         # Version
         '__version__',
         
-        # Core classes
-        'Isochrone', 'MISTtracks', 'SEDmaker',
+        # Core classes (refactored)
+        'Isochrone', 'EEPTracks',
         
-        # Analysis classes  
-        'BruteForce', 'isochrone_loglike',
-        
-        # Dust mapping
-        'Bayestar',
-        
-        # Data utilities
+        # Data utilities (refactored)
         'fetch_grids', 'fetch_isos', 'load_models',
         
-        # Photometry utilities
+        # Photometry utilities (refactored)
         'magnitude', 'inv_magnitude',
+        
+        # Analysis classes (not yet refactored)
+        # 'BruteForce', 'isochrone_loglike',
+        
+        # Dust mapping (not yet refactored)
+        # 'Bayestar',
     ]
 
 except ImportError as e:

@@ -60,3 +60,10 @@ __pycache__
 speed/*
 *.npy
 */calib/*
+
+# Claude Code files
+CLAUDE.md
+.claude/
+.claude_code/
+claude_*.md
+claude_*.txt
