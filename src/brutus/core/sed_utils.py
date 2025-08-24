@@ -21,9 +21,7 @@ def _get_seds(mag_coeffs, av, rv, return_flux=False):
     Compute reddened SEDs from the provided magnitude coefficients.
 
     This is the core function for computing reddened SEDs, optimized with numba
-    for performance. It applies dust reddening to unreddened stellar SEDs using
-    the parameterization from Cardelli, Clayton, & Mathis (1989) and
-    O'Donnell (1994).
+    for performance.
 
     Parameters
     ----------

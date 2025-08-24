@@ -24,12 +24,13 @@ except ImportError:
     FastNN = None
     FastNNPredictor = None
 
-# Import tracks classes
+# Import tracks and grid classes
 try:
-    from .individual import EEPTracks
+    from .individual import EEPTracks, StarGrid
 except ImportError:
-    # Tracks classes might not be available during transition
+    # Tracks/grid classes might not be available during transition
     EEPTracks = None
+    StarGrid = None
 
 # Import isochrones classes
 try:
@@ -49,9 +50,11 @@ if _get_seds is not None and get_seds is not None:
 if FastNN is not None and FastNNPredictor is not None:
     __all__.extend(["FastNN", "FastNNPredictor"])
 
-# Add tracks classes if available
+# Add tracks and grid classes if available
 if EEPTracks is not None:
     __all__.extend(["EEPTracks"])
+if StarGrid is not None:
+    __all__.extend(["StarGrid"])
 
 # Add isochrones classes if available
 if Isochrone is not None:
