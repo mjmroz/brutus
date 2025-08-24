@@ -75,8 +75,8 @@ def quantile(x, q, weights=None):
             raise ValueError("Dimension mismatch: len(weights) != len(x).")
         idx = np.argsort(x)  # sort samples
         sw = weights[idx]  # sort weights
-        cdf = np.cumsum(sw, dtype=float)  # compute CDF
-        cdf /= cdf[-1]  # normalize CDF
+        # Compute CDF at sample midpoints for proper quantile calculation
+        cdf = (np.cumsum(sw, dtype=float) - 0.5 * sw) / np.sum(sw)
         quantiles = np.interp(q, cdf, x[idx])
         if quantiles.size == 1:
             return np.array([quantiles[0]])

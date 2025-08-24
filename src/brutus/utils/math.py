@@ -69,7 +69,6 @@ def adjoint3(A):
     by the determinant.
 
     The adjoint (or adjugate) matrix is the transpose of the cofactor matrix.
-    For a 3x3 matrix, this can be computed efficiently using cross products.
 
     Parameters
     ----------
@@ -82,9 +81,20 @@ def adjoint3(A):
         Adjoint matrices.
     """
     AI = np.empty_like(A)
-
-    for i in range(3):
-        AI[..., i, :] = np.cross(A[..., i - 2, :], A[..., i - 1, :])
+    
+    # Compute adjoint using cofactor expansion
+    # adj(A)[i,j] = (-1)^(i+j) * M[j,i] where M[j,i] is the (j,i)-minor
+    AI[..., 0, 0] = A[..., 1, 1] * A[..., 2, 2] - A[..., 1, 2] * A[..., 2, 1]
+    AI[..., 0, 1] = A[..., 0, 2] * A[..., 2, 1] - A[..., 0, 1] * A[..., 2, 2]
+    AI[..., 0, 2] = A[..., 0, 1] * A[..., 1, 2] - A[..., 0, 2] * A[..., 1, 1]
+    
+    AI[..., 1, 0] = A[..., 1, 2] * A[..., 2, 0] - A[..., 1, 0] * A[..., 2, 2]
+    AI[..., 1, 1] = A[..., 0, 0] * A[..., 2, 2] - A[..., 0, 2] * A[..., 2, 0]
+    AI[..., 1, 2] = A[..., 0, 2] * A[..., 1, 0] - A[..., 0, 0] * A[..., 1, 2]
+    
+    AI[..., 2, 0] = A[..., 1, 0] * A[..., 2, 1] - A[..., 1, 1] * A[..., 2, 0]
+    AI[..., 2, 1] = A[..., 0, 1] * A[..., 2, 0] - A[..., 0, 0] * A[..., 2, 1]
+    AI[..., 2, 2] = A[..., 0, 0] * A[..., 1, 1] - A[..., 0, 1] * A[..., 1, 0]
 
     return AI
 
@@ -160,8 +170,6 @@ def isPSD(A):
     Check if `A` is a positive semidefinite matrix.
 
     A matrix is positive semidefinite if all its eigenvalues are non-negative.
-    This function checks this by attempting a Cholesky decomposition, which
-    only succeeds for positive semidefinite matrices.
 
     Parameters
     ----------
@@ -173,11 +181,13 @@ def isPSD(A):
     is_psd : bool
         True if the matrix is positive semidefinite, False otherwise.
     """
-    try:
-        _ = np.linalg.cholesky(A)
-        return True
-    except np.linalg.LinAlgError:
+    # Check if matrix is symmetric (within numerical precision)
+    if not np.allclose(A, A.T, rtol=1e-10, atol=1e-10):
         return False
+    
+    # Check eigenvalues are non-negative
+    eigenvals = np.linalg.eigvals(A)
+    return np.all(eigenvals >= -1e-10)  # Allow small numerical errors
 
 
 def chisquare_logpdf(x, df, loc=0, scale=1):

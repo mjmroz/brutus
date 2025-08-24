@@ -126,31 +126,41 @@ def load_models(
     except:
         f = h5py.File(filepath, "r")
         pass
-    mag_coeffs = f["mag_coeffs"]
-
+    mag_coeffs_dataset = f["mag_coeffs"]
+    
+    # Find which requested filters actually exist in the file
+    available_filters = list(mag_coeffs_dataset.dtype.names)
+    valid_filters = [filt for filt in filters if filt in available_filters]
+    
+    if verbose:
+        sys.stderr.write(f"Reading entire dataset ({len(available_filters)} filters) once...\n")
+    
+    # Read the ENTIRE dataset once into memory (this is the key optimization!)
+    mag_coeffs = mag_coeffs_dataset[:]
+    
+    if verbose:
+        sys.stderr.write(f"Extracting {len(valid_filters)} requested filters from memory...\n")
+    
+    # Pre-allocate array for only the valid filters
     models = np.zeros(
-        (len(mag_coeffs), len(filters), len(mag_coeffs[0][0])), dtype="float32"
+        (len(mag_coeffs), len(valid_filters), 3), dtype="float32"
     )
-    for i, filt in enumerate(filters):
+    
+    # Extract each valid filter from the in-memory data (no more H5 I/O!)
+    for i, filt in enumerate(valid_filters):
         try:
-            models[:, i] = mag_coeffs[filt]  # fitted magnitude coefficients
-            if verbose:
-                sys.stderr.write("\rReading filter {}           ".format(filt))
-                sys.stderr.flush()
+            models[:, i] = mag_coeffs[filt]  # Extract from memory, not H5!
         except:
             pass
-    if verbose:
-        sys.stderr.write("\n")
-
-    # Remove extraneous/undefined filters.
-    sel = np.all(models == 0.0, axis=(0, 2))
-    models = models[:, ~sel, :]
+    
+    # Update filters list to only include the ones we actually loaded
+    filters = valid_filters
 
     # Read in labels.
     combined_labels = np.full(
-        len(models), np.nan, dtype=np.dtype([(n, np.float) for n in labels])
+        len(models), np.nan, dtype=np.dtype([(n, np.float64) for n in labels])
     )
-    label_mask = np.zeros(1, dtype=np.dtype([(n, np.bool) for n in labels]))
+    label_mask = np.zeros(1, dtype=np.dtype([(n, np.bool_) for n in labels]))
     try:
         # Grab "labels" (inputs).
         flabels = f["labels"][:]
@@ -202,7 +212,7 @@ def load_models(
             pass
 
     # Compile results.
-    combined_labels = combined_labels[labels2]
+    combined_labels = combined_labels[labels2] 
     label_mask = label_mask[labels2]
 
     # Close file
