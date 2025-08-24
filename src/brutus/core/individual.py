@@ -1584,7 +1584,8 @@ class StarGrid(object):
         # Convert to flux if requested
         if return_flux:
             from ..utils.photometry import inv_magnitude
-            sed = inv_magnitude(mags)
+            # Use zero errors for now (could be improved with proper error propagation)
+            sed, _ = inv_magnitude(mags, np.zeros_like(mags))
         else:
             sed = mags
             

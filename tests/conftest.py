@@ -16,9 +16,27 @@ import os
 from pathlib import Path
 
 
-# Disable numba JIT compilation during testing for coverage measurement
-# This must be done before any numba-compiled functions are imported
-os.environ['NUMBA_DISABLE_JIT'] = '1'
+# Configure numba for testing
+# Use a writable cache directory, but keep JIT enabled due to scipy conflicts
+os.environ['NUMBA_CACHE_DIR'] = '/tmp/numba_cache'
+
+# IMPORTANT: For accurate coverage measurement, use run_coverage.py script!
+# 
+# Due to coverage instrumentation conflicts when mixing test types,
+# running pytest directly may show artificially low coverage for utils modules.
+# 
+# Correct usage:
+#   python run_coverage.py              # Full coverage analysis
+#   python run_coverage.py --utils      # Utils tests only
+#   python run_coverage.py --core       # Core tests only
+#   python run_coverage.py --analysis   # Analysis tests only
+#   python run_coverage.py --data       # Data tests only
+#
+# DO NOT use: pytest --cov=... (may trigger instrumentation conflicts)
+#
+# Note: NUMBA_DISABLE_JIT causes scipy import conflicts, so we keep JIT enabled
+# This means numba-compiled functions won't show in coverage, but we can still
+# measure coverage of the main Python logic
 
 
 # Test data and fixtures

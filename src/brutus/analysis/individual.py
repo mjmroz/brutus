@@ -690,6 +690,16 @@ class BruteForce:
                 if len(pred_params) > 3:
                     preview += f", ... ({len(pred_params)-3} more)"
                 print(f"  Predictions ({n_pred}): {preview}")
+    
+    @property
+    def nmodels(self):
+        """Number of models in the grid."""
+        return self.models.shape[0]
+        
+    @property 
+    def nfilters(self):
+        """Number of filters in the grid."""
+        return self.models.shape[1]
                 
     def _generate_labels_mask(self):
         """
