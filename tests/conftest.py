@@ -16,6 +16,11 @@ import os
 from pathlib import Path
 
 
+# Disable numba JIT compilation during testing for coverage measurement
+# This must be done before any numba-compiled functions are imported
+os.environ['NUMBA_DISABLE_JIT'] = '1'
+
+
 # Test data and fixtures
 @pytest.fixture
 def simple_photometry():
@@ -107,14 +112,6 @@ def mock_stellar_parameters():
     }
 
 
-@pytest.fixture(scope="session")
-def skip_slow_tests():
-    """
-    Skip slow tests unless explicitly requested.
-
-    Use with: @pytest.mark.skipif(skip_slow_tests, reason="Slow test")
-    """
-    return not os.environ.get("RUN_SLOW_TESTS", False)
 
 
 # Custom assertion helpers
@@ -152,13 +149,3 @@ def assert_valid_photometry(phot, phot_err):
     assert np.all(np.isfinite(phot_err)), "All photometry errors must be finite"
 
 
-# Test markers
-pytest.mark.slow = pytest.mark.skipif(
-    not os.environ.get("RUN_SLOW_TESTS", False),
-    reason="Slow test - set RUN_SLOW_TESTS=1 to run",
-)
-
-pytest.mark.integration = pytest.mark.skipif(
-    not os.environ.get("RUN_INTEGRATION_TESTS", False),
-    reason="Integration test - set RUN_INTEGRATION_TESTS=1 to run",
-)

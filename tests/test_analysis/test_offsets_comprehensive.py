@@ -59,7 +59,11 @@ def simple_mocks():
 
     def mock_get_seds(models_input, av=None, rv=None, return_flux=True):
         n_requested = len(models_input) if hasattr(models_input, "__len__") else 1
-        n_filt = 5
+        # Infer n_filt from models_input shape
+        if hasattr(models_input, "shape") and len(models_input.shape) >= 2:
+            n_filt = models_input.shape[1] 
+        else:
+            n_filt = 5  # fallback
         if return_flux:
             return np.random.uniform(0.1, 10.0, (n_requested, n_filt))
         else:
@@ -768,7 +772,7 @@ class TestEdgeCases:
             n_obj, n_filt = 10, 5
             phot = np.random.uniform(0.1, 1.0, (n_obj, n_filt))
             err = 0.1 * phot
-            mask = np.zeros((n_obj, n_filt))  # No detections
+            mask = np.zeros((n_obj, n_filt), dtype=bool)  # No detections
 
             models = np.random.random((10, n_filt, 3))
             idxs = np.random.randint(0, 10, (n_obj, 5))
@@ -803,7 +807,6 @@ class TestEdgeCases:
             assert np.all(errors == 0.0)  # No uncertainty
 
 
-@pytest.mark.slow
 class TestPerformance:
     """Performance tests."""
 
@@ -829,7 +832,7 @@ class TestPerformance:
 
             phot = np.random.uniform(0.1, 10.0, (n_obj, n_filt))
             err = 0.1 * phot
-            mask = np.random.choice([0, 1], (n_obj, n_filt), p=[0.1, 0.9])
+            mask = np.random.choice([False, True], (n_obj, n_filt), p=[0.1, 0.9])
 
             models = np.random.random((200, n_filt, 3))
             idxs = np.random.randint(0, 200, (n_obj, n_samp))

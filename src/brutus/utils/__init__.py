@@ -18,7 +18,6 @@ try:
         inv_luptitude,
         add_mag,
         phot_loglike,
-        photometric_offsets,
     )
 
     # Mathematical functions
@@ -49,7 +48,6 @@ try:
         "inv_luptitude",
         "add_mag",
         "phot_loglike",
-        "photometric_offsets",
         # Mathematical functions
         "_function_wrapper",
         "adjoint3",

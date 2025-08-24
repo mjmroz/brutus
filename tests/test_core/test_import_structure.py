@@ -72,16 +72,15 @@ class TestBackwardCompatibility:
         except ImportError as e:
             pytest.skip(f"Legacy imports not available: {e}")
     
-    @pytest.mark.slow
     def test_core_classes_available(self):
         """Test that core classes are available through new structure."""
         try:
             # These might not work initially but should work after reorganization
-            from brutus.core import Isochrone, MISTtracks
+            from brutus.core import Isochrone, EEPTracks
             
             # Just test that they're classes
             assert callable(Isochrone)
-            assert callable(MISTtracks)
+            assert callable(EEPTracks)
             
         except ImportError as e:
             pytest.skip(f"Core classes not yet reorganized: {e}")
@@ -93,7 +92,7 @@ class TestProjectStructure:
         """Test that src layout directory structure exists."""
         # This test assumes the new structure has been created
         
-        project_root = Path(__file__).parent.parent
+        project_root = Path(__file__).parent.parent.parent  # Go up from tests/test_core to root
         src_dir = project_root / "src" / "brutus"
         
         if not src_dir.exists():
@@ -109,7 +108,7 @@ class TestProjectStructure:
     
     def test_pyproject_toml_exists(self):
         """Test that pyproject.toml exists and is valid."""
-        project_root = Path(__file__).parent.parent
+        project_root = Path(__file__).parent.parent.parent  # Go up from tests/test_core to root
         pyproject_path = project_root / "pyproject.toml"
         
         if not pyproject_path.exists():
