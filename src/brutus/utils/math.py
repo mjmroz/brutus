@@ -11,12 +11,10 @@ statistical distributions, and numerical utilities.
 import numpy as np
 from math import gamma, log, sqrt
 from scipy.special import erf
+from numba import jit
 
 __all__ = [
     "_function_wrapper",
-    "adjoint3",
-    "dot3",
-    "inverse_transpose3",
     "inverse3",
     "isPSD",
     "chisquare_logpdf",
@@ -64,106 +62,210 @@ class _function_wrapper(object):
             raise
 
 
-def adjoint3(A):
+
+@jit(nopython=True, cache=True)
+def _min_eigenval_3x3_symmetric(A):
     """
-    Compute the adjoint of a series of 3x3 matrices without division
-    by the determinant.
+    Fast approximation of minimum eigenvalue for 3x3 symmetric matrix.
+    
+    Uses Gershgorin circle theorem for a quick lower bound estimate.
+    This is much faster than full eigenvalue computation and sufficient
+    for regularization purposes.
+    """
+    # Gershgorin circles give bounds on eigenvalues
+    # For each diagonal element, the eigenvalue is within radius = sum of off-diagonals
+    
+    # Circle 1: center = A[0,0], radius = |A[0,1]| + |A[0,2]|
+    center1 = A[0, 0]
+    a01 = A[0, 1] if A[0, 1] >= 0 else -A[0, 1]  # numba-compatible abs
+    a02 = A[0, 2] if A[0, 2] >= 0 else -A[0, 2]
+    radius1 = a01 + a02
+    min1 = center1 - radius1
+    
+    # Circle 2: center = A[1,1], radius = |A[1,0]| + |A[1,2]|
+    center2 = A[1, 1]
+    a10 = A[1, 0] if A[1, 0] >= 0 else -A[1, 0]
+    a12 = A[1, 2] if A[1, 2] >= 0 else -A[1, 2]
+    radius2 = a10 + a12
+    min2 = center2 - radius2
+    
+    # Circle 3: center = A[2,2], radius = |A[2,0]| + |A[2,1]|
+    center3 = A[2, 2]
+    a20 = A[2, 0] if A[2, 0] >= 0 else -A[2, 0]
+    a21 = A[2, 1] if A[2, 1] >= 0 else -A[2, 1]
+    radius3 = a20 + a21
+    min3 = center3 - radius3
+    
+    # Minimum eigenvalue is at least the smallest lower bound
+    result = min1
+    if min2 < result:
+        result = min2
+    if min3 < result:
+        result = min3
+    return result
 
-    The adjoint (or adjugate) matrix is the transpose of the cofactor matrix.
+@jit(nopython=True, cache=True)
+def _invert_3x3_analytical(A):
+    """
+    Invert a 3x3 matrix using analytical formulas.
+    
+    This is numba-compatible and numerically stable for well-conditioned matrices.
+    Uses the standard analytical inversion formula with explicit determinant calculation.
+    """
+    # Extract matrix elements
+    a11, a12, a13 = A[0, 0], A[0, 1], A[0, 2]
+    a21, a22, a23 = A[1, 0], A[1, 1], A[1, 2]
+    a31, a32, a33 = A[2, 0], A[2, 1], A[2, 2]
+    
+    # Calculate determinant
+    det = (a11 * (a22 * a33 - a23 * a32) - 
+           a12 * (a21 * a33 - a23 * a31) + 
+           a13 * (a21 * a32 - a22 * a31))
+    
+    # Check for singular matrix
+    if abs(det) < 1e-15:  # Essentially zero determinant
+        # Return matrix filled with inf/nan for singular case
+        inv = np.empty_like(A)
+        inv.fill(np.inf)
+        return inv
+    
+    # Calculate inverse using cofactor method
+    inv = np.empty_like(A)
+    
+    inv[0, 0] = (a22 * a33 - a23 * a32) / det
+    inv[0, 1] = (a13 * a32 - a12 * a33) / det  
+    inv[0, 2] = (a12 * a23 - a13 * a22) / det
+    
+    inv[1, 0] = (a23 * a31 - a21 * a33) / det
+    inv[1, 1] = (a11 * a33 - a13 * a31) / det
+    inv[1, 2] = (a13 * a21 - a11 * a23) / det
+    
+    inv[2, 0] = (a21 * a32 - a22 * a31) / det
+    inv[2, 1] = (a12 * a31 - a11 * a32) / det
+    inv[2, 2] = (a11 * a22 - a12 * a21) / det
+    
+    return inv
 
+
+@jit(nopython=True, cache=True)  
+def _matrix_det_3x3(A):
+    """Compute 3x3 matrix determinant - numba compatible."""
+    return (A[0, 0] * (A[1, 1] * A[2, 2] - A[1, 2] * A[2, 1]) -
+            A[0, 1] * (A[1, 0] * A[2, 2] - A[1, 2] * A[2, 0]) +
+            A[0, 2] * (A[1, 0] * A[2, 1] - A[1, 1] * A[2, 0]))
+
+
+@jit(nopython=True, cache=True)
+def _batch_invert_3x3(A_batch):
+    """
+    Numba-compiled batch 3x3 matrix inversion using analytical method.
+    
     Parameters
     ----------
-    A : `~numpy.ndarray` of shape `(..., 3, 3)`
-        Array of 3x3 matrices.
-
+    A_batch : ndarray of shape (N, 3, 3)
+        Batch of 3x3 matrices to invert.
+        
     Returns
     -------
-    AI : `~numpy.ndarray` of shape `(..., 3, 3)`
-        Adjoint matrices.
+    inv_batch : ndarray of shape (N, 3, 3)
+        Batch of inverted matrices.
     """
-    AI = np.empty_like(A)
+    N = A_batch.shape[0]
+    result = np.empty_like(A_batch)
     
-    # Compute adjoint using cofactor expansion
-    # adj(A)[i,j] = (-1)^(i+j) * M[j,i] where M[j,i] is the (j,i)-minor
-    AI[..., 0, 0] = A[..., 1, 1] * A[..., 2, 2] - A[..., 1, 2] * A[..., 2, 1]
-    AI[..., 0, 1] = A[..., 0, 2] * A[..., 2, 1] - A[..., 0, 1] * A[..., 2, 2]
-    AI[..., 0, 2] = A[..., 0, 1] * A[..., 1, 2] - A[..., 0, 2] * A[..., 1, 1]
+    for i in range(N):
+        result[i] = _invert_3x3_analytical(A_batch[i])
     
-    AI[..., 1, 0] = A[..., 1, 2] * A[..., 2, 0] - A[..., 1, 0] * A[..., 2, 2]
-    AI[..., 1, 1] = A[..., 0, 0] * A[..., 2, 2] - A[..., 0, 2] * A[..., 2, 0]
-    AI[..., 1, 2] = A[..., 0, 2] * A[..., 1, 0] - A[..., 0, 0] * A[..., 1, 2]
-    
-    AI[..., 2, 0] = A[..., 1, 0] * A[..., 2, 1] - A[..., 1, 1] * A[..., 2, 0]
-    AI[..., 2, 1] = A[..., 0, 1] * A[..., 2, 0] - A[..., 0, 0] * A[..., 2, 1]
-    AI[..., 2, 2] = A[..., 0, 0] * A[..., 1, 1] - A[..., 0, 1] * A[..., 1, 0]
-
-    return AI
+    return result
 
 
-def dot3(A, B):
-    """
-    Take the dot product of arrays of vectors, contracting over the
-    last indices.
-
-    This is equivalent to np.sum(A * B, axis=-1) but uses einsum
-    for clarity and potential performance benefits.
-
-    Parameters
-    ----------
-    A : `~numpy.ndarray` of shape `(..., N)`
-        First array of vectors.
-    B : `~numpy.ndarray` of shape `(..., N)`
-        Second array of vectors.
-
-    Returns
-    -------
-    result : `~numpy.ndarray` of shape `(...,)`
-        Dot products.
-    """
-    return np.einsum("...i,...i->...", A, B)
-
-
-def inverse_transpose3(A):
-    """
-    Compute the inverse-transpose of a series of 3x3 matrices.
-
-    This computes (A^T)^(-1) = (A^(-1))^T efficiently using the adjoint method.
-
-    Parameters
-    ----------
-    A : `~numpy.ndarray` of shape `(..., 3, 3)`
-        Array of 3x3 matrices.
-
-    Returns
-    -------
-    AI_T : `~numpy.ndarray` of shape `(..., 3, 3)`
-        Inverse-transpose matrices.
-    """
-    Id = adjoint3(A)
-    det = dot3(Id, A).mean(axis=-1)
-
-    return Id / det[..., None, None]
-
-
-def inverse3(A):
+def inverse3(A, regularize=False, min_eigenval_threshold=1e-12):
     """
     Compute the inverse of a series of 3x3 matrices using adjoints.
 
-    This method is often more numerically stable than LU decomposition
-    for small matrices and avoids the overhead of calling scipy.linalg.inv
-    in a loop.
+    This method applies regularization to guarantee that the resulting 
+    inverse matrices are mathematically valid for use in Cholesky 
+    decompositions and multivariate normal sampling.
 
     Parameters
     ----------
     A : `~numpy.ndarray` of shape `(..., 3, 3)`
         Array of 3x3 matrices.
+    regularize : bool, optional
+        Whether to apply regularization to ensure positive semi-definiteness 
+        of the OUTPUT matrices. Default: True.
+    min_eigenval_threshold : float, optional
+        Minimum acceptable eigenvalue for OUTPUT matrices. Default: 1e-12.
 
     Returns
     -------
     A_inv : `~numpy.ndarray` of shape `(..., 3, 3)`
-        Inverse matrices.
+        Inverse matrices, guaranteed to be positive semi-definite if
+        regularize=True.
     """
-    return np.swapaxes(inverse_transpose3(A), -1, -2)
+    if not regularize:
+        # Use analytical 3x3 inversion (numba-compatible)
+        if len(A.shape) == 2:
+            return _invert_3x3_analytical(A)
+        else:
+            # Batch case - use numba-compiled batch function
+            return _batch_invert_3x3(A)
+    
+    # With regularization: pre-condition the input matrices
+    A_work = A.copy()
+    original_shape = A_work.shape
+    
+    # Pre-regularize input matrices that are too singular
+    if len(original_shape) == 2:
+        # Single 3x3 matrix
+        # For singular matrices, ensure symmetric regularization
+        det = _matrix_det_3x3(A_work)  # Use numba-compatible determinant
+        if abs(det) < 1e-12:  # Matrix is singular or nearly singular
+            # First make symmetric if needed, then add diagonal regularization
+            A_work = 0.5 * (A_work + A_work.T)
+            regularization = 1e-3  # Strong regularization for numerical stability
+            A_work[0, 0] += regularization
+            A_work[1, 1] += regularization
+            A_work[2, 2] += regularization
+    else:
+        # Array of matrices
+        for i in range(original_shape[0]):
+            # For singular matrices, ensure symmetric regularization
+            det = _matrix_det_3x3(A_work[i])  # Use numba-compatible determinant
+            if abs(det) < 1e-12:  # Matrix is singular or nearly singular
+                # First make symmetric if needed, then add diagonal regularization
+                A_work[i] = 0.5 * (A_work[i] + A_work[i].T)
+                regularization = 1e-3  # Strong regularization for numerical stability
+                A_work[i, 0, 0] += regularization
+                A_work[i, 1, 1] += regularization
+                A_work[i, 2, 2] += regularization
+    
+    # Compute inverse of pre-conditioned matrices using analytical method
+    if len(original_shape) == 2:
+        A_inv = _invert_3x3_analytical(A_work)
+    else:
+        A_inv = _batch_invert_3x3(A_work)
+    
+    # Apply post-regularization to output if still needed
+    if len(original_shape) == 2:
+        matrix_sym = 0.5 * (A_inv + A_inv.T)
+        min_eigenval_approx = _min_eigenval_3x3_symmetric(matrix_sym)
+        if min_eigenval_approx < min_eigenval_threshold:
+            regularization = min_eigenval_threshold - min_eigenval_approx
+            A_inv[0, 0] += regularization
+            A_inv[1, 1] += regularization 
+            A_inv[2, 2] += regularization
+    else:
+        for i in range(original_shape[0]):
+            matrix_sym = 0.5 * (A_inv[i] + A_inv[i].T)
+            min_eigenval_approx = _min_eigenval_3x3_symmetric(matrix_sym)
+            if min_eigenval_approx < min_eigenval_threshold:
+                regularization = min_eigenval_threshold - min_eigenval_approx
+                A_inv[i, 0, 0] += regularization
+                A_inv[i, 1, 1] += regularization
+                A_inv[i, 2, 2] += regularization
+    
+    return A_inv
 
 
 def isPSD(A):

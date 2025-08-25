@@ -9,6 +9,7 @@ and random number generation used in Bayesian inference workflows.
 """
 
 import numpy as np
+from numba import jit
 
 __all__ = ["quantile", "draw_sar", "sample_multivariate_normal"]
 
@@ -201,6 +202,92 @@ def draw_sar(
     return sdraws, adraws, rdraws
 
 
+@jit(nopython=True, cache=True)
+def _cholesky_3x3(A):
+    """
+    Compute Cholesky decomposition of a 3x3 positive definite matrix.
+    
+    Uses explicit formulas optimized for 3x3 case to avoid numba limitations.
+    """
+    L = np.zeros_like(A)
+    
+    # L[0,0] = sqrt(A[0,0])
+    L[0, 0] = np.sqrt(A[0, 0])
+    
+    # L[1,0] = A[1,0] / L[0,0]
+    L[1, 0] = A[1, 0] / L[0, 0]
+    
+    # L[1,1] = sqrt(A[1,1] - L[1,0]^2)
+    L[1, 1] = np.sqrt(A[1, 1] - L[1, 0] * L[1, 0])
+    
+    # L[2,0] = A[2,0] / L[0,0]
+    L[2, 0] = A[2, 0] / L[0, 0]
+    
+    # L[2,1] = (A[2,1] - L[2,0] * L[1,0]) / L[1,1]
+    L[2, 1] = (A[2, 1] - L[2, 0] * L[1, 0]) / L[1, 1]
+    
+    # L[2,2] = sqrt(A[2,2] - L[2,0]^2 - L[2,1]^2)
+    L[2, 2] = np.sqrt(A[2, 2] - L[2, 0] * L[2, 0] - L[2, 1] * L[2, 1])
+    
+    return L
+
+
+@jit(nopython=True, cache=True)
+def _sample_multivariate_normal_jit(mean, cov, size, eps, random_samples):
+    """
+    Numba-accelerated core multivariate normal sampling.
+    
+    Parameters
+    ----------
+    mean : ndarray of shape (Ndist, dim)
+        Means of the multivariate distributions.
+    cov : ndarray of shape (Ndist, dim, dim) 
+        Covariances of the multivariate distributions.
+    size : int
+        Number of samples to draw from each distribution.
+    eps : float
+        Regularization parameter for numerical stability.
+    random_samples : ndarray of shape (Ndist, dim, size)
+        Pre-generated standard normal samples.
+        
+    Returns
+    -------
+    samples : ndarray of shape (dim, size, Ndist)
+        Transformed samples.
+    """
+    N, d = mean.shape
+    
+    # Add regularization to covariance matrices
+    K = cov.copy()
+    for n in range(N):
+        for i in range(d):
+            K[n, i, i] += eps
+    
+    # Cholesky decomposition using custom 3x3 implementation
+    L = np.empty_like(K)
+    for n in range(N):
+        L[n] = _cholesky_3x3(K[n])
+    
+    # Transform samples: ans = mean + L @ z
+    ans = np.empty((N, d, size))
+    for n in range(N):
+        for s in range(size):
+            # ans[n, :, s] = mean[n] + L[n] @ random_samples[n, :, s]
+            for i in range(d):
+                ans[n, i, s] = mean[n, i]
+                for j in range(d):
+                    ans[n, i, s] += L[n, i, j] * random_samples[n, j, s]
+    
+    # Reshape to match expected output format: (dim, size, Ndist)
+    result = np.empty((d, size, N))
+    for n in range(N):
+        for s in range(size):
+            for i in range(d):
+                result[i, s, n] = ans[n, i, s]
+    
+    return result
+
+
 def sample_multivariate_normal(mean, cov, size=1, eps=1e-30, rstate=None):
     """
     Draw samples from many multivariate normal distributions.
@@ -274,18 +361,20 @@ def sample_multivariate_normal(mean, cov, size=1, eps=1e-30, rstate=None):
         samples = rstate.multivariate_normal(mean, cov, size=size)
         return samples.T  # Transpose to match expected (dim, size) format
 
-    # Otherwise, proceed with the Cholesky decomposition.
+    # For multiple distributions, check dimension compatibility
     N, d = np.shape(mean)
-    K = cov + eps * np.full((N, d, d), np.identity(d))
-    L = np.linalg.cholesky(K)
-
-    # Generate random samples from a standard iid normal distributions.
-    z = rstate.normal(loc=0, scale=1, size=d * size * N).reshape(N, d, size)
-
-    # Transform these samples to the appropriate correlated distributions.
-    # In matrix form, this is just `ans = mean + L * u`.
-    ans = np.repeat(mean[:, :, np.newaxis], size, axis=2) + np.matmul(L, z)
-    ans = np.swapaxes(ans, 0, 1)
-    ans = np.swapaxes(ans, 1, 2)
-
+    
+    if d == 3:
+        # Use numba-accelerated version for 3D case
+        z = rstate.normal(loc=0, scale=1, size=d * size * N).reshape(N, d, size)
+        ans = _sample_multivariate_normal_jit(mean, cov, size, eps, z)
+    else:
+        # Fall back to numpy for non-3D cases
+        ans = []
+        for i in range(N):
+            samples_i = rstate.multivariate_normal(mean[i], cov[i], size=size)
+            ans.append(samples_i.T)  # Transpose to match expected format
+        ans = np.array(ans)  # Shape: (N, d, size)
+        ans = np.transpose(ans, (1, 2, 0))  # Convert to (d, size, N)
+    
     return ans

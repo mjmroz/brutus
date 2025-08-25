@@ -29,7 +29,7 @@ class TestUtilsInit:
         # Check that key functions are available
         expected_functions = [
             'magnitude', 'inv_magnitude', 'luptitude', 'inv_luptitude', 'add_mag', 'phot_loglike',
-            'adjoint3', 'dot3', 'inverse3', 'isPSD', 'chisquare_logpdf', 'truncnorm_pdf',
+            'inverse3', 'isPSD', 'chisquare_logpdf', 'truncnorm_pdf',
             'quantile', 'sample_multivariate_normal', 'draw_sar'
         ]
         
@@ -76,7 +76,7 @@ class TestUtilsInit:
                 assert callable(getattr(brutus.utils, func, None)), f"{func} should be callable"
         
         # Test that math functions are available
-        math_funcs = ['adjoint3', 'dot3', 'inverse3', 'isPSD']
+        math_funcs = ['inverse3', 'isPSD']
         for func in math_funcs:
             if func in brutus.utils.__all__:
                 assert callable(getattr(brutus.utils, func, None)), f"{func} should be callable"

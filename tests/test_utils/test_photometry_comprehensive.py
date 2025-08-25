@@ -453,6 +453,39 @@ class TestPhotometryIntegration:
         # Likelihood should be reasonable (not too negative)
         assert np.all(lnl > -1000)  # Somewhat arbitrary but reasonable threshold
 
+    def test_phot_loglike_dim_prior(self):
+        """Test photometric likelihood with dimensionality prior."""
+        from brutus.utils.photometry import phot_loglike
+        import numpy as np
+
+        # Simple test case with dimensionality prior
+        nobjs = 5
+        nmods = 3
+        nfilts = 4
+
+        # Mock observed fluxes and errors
+        fluxes = np.random.rand(nobjs, nfilts) * 1000 + 100  # Positive fluxes
+        flux_errors = np.random.rand(nobjs, nfilts) * 50 + 10
+
+        # Mock model fluxes
+        model_fluxes = np.random.rand(nobjs, nmods, nfilts) * 1000 + 100
+
+        # Test with dimensionality prior enabled
+        lnl_dim = phot_loglike(fluxes, flux_errors, model_fluxes, dim_prior=True)
+        
+        assert lnl_dim.shape == (nobjs, nmods)
+        assert np.all(np.isfinite(lnl_dim)), "Log-likelihood with dim prior should be finite"
+
+        # Test with insufficient degrees of freedom (should handle gracefully)
+        small_fluxes = fluxes[:, :2]  # Only 2 filters, dof = 2-3 = -1
+        small_errors = flux_errors[:, :2]
+        small_models = model_fluxes[:, :, :2]
+        
+        lnl_small = phot_loglike(small_fluxes, small_errors, small_models, dim_prior=True)
+        assert lnl_small.shape == (nobjs, nmods)
+        # Should be -inf when dof <= 0
+        assert np.all(lnl_small == -np.inf), "Should be -inf when degrees of freedom <= 0"
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

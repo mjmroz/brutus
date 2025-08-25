@@ -23,9 +23,6 @@ try:
     # Mathematical functions
     from .math import (
         _function_wrapper,
-        adjoint3,
-        dot3,
-        inverse_transpose3,
         inverse3,
         isPSD,
         chisquare_logpdf,
@@ -50,9 +47,6 @@ try:
         "phot_loglike",
         # Mathematical functions
         "_function_wrapper",
-        "adjoint3",
-        "dot3",
-        "inverse_transpose3",
         "inverse3",
         "isPSD",
         "chisquare_logpdf",

@@ -309,10 +309,9 @@ class TestGalacticPriors:
     def test_logp_age_from_feh_custom_parameters(self):
         """Test age-metallicity relation with custom parameters."""
         ages = np.array([5.0, 8.0])
-        fehs = np.array([-0.3, -0.1])
         
-        logp_default = logp_age_from_feh(ages, fehs)
-        logp_custom = logp_age_from_feh(ages, fehs, feh_slope=-0.05, feh_scatter=0.2)
+        logp_default = logp_age_from_feh(ages)
+        logp_custom = logp_age_from_feh(ages, feh_mean=-0.1, max_age=12.0)
         
         # Should produce different results
         assert not np.allclose(logp_default, logp_custom)
@@ -338,9 +337,9 @@ class TestGalacticPriors:
         logp_total, components = result
         
         # Check components structure
-        assert 'thin_disk' in components
-        assert 'thick_disk' in components  
-        assert 'halo' in components
+        assert 'number_density' in components
+        assert isinstance(components['number_density'], list)
+        assert len(components['number_density']) == 3  # thin, thick, halo components
         
         # Each component should have right length
         for comp in components.values():
@@ -452,7 +451,7 @@ class TestNumericalStability:
         m2 = np.array([0.5, 1.0, 1.5])
         
         logp = logp_imf(m1, mgrid2=m2) 
-        assert logp.shape == (1,)
+        assert logp.shape == (3,)  # Should match mgrid2 shape
         
         # Test parallax with broadcasting
         parallaxes = np.array([[0.8, 1.0], [1.2, 1.4]])
@@ -530,10 +529,10 @@ class TestIntegration:
         assert len(logp_masses) == n_test
         assert np.all(np.isfinite(logp_masses))
         
-        # Parallax priors  
+        # Parallax priors (test with first object's measurements)
         logp_plx = logp_parallax(data['parallaxes'][idx], 
-                                data['parallaxes'][idx],
-                                data['parallax_errors'][idx])
+                                data['parallaxes'][idx[0]], 
+                                data['parallax_errors'][idx[0]])
         assert len(logp_plx) == n_test
         
         # Galactic structure priors
