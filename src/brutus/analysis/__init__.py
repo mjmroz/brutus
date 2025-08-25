@@ -18,7 +18,7 @@ try:
         # Individual star fitting
         "BruteForce",
         # Photometric offset analysis
-        "photometric_offsets", 
+        "photometric_offsets",
         "PhotometricOffsetsConfig",
     ]
 except ImportError:

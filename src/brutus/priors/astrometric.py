@@ -17,7 +17,7 @@ def logp_parallax(parallaxes, p_meas, p_err):
     """
     Log-prior for parallax measurements assuming Gaussian errors.
 
-    Implements a Gaussian log-prior based on observed parallax and 
+    Implements a Gaussian log-prior based on observed parallax and
     measurement uncertainty. Returns uniform prior when measurements
     are invalid or unavailable.
 
@@ -27,7 +27,7 @@ def logp_parallax(parallaxes, p_meas, p_err):
         Model parallax values in milliarcseconds (mas).
     p_meas : float
         Measured parallax in milliarcseconds (mas).
-    p_err : float  
+    p_err : float
         Parallax measurement uncertainty in milliarcseconds (mas).
 
     Returns
@@ -39,26 +39,26 @@ def logp_parallax(parallaxes, p_meas, p_err):
     Notes
     -----
     The log-prior follows a normal distribution:
-    
+
     .. math::
-        \\log p(\\pi | \\pi_{\\text{obs}}, \\sigma_\\pi) = 
-        -\\frac{1}{2} \\left[ \\frac{(\\pi - \\pi_{\\text{obs}})^2}{\\sigma_\\pi^2} + 
+        \\log p(\\pi | \\pi_{\\text{obs}}, \\sigma_\\pi) =
+        -\\frac{1}{2} \\left[ \\frac{(\\pi - \\pi_{\\text{obs}})^2}{\\sigma_\\pi^2} +
         \\log(2\\pi\\sigma_\\pi^2) \\right]
-    
+
     For invalid measurements (non-finite values), returns uniform prior.
     """
     parallaxes = np.asarray(parallaxes)
-    
+
     # Check for valid measurements
     if np.isfinite(p_meas) and np.isfinite(p_err) and p_err > 0:
         # Gaussian log-prior
-        chi2 = (parallaxes - p_meas)**2 / p_err**2
+        chi2 = (parallaxes - p_meas) ** 2 / p_err**2
         log_norm = np.log(2.0 * np.pi * p_err**2)
         logp = -0.5 * (chi2 + log_norm)
     else:
         # Uniform prior for invalid measurements
         logp = np.zeros_like(parallaxes, dtype=float)
-    
+
     return logp
 
 
@@ -66,7 +66,7 @@ def logp_parallax_scale(scales, scale_errs, p_meas, p_err, snr_lim=4.0):
     """
     Log-prior for flux scale factors derived from parallax measurements.
 
-    Applies parallax constraints to flux density scale factors where 
+    Applies parallax constraints to flux density scale factors where
     scale ~ parallax². Uses Gaussian approximation for high signal-to-noise
     parallax measurements.
 
@@ -93,35 +93,39 @@ def logp_parallax_scale(scales, scale_errs, p_meas, p_err, snr_lim=4.0):
     -----
     For high SNR measurements (p_meas/p_err > snr_lim), the scale factor
     prior is derived from the parallax measurement using error propagation:
-    
+
     .. math::
         s = \\pi^2 + \\sigma_\\pi^2
-        
+
         \\sigma_s = \\sqrt{2\\sigma_\\pi^4 + 4\\pi^2\\sigma_\\pi^2}
-    
+
     The total uncertainty combines model and measurement errors in quadrature.
     """
-    scales = np.asarray(scales) 
+    scales = np.asarray(scales)
     scale_errs = np.asarray(scale_errs)
-    
+
     # Check SNR threshold and measurement validity
-    if (np.isfinite(p_meas) and np.isfinite(p_err) and 
-        p_err > 0 and abs(p_meas / p_err) > snr_lim):
-        
+    if (
+        np.isfinite(p_meas)
+        and np.isfinite(p_err)
+        and p_err > 0
+        and abs(p_meas / p_err) > snr_lim
+    ):
+
         # Convert parallax to scale factor statistics
         s_mean, s_std = convert_parallax_to_scale(p_meas, p_err, snr_lim)
-        
+
         # Total variance (model + measurement)
         total_var = s_std**2 + scale_errs**2
-        
+
         # Gaussian log-prior
-        chi2 = (scales - s_mean)**2 / total_var
+        chi2 = (scales - s_mean) ** 2 / total_var
         log_norm = np.log(2.0 * np.pi * total_var)
         logp = -0.5 * (chi2 + log_norm)
     else:
         # Uniform prior for low SNR or invalid measurements
         logp = np.zeros_like(scales, dtype=float)
-    
+
     return logp
 
 
@@ -129,7 +133,7 @@ def convert_parallax_to_scale(p_meas, p_err, snr_lim=4.0):
     """
     Convert parallax measurement to flux density scale factor statistics.
 
-    Transforms parallax measurements and uncertainties to scale factor 
+    Transforms parallax measurements and uncertainties to scale factor
     (s ~ π²) mean and standard deviation using error propagation.
 
     Parameters
@@ -146,18 +150,18 @@ def convert_parallax_to_scale(p_meas, p_err, snr_lim=4.0):
     -------
     s_mean : float
         Mean of the scale factor distribution.
-    s_std : float  
+    s_std : float
         Standard deviation of the scale factor distribution.
 
     Notes
     -----
     For high SNR measurements, uses error propagation:
-    
+
     .. math::
         s_{\\text{mean}} = \\max(0, \\pi_{\\text{meas}})^2 + \\sigma_\\pi^2
-        
+
         s_{\\text{std}} = \\sqrt{2\\sigma_\\pi^4 + 4\\pi_{\\text{meas}}^2\\sigma_\\pi^2}
-    
+
     The parallax is floored at zero to handle negative measurements.
     For low SNR, returns uninformative statistics (tiny mean, huge std).
 
@@ -169,12 +173,12 @@ def convert_parallax_to_scale(p_meas, p_err, snr_lim=4.0):
     if np.isfinite(p_meas) and np.isfinite(p_err) and abs(p_meas / p_err) > snr_lim:
         # Floor parallax at zero to handle negative measurements
         p_positive = max(0.0, p_meas)
-        
+
         # Scale factor statistics via error propagation
         s_mean = p_positive**2 + p_err**2
         s_std = np.sqrt(2 * p_err**4 + 4 * p_positive**2 * p_err**2)
     else:
         # Uninformative prior for low SNR measurements
         s_mean, s_std = 1e-20, 1e20
-    
+
     return s_mean, s_std

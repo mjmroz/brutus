@@ -206,29 +206,29 @@ def draw_sar(
 def _cholesky_3x3(A):
     """
     Compute Cholesky decomposition of a 3x3 positive definite matrix.
-    
+
     Uses explicit formulas optimized for 3x3 case to avoid numba limitations.
     """
     L = np.zeros_like(A)
-    
+
     # L[0,0] = sqrt(A[0,0])
     L[0, 0] = np.sqrt(A[0, 0])
-    
+
     # L[1,0] = A[1,0] / L[0,0]
     L[1, 0] = A[1, 0] / L[0, 0]
-    
+
     # L[1,1] = sqrt(A[1,1] - L[1,0]^2)
     L[1, 1] = np.sqrt(A[1, 1] - L[1, 0] * L[1, 0])
-    
+
     # L[2,0] = A[2,0] / L[0,0]
     L[2, 0] = A[2, 0] / L[0, 0]
-    
+
     # L[2,1] = (A[2,1] - L[2,0] * L[1,0]) / L[1,1]
     L[2, 1] = (A[2, 1] - L[2, 0] * L[1, 0]) / L[1, 1]
-    
+
     # L[2,2] = sqrt(A[2,2] - L[2,0]^2 - L[2,1]^2)
     L[2, 2] = np.sqrt(A[2, 2] - L[2, 0] * L[2, 0] - L[2, 1] * L[2, 1])
-    
+
     return L
 
 
@@ -236,12 +236,12 @@ def _cholesky_3x3(A):
 def _sample_multivariate_normal_jit(mean, cov, size, eps, random_samples):
     """
     Numba-accelerated core multivariate normal sampling.
-    
+
     Parameters
     ----------
     mean : ndarray of shape (Ndist, dim)
         Means of the multivariate distributions.
-    cov : ndarray of shape (Ndist, dim, dim) 
+    cov : ndarray of shape (Ndist, dim, dim)
         Covariances of the multivariate distributions.
     size : int
         Number of samples to draw from each distribution.
@@ -249,25 +249,25 @@ def _sample_multivariate_normal_jit(mean, cov, size, eps, random_samples):
         Regularization parameter for numerical stability.
     random_samples : ndarray of shape (Ndist, dim, size)
         Pre-generated standard normal samples.
-        
+
     Returns
     -------
     samples : ndarray of shape (dim, size, Ndist)
         Transformed samples.
     """
     N, d = mean.shape
-    
+
     # Add regularization to covariance matrices
     K = cov.copy()
     for n in range(N):
         for i in range(d):
             K[n, i, i] += eps
-    
+
     # Cholesky decomposition using custom 3x3 implementation
     L = np.empty_like(K)
     for n in range(N):
         L[n] = _cholesky_3x3(K[n])
-    
+
     # Transform samples: ans = mean + L @ z
     ans = np.empty((N, d, size))
     for n in range(N):
@@ -277,14 +277,14 @@ def _sample_multivariate_normal_jit(mean, cov, size, eps, random_samples):
                 ans[n, i, s] = mean[n, i]
                 for j in range(d):
                     ans[n, i, s] += L[n, i, j] * random_samples[n, j, s]
-    
+
     # Reshape to match expected output format: (dim, size, Ndist)
     result = np.empty((d, size, N))
     for n in range(N):
         for s in range(size):
             for i in range(d):
                 result[i, s, n] = ans[n, i, s]
-    
+
     return result
 
 
@@ -363,7 +363,7 @@ def sample_multivariate_normal(mean, cov, size=1, eps=1e-30, rstate=None):
 
     # For multiple distributions, check dimension compatibility
     N, d = np.shape(mean)
-    
+
     if d == 3:
         # Use numba-accelerated version for 3D case
         z = rstate.normal(loc=0, scale=1, size=d * size * N).reshape(N, d, size)
@@ -376,5 +376,5 @@ def sample_multivariate_normal(mean, cov, size=1, eps=1e-30, rstate=None):
             ans.append(samples_i.T)  # Transpose to match expected format
         ans = np.array(ans)  # Shape: (N, d, size)
         ans = np.transpose(ans, (1, 2, 0))  # Convert to (d, size, N)
-    
+
     return ans

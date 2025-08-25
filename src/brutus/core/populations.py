@@ -285,7 +285,7 @@ class Isochrone(object):
             Metallicity [Fe/H] relative to solar. Default is 0.0.
 
         afe : float, optional
-            Alpha enhancement [α/Fe] relative to solar. Default is 0.0.
+            Alpha enhancement [alpha/Fe] relative to solar. Default is 0.0.
 
         loga : float, optional
             Log10(age in years). Default is 8.5 (≈316 Myr).
@@ -509,7 +509,7 @@ class StellarPop(object):
             Metallicity [Fe/H]. Default is 0.0.
 
         afe : float, optional
-            Alpha enhancement [α/Fe]. Default is 0.0.
+            Alpha enhancement [alpha/Fe]. Default is 0.0.
 
         loga : float, optional
             Log10(age in years). Default is 8.5.
