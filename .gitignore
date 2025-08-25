@@ -67,3 +67,11 @@ CLAUDE.md
 .claude_code/
 claude_*.md
 claude_*.txt
+
+# Coverage reports
+coverage.xml
+coverage/
+htmlcov/
+.coverage
+*.cover
+.pytest_cache/
