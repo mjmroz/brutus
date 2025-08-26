@@ -20,10 +20,6 @@ from brutus.utils.math import truncnorm_logpdf
 class TestMatrixOperations:
     """Unit tests for 3x3 matrix operations."""
 
-
-
-
-
     def test_inverse3_basic(self):
         """Test 3x3 matrix inversion."""
         from brutus.utils.math import inverse3
@@ -38,11 +34,13 @@ class TestMatrixOperations:
         product = np.dot(A, A_inv)
         expected = np.eye(3)
         np.testing.assert_array_almost_equal(product, expected, decimal=12)
-        
+
         # Test with regularization - should still work for well-conditioned matrices
         A_inv_reg = inverse3(A, regularize=True)
         product_reg = np.dot(A, A_inv_reg)
-        np.testing.assert_array_almost_equal(product_reg, expected, decimal=10)  # Slightly less precision due to regularization
+        np.testing.assert_array_almost_equal(
+            product_reg, expected, decimal=10
+        )  # Slightly less precision due to regularization
 
     def test_inverse3_vs_numpy(self):
         """Test inverse computation against numpy.linalg.inv."""
@@ -239,11 +237,10 @@ class TestFunctionWrapper:
 
 class TestMathComparison:
     """Comparison tests between old and new implementations.
-    
+
     NOTE: These tests will be removed after refactoring is complete.
     They exist to ensure consistency during the transition period.
     """
-
 
     def test_inverse3_vs_original(self):
         """Compare new _inverse3 function with original."""
@@ -325,11 +322,11 @@ class TestMathEdgeCases:
         A = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]], dtype=float)
 
         # Without regularization: should produce inf/nan values
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             result_no_reg = inverse3(A, regularize=False)
         assert result_no_reg.shape == (3, 3)
         # Result will contain inf/nan values due to zero determinant
-        
+
         # With regularization: should produce finite values
         result_reg = inverse3(A, regularize=True)
         assert result_reg.shape == (3, 3)
@@ -344,13 +341,13 @@ class TestMathEdgeCases:
         eigenvals = np.array([1.0, -1e-15, 0.5])  # One tiny negative eigenvalue
         Q = np.linalg.qr(np.random.randn(3, 3))[0]
         A = Q @ np.diag(eigenvals) @ Q.T
-        
+
         # Invert with regularization
         A_inv_reg = inverse3(A, regularize=True)
-        
+
         # Result should be positive semi-definite
         assert isPSD(A_inv_reg), "Regularized inverse should be positive semi-definite"
-        
+
         # Should be finite
         assert np.all(np.isfinite(A_inv_reg)), "Regularized inverse should be finite"
 
@@ -362,22 +359,22 @@ class TestMathEdgeCases:
         # Create batch of matrices with regularization needs
         n_matrices = 3
         matrices = np.zeros((n_matrices, 3, 3))
-        
+
         # Matrix 0: needs input regularization (singular)
         matrices[0] = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-        
-        # Matrix 1: needs output regularization (small eigenvalues)  
+
+        # Matrix 1: needs output regularization (small eigenvalues)
         eigenvals = np.array([1.0, -1e-14, 0.1])
         Q = np.linalg.qr(np.random.randn(3, 3))[0]
         matrices[1] = Q @ np.diag(eigenvals) @ Q.T
-        
+
         # Matrix 2: well-conditioned
         matrices[2] = np.eye(3) + 0.1 * np.random.randn(3, 3)
         matrices[2] = matrices[2] @ matrices[2].T  # Make PSD
-        
+
         # Test batch regularization
         inverted = inverse3(matrices, regularize=True)
-        
+
         # All should be PSD and finite
         for i in range(n_matrices):
             assert isPSD(inverted[i]), f"Matrix {i} should be PSD"
@@ -386,11 +383,11 @@ class TestMathEdgeCases:
     def test_isPSD_edge_cases(self):
         """Test isPSD with edge cases that return False."""
         from brutus.utils.math import isPSD
-        
+
         # Matrix with negative eigenvalue
         A_neg = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
         assert not isPSD(A_neg), "Matrix with negative eigenvalue should not be PSD"
-        
+
         # Singular matrix (zero eigenvalue)
         A_singular = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
         # This should return False due to negative/zero eigenvalues from numerical issues
@@ -475,32 +472,38 @@ class TestMathIntegration:
 
 class TestInternalFunctions:
     """Test internal helper functions for coverage."""
-    
+
     def test_internal_helper_functions(self):
         """Test internal helper functions to improve coverage."""
-        from brutus.utils.math import _min_eigenval_3x3_symmetric, _invert_3x3_analytical, _matrix_det_3x3
+        from brutus.utils.math import (
+            _min_eigenval_3x3_symmetric,
+            _invert_3x3_analytical,
+            _matrix_det_3x3,
+        )
         import numpy as np
 
         # Test _min_eigenval_3x3_symmetric
-        A = np.array([[2, 1, 0], [1, 3, 1], [0, 1, 2]], dtype=float)  # Known symmetric positive definite matrix
+        A = np.array(
+            [[2, 1, 0], [1, 3, 1], [0, 1, 2]], dtype=float
+        )  # Known symmetric positive definite matrix
         min_eig = _min_eigenval_3x3_symmetric(A)
         assert min_eig > 0, "Minimum eigenvalue should be positive for PSD matrix"
-        
+
         # Test with near-singular matrix
         B = np.array([[1, 1, 1], [1, 1.001, 1], [1, 1, 1.001]], dtype=float)
         min_eig_B = _min_eigenval_3x3_symmetric(B)
         assert min_eig_B < 0.1, "Should detect small eigenvalue"
-        
+
         # Test _matrix_det_3x3
         det_A = _matrix_det_3x3(A)
         expected_det = np.linalg.det(A)
         np.testing.assert_almost_equal(det_A, expected_det, decimal=10)
-        
+
         # Test _invert_3x3_analytical with well-conditioned matrix
         inv_A = _invert_3x3_analytical(A)
         expected_inv = np.linalg.inv(A)
         np.testing.assert_array_almost_equal(inv_A, expected_inv, decimal=10)
-        
+
         # Test singular matrix handling
         singular = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]], dtype=float)
         inv_singular = _invert_3x3_analytical(singular)
@@ -512,20 +515,23 @@ class TestInternalFunctions:
         import numpy as np
 
         # Create batch of matrices that require different code paths
-        batch = np.array([
-            [[2, 1, 0], [1, 3, 1], [0, 1, 2]],  # Well-conditioned
-            [[1e10, 0, 0], [0, 1e-10, 0], [0, 0, 1]],  # Ill-conditioned
-            [[1, 0, 0], [0, 1, 0], [0, 0, 1]],  # Identity
-        ], dtype=float)
-        
+        batch = np.array(
+            [
+                [[2, 1, 0], [1, 3, 1], [0, 1, 2]],  # Well-conditioned
+                [[1e10, 0, 0], [0, 1e-10, 0], [0, 0, 1]],  # Ill-conditioned
+                [[1, 0, 0], [0, 1, 0], [0, 0, 1]],  # Identity
+            ],
+            dtype=float,
+        )
+
         # Test _batch_invert_3x3 directly
         inverted_batch = _batch_invert_3x3(batch)
         assert inverted_batch.shape == batch.shape
-        
-        # Test with regularization to hit regularization code paths  
+
+        # Test with regularization to hit regularization code paths
         inverted_reg = inverse3(batch, regularize=True)
         assert inverted_reg.shape == batch.shape
-        
+
         # Test with very small eigenvalue threshold
         inverted_strict = inverse3(batch, regularize=True, min_eigenval_threshold=1e-6)
         assert inverted_strict.shape == batch.shape

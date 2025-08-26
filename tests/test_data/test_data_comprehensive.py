@@ -198,95 +198,106 @@ class TestDataLoaderFunctions:
         """Comprehensive test of load_models with real MIST v9 data (single load for efficiency)."""
         from brutus.data.loader import load_models
         import os
-        
+
         # Check if the MIST v9 grid file exists
         data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
         if not os.path.exists(data_file):
             import pytest
+
             pytest.skip(f"MIST v9 grid file not found at {data_file}")
-        
+
         # Single load with reasonable filter set - this covers most functionality
-        test_filters = ['SDSS_g', 'SDSS_r', 'SDSS_i', 'SDSS_u', 'SDSS_z']  # 5 filters for good coverage
+        test_filters = [
+            "SDSS_g",
+            "SDSS_r",
+            "SDSS_i",
+            "SDSS_u",
+            "SDSS_z",
+        ]  # 5 filters for good coverage
         models, labels, label_mask = load_models(
             data_file, filters=test_filters, verbose=False
         )
-        
+
         # Verify output shapes and types
         assert isinstance(models, np.ndarray)
         assert isinstance(labels, np.ndarray)
         assert isinstance(label_mask, np.ndarray)
-        
+
         assert models.ndim == 3  # (n_models, n_filters, n_coeffs)
         assert models.shape[0] > 0  # Should have models
         assert models.shape[1] == len(test_filters)  # Should match filter count
         assert models.shape[2] == 3  # Should have 3 coefficients per filter
-        
+
         assert len(labels) == len(models)  # Labels should match models
         assert len(label_mask) == 1  # Should have one mask row
-        
+
         # Test that all models have finite values (no NaNs/Infs)
         assert np.all(np.isfinite(models))
-        
+
         # Test that labels contain expected stellar parameters
-        expected_params = ['mini', 'feh', 'eep']  # Most basic ones
+        expected_params = ["mini", "feh", "eep"]  # Most basic ones
         available_params = labels.dtype.names
         for param in expected_params:
             if param in available_params:
                 assert np.all(np.isfinite(labels[param]))
-                
+
     def test_load_models_filtering_options_fast(self):
         """Test load_models filtering options with minimal I/O."""
         from brutus.data.loader import load_models
         import os
-        
+
         data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
         if not os.path.exists(data_file):
             import pytest
+
             pytest.skip(f"MIST v9 grid file not found at {data_file}")
-        
+
         # Get baseline with fast filter set
-        fast_filters = ['SDSS_g', 'SDSS_r']  # Just 2 filters for speed
+        fast_filters = ["SDSS_g", "SDSS_r"]  # Just 2 filters for speed
         models_full, _, _ = load_models(data_file, filters=fast_filters, verbose=False)
-        
+
         # Test main sequence only
         models_ms, _, _ = load_models(
             data_file, filters=fast_filters, include_postms=False, verbose=False
         )
         assert len(models_ms) > 0
         assert len(models_ms) < len(models_full)  # Should be subset
-        
+
         # Test post-main sequence only
         models_postms, _, _ = load_models(
             data_file, filters=fast_filters, include_ms=False, verbose=False
         )
         assert len(models_postms) > 0
         assert len(models_postms) < len(models_full)  # Should be subset
-        
+
         # Test excluding binaries
         models_singles, _, _ = load_models(
             data_file, filters=fast_filters, include_binaries=False, verbose=False
         )
         assert len(models_singles) > 0
         assert len(models_singles) <= len(models_full)  # Should be <= total
-                
+
     def test_load_models_performance_no_scaling(self):
         """Test that load_models has minimal performance scaling with filter count."""
         from brutus.data.loader import load_models
         import os
-        
+
         data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
         if not os.path.exists(data_file):
             import pytest
+
             pytest.skip(f"MIST v9 grid file not found at {data_file}")
-        
+
         # Test with small and large filter sets (just validate shapes, not timing)
         models_small, _, _ = load_models(
-            data_file, filters=['SDSS_g', 'SDSS_r'], verbose=False
+            data_file, filters=["SDSS_g", "SDSS_r"], verbose=False
         )
         models_large, _, _ = load_models(
-            data_file, filters=['SDSS_g', 'SDSS_r', 'SDSS_i', 'SDSS_u', 'SDSS_z', '2MASS_J'], verbose=False
+            data_file,
+            filters=["SDSS_g", "SDSS_r", "SDSS_i", "SDSS_u", "SDSS_z", "2MASS_J"],
+            verbose=False,
         )
-        
+
         # Results should be valid
         assert len(models_small) > 0
         assert len(models_large) > 0
@@ -298,65 +309,77 @@ class TestDataLoaderFunctions:
         """Test load_models with custom label selection (fast version)."""
         from brutus.data.loader import load_models
         import os
-        
+
         data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
         if not os.path.exists(data_file):
             import pytest
+
             pytest.skip(f"MIST v9 grid file not found at {data_file}")
-        
+
         # Test with specific labels (minimal filters for speed)
-        custom_labels = ['mini', 'feh', 'eep', 'loga']
-        test_filters = ['SDSS_g']  # Just 1 filter for speed
+        custom_labels = ["mini", "feh", "eep", "loga"]
+        test_filters = ["SDSS_g"]  # Just 1 filter for speed
         models, labels, label_mask = load_models(
             data_file, filters=test_filters, labels=custom_labels, verbose=False
         )
-        
+
         # Basic validation
         assert len(models) > 0
         assert models.shape[1] == 1  # 1 filter
-        
+
         # Verify that requested labels are accessible
-        available_labels = [name for name in labels.dtype.names if not np.all(np.isnan(labels[name]))]
+        available_labels = [
+            name for name in labels.dtype.names if not np.all(np.isnan(labels[name]))
+        ]
         assert len(available_labels) > 0  # Should have some valid labels
 
     def test_load_models_error_conditions_with_real_data(self):
         """Test load_models error conditions with real data."""
         from brutus.data.loader import load_models
         import os
-        
+
         data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
         if not os.path.exists(data_file):
             import pytest
+
             pytest.skip(f"MIST v9 grid file not found at {data_file}")
-        
+
         # Test invalid include_ms/include_postms combination
         import pytest
+
         with pytest.raises(ValueError, match="you have nothing left"):
-            load_models(data_file, filters=['SDSS_g'], include_ms=False, include_postms=False, verbose=False)
+            load_models(
+                data_file,
+                filters=["SDSS_g"],
+                include_ms=False,
+                include_postms=False,
+                verbose=False,
+            )
 
     def test_load_offsets_with_real_mist_v9_data(self):
-        """Test load_offsets with real MIST v9 offset data."""  
+        """Test load_offsets with real MIST v9 offset data."""
         from brutus.data.loader import load_offsets
         import os
-        
+
         offset_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/offsets_mist_v9.txt"
         if not os.path.exists(offset_file):
             import pytest
+
             pytest.skip(f"MIST v9 offset file not found at {offset_file}")
-        
+
         # Test loading all offsets
         offsets = load_offsets(offset_file, verbose=False)
-        
+
         # Verify output
         assert isinstance(offsets, np.ndarray)
         assert len(offsets) > 0
         assert np.all(np.isfinite(offsets))
-        
+
         # Offsets should be close to 1.0 (small corrections)
         assert np.all(np.abs(offsets - 1.0) < 0.5)  # Reasonable range
-        
+
         # Test with specific filters
-        test_filters = ['g', 'r', 'i'] 
+        test_filters = ["g", "r", "i"]
         offsets_gri = load_offsets(offset_file, filters=test_filters, verbose=False)
         assert len(offsets_gri) == len(test_filters)
         assert np.all(np.isfinite(offsets_gri))
@@ -419,19 +442,17 @@ class TestDataLoaderFunctions:
     def test_load_offsets_array_format(self, mock_loadtxt):
         """Test load_offsets with 2D array format (not tuple)."""
         from brutus.data.loader import load_offsets
-        
+
         # Mock loadtxt returning 2D array instead of tuple
-        mock_loadtxt.return_value = np.array([
-            ["g", "1.02"],
-            ["r", "0.98"], 
-            ["i", "1.01"]
-        ])
-        
+        mock_loadtxt.return_value = np.array(
+            [["g", "1.02"], ["r", "0.98"], ["i", "1.01"]]
+        )
+
         with patch("brutus.data.loader.sys.stderr"):
             offsets = load_offsets(
                 "/fake/path.txt", filters=["g", "r", "i"], verbose=False
             )
-        
+
         expected = np.array([1.02, 0.98, 1.01])
         np.testing.assert_array_almost_equal(offsets, expected)
 
@@ -439,21 +460,23 @@ class TestDataLoaderFunctions:
     def test_load_offsets_verbose_output(self, mock_loadtxt):
         """Test load_offsets verbose output."""
         from brutus.data.loader import load_offsets
-        
+
         mock_loadtxt.return_value = (
             np.array(["g", "r", "i"], dtype="str"),
             np.array(["1.05", "0.95", "1.00"], dtype="str"),
         )
-        
+
         import io
         from unittest.mock import patch
-        
+
         # Capture stderr output
-        with patch("brutus.data.loader.sys.stderr", new_callable=io.StringIO) as mock_stderr:
+        with patch(
+            "brutus.data.loader.sys.stderr", new_callable=io.StringIO
+        ) as mock_stderr:
             offsets = load_offsets(
                 "/fake/path.txt", filters=["g", "r", "i"], verbose=True
             )
-        
+
         # Check that verbose output was produced
         output = mock_stderr.getvalue()
         assert "g" in output
@@ -464,7 +487,7 @@ class TestDataLoaderFunctions:
 
 class TestDataComparison:
     """Comparison tests between old and new implementations.
-    
+
     NOTE: These tests will be removed after refactoring is complete.
     They exist to ensure consistency during the transition period.
     """

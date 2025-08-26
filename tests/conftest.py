@@ -18,13 +18,13 @@ from pathlib import Path
 
 # Configure numba for testing
 # Use a writable cache directory, but keep JIT enabled due to scipy conflicts
-os.environ['NUMBA_CACHE_DIR'] = '/tmp/numba_cache'
+os.environ["NUMBA_CACHE_DIR"] = "/tmp/numba_cache"
 
 # IMPORTANT: For accurate coverage measurement, use run_coverage.py script!
-# 
+#
 # Due to coverage instrumentation conflicts when mixing test types,
 # running pytest directly may show artificially low coverage for utils modules.
-# 
+#
 # Correct usage:
 #   python run_coverage.py              # Full coverage analysis
 #   python run_coverage.py --utils      # Utils tests only
@@ -130,8 +130,6 @@ def mock_stellar_parameters():
     }
 
 
-
-
 # Custom assertion helpers
 def assert_array_almost_equal(actual, desired, decimal=7, err_msg=""):
     """
@@ -165,5 +163,3 @@ def assert_valid_photometry(phot, phot_err):
     assert np.all(phot_err > 0), "All photometry errors must be positive"
     assert np.all(np.isfinite(phot)), "All photometry must be finite"
     assert np.all(np.isfinite(phot_err)), "All photometry errors must be finite"
-
-

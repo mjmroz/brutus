@@ -61,7 +61,7 @@ def simple_mocks():
         n_requested = len(models_input) if hasattr(models_input, "__len__") else 1
         # Infer n_filt from models_input shape
         if hasattr(models_input, "shape") and len(models_input.shape) >= 2:
-            n_filt = models_input.shape[1] 
+            n_filt = models_input.shape[1]
         else:
             n_filt = 5  # fallback
         if return_flux:

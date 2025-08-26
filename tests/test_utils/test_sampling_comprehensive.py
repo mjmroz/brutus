@@ -234,7 +234,7 @@ class TestSampleMultivariateNormal:
             sample_cov = np.cov(samples[:, :, i])
 
             # Use looser tolerance for statistical tests with limited sample size
-            np.testing.assert_array_almost_equal(sample_mean, means[i], decimal=0) 
+            np.testing.assert_array_almost_equal(sample_mean, means[i], decimal=0)
             np.testing.assert_array_almost_equal(sample_cov, covs[i], decimal=0)
 
     def test_sample_multivariate_normal_stability(self):
@@ -256,7 +256,7 @@ class TestSampleMultivariateNormal:
 
 class TestSamplingComparison:
     """Comparison tests between old and new implementations.
-    
+
     NOTE: These tests will be removed after refactoring is complete.
     They exist to ensure consistency during the transition period.
     """
@@ -329,7 +329,9 @@ class TestSamplingComparison:
         """Compare new sample_multivariate_normal function with original."""
         try:
             # NOTE: Legacy comparison test - remove after refactor complete
-            from brutus.utils.sampling import sample_multivariate_normal as orig_sample_mvn
+            from brutus.utils.sampling import (
+                sample_multivariate_normal as orig_sample_mvn,
+            )
         except ImportError:
             pytest.skip("Original utilities.py not available for comparison")
 
@@ -521,9 +523,13 @@ class TestSamplingIntegration:
             quantiles = quantile(dim_samples, [0.16, 0.5, 0.84])
 
             # Should have reasonable spread
-            iqr = quantiles[2] - quantiles[0]  # Interquartile range (16th to 84th percentile)
+            iqr = (
+                quantiles[2] - quantiles[0]
+            )  # Interquartile range (16th to 84th percentile)
             assert iqr > 0.1  # Should have some spread
-            assert iqr < 15.0  # But not too much (relaxed tolerance for statistical variation)
+            assert (
+                iqr < 15.0
+            )  # But not too much (relaxed tolerance for statistical variation)
 
 
 if __name__ == "__main__":

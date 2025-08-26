@@ -21,194 +21,216 @@ import os
 
 class TestSedUtilsCoverage:
     """Tests specifically designed to improve coverage measurement."""
-    
+
     def test_numba_jit_function_coverage_workaround(self):
         """Test to ensure numba function is executed for coverage."""
         # Import and force execution of the jit-compiled function
         from brutus.core.sed_utils import _get_seds
-        
+
         # Create test data to exercise all code paths in _get_seds
         Nmodels, Nbands = 3, 4
         mag_coeffs = np.random.random((Nmodels, Nbands, 3))
         mag_coeffs[:, :, 0] = 15.0  # Base magnitudes
-        mag_coeffs[:, :, 1] = 1.0   # R(V)=0 reddening
-        mag_coeffs[:, :, 2] = 0.1   # dR/dR(V)
-        
+        mag_coeffs[:, :, 1] = 1.0  # R(V)=0 reddening
+        mag_coeffs[:, :, 2] = 0.1  # dR/dR(V)
+
         av = np.array([0.0, 0.5, 1.0])  # Different extinction values
         rv = np.array([2.5, 3.1, 4.0])  # Different curve shapes
-        
+
         # Test with return_flux=False (magnitude output)
-        seds_mag, rvecs_mag, drvecs_mag = _get_seds(mag_coeffs, av, rv, return_flux=False)
-        
+        seds_mag, rvecs_mag, drvecs_mag = _get_seds(
+            mag_coeffs, av, rv, return_flux=False
+        )
+
         # Verify output shapes and basic properties
         assert seds_mag.shape == (Nmodels, Nbands)
         assert rvecs_mag.shape == (Nmodels, Nbands)
         assert drvecs_mag.shape == (Nmodels, Nbands)
         assert np.all(np.isfinite(seds_mag))
-        
+
         # Test with return_flux=True (flux output) - this exercises lines 78-81
-        seds_flux, rvecs_flux, drvecs_flux = _get_seds(mag_coeffs, av, rv, return_flux=True)
-        
+        seds_flux, rvecs_flux, drvecs_flux = _get_seds(
+            mag_coeffs, av, rv, return_flux=True
+        )
+
         # Verify conversion worked
         assert seds_flux.shape == (Nmodels, Nbands)
         assert np.all(np.isfinite(seds_flux))
         assert np.all(seds_flux > 0)  # Flux should be positive
-        
+
         # The flux conversion should have been applied
         expected_flux = 10.0 ** (-0.4 * seds_mag)
         npt.assert_array_almost_equal(seds_flux, expected_flux, decimal=10)
-    
+
     def test_get_seds_force_import_and_execution(self):
         """Force import and execution to register coverage."""
         # Direct import and execution of both functions
         from brutus.core import sed_utils
-        
+
         # Test that module attributes exist
-        assert hasattr(sed_utils, '_get_seds')
-        assert hasattr(sed_utils, 'get_seds')
-        assert hasattr(sed_utils, '__all__')
-        assert '_get_seds' in sed_utils.__all__
-        assert 'get_seds' in sed_utils.__all__
-        
+        assert hasattr(sed_utils, "_get_seds")
+        assert hasattr(sed_utils, "get_seds")
+        assert hasattr(sed_utils, "__all__")
+        assert "_get_seds" in sed_utils.__all__
+        assert "get_seds" in sed_utils.__all__
+
         # Force execution of both functions with comprehensive parameter sets
-        mag_coeffs = np.array([[[15.0, 1.0, 0.1], [16.0, 1.2, 0.15], [14.5, 0.8, 0.05]]])
+        mag_coeffs = np.array(
+            [[[15.0, 1.0, 0.1], [16.0, 1.2, 0.15], [14.5, 0.8, 0.05]]]
+        )
         av = np.array([0.3])
         rv = np.array([3.3])
-        
+
         # Test _get_seds directly
         seds1, rvecs1, drvecs1 = sed_utils._get_seds(mag_coeffs, av, rv, False)
         seds2, rvecs2, drvecs2 = sed_utils._get_seds(mag_coeffs, av, rv, True)
-        
+
         # Test get_seds wrapper
         seds3 = sed_utils.get_seds(mag_coeffs, av=av[0], rv=rv[0])
-        seds4, rvecs4 = sed_utils.get_seds(mag_coeffs, av=av[0], rv=rv[0], return_rvec=True)
-        seds5, drvecs5 = sed_utils.get_seds(mag_coeffs, av=av[0], rv=rv[0], return_drvec=True)
-        
+        seds4, rvecs4 = sed_utils.get_seds(
+            mag_coeffs, av=av[0], rv=rv[0], return_rvec=True
+        )
+        seds5, drvecs5 = sed_utils.get_seds(
+            mag_coeffs, av=av[0], rv=rv[0], return_drvec=True
+        )
+
         # All should return valid arrays
-        for arr in [seds1, rvecs1, drvecs1, seds2, rvecs2, drvecs2, seds3, seds4, rvecs4, seds5, drvecs5]:
+        for arr in [
+            seds1,
+            rvecs1,
+            drvecs1,
+            seds2,
+            rvecs2,
+            drvecs2,
+            seds3,
+            seds4,
+            rvecs4,
+            seds5,
+            drvecs5,
+        ]:
             assert isinstance(arr, np.ndarray)
             assert np.all(np.isfinite(arr))
-    
+
     def test_get_seds_non_jit_coverage_workaround(self):
         """Test the actual function logic without numba JIT to improve coverage."""
         # This test recreates the _get_seds logic without numba for coverage
         from math import log
-        
+
         # Test data
         Nmodels, Nbands, Ncoef = 2, 3, 3
         mag_coeffs = np.ones((Nmodels, Nbands, Ncoef))
         mag_coeffs[:, :, 0] = 15.0  # Base magnitudes
-        mag_coeffs[:, :, 1] = 1.0   # R(V)=0 reddening  
-        mag_coeffs[:, :, 2] = 0.1   # dR/dR(V)
-        
+        mag_coeffs[:, :, 1] = 1.0  # R(V)=0 reddening
+        mag_coeffs[:, :, 2] = 0.1  # dR/dR(V)
+
         av = np.array([0.5, 1.0])
         rv = np.array([3.0, 3.5])
-        
+
         # Test return_flux=False case (recreating lines 59-76)
         seds = np.zeros((Nmodels, Nbands))
         rvecs = np.zeros((Nmodels, Nbands))
         drvecs = np.zeros((Nmodels, Nbands))
-        
+
         for i in range(Nmodels):
             for j in range(Nbands):
                 mags = mag_coeffs[i, j, 0]
                 r0 = mag_coeffs[i, j, 1]
                 dr = mag_coeffs[i, j, 2]
-                
+
                 # Recreate the core logic (lines 72-75)
                 drvecs[i][j] = dr
                 rvecs[i][j] = r0 + rv[i] * dr
                 seds[i][j] = mags + av[i] * rvecs[i][j]
-        
+
         # Verify this matches the jit version
         from brutus.core.sed_utils import _get_seds
+
         seds_jit, rvecs_jit, drvecs_jit = _get_seds(mag_coeffs, av, rv, False)
-        
+
         npt.assert_array_almost_equal(seds, seds_jit, decimal=10)
         npt.assert_array_almost_equal(rvecs, rvecs_jit, decimal=10)
         npt.assert_array_almost_equal(drvecs, drvecs_jit, decimal=10)
-    
+
     def test_get_seds_wrapper_parameter_branches(self):
         """Test specific parameter handling branches in get_seds wrapper."""
         from brutus.core.sed_utils import get_seds
-        
+
         # Create test data
         Nmodels, Nbands = 2, 3
         mag_coeffs = np.random.random((Nmodels, Nbands, 3))
         mag_coeffs[:, :, 0] = 15.0
         mag_coeffs[:, :, 1] = 1.0
         mag_coeffs[:, :, 2] = 0.1
-        
+
         # Test av=None branch (line 177)
         seds = get_seds(mag_coeffs, av=None, rv=3.1)
         assert seds.shape == (Nmodels, Nbands)
         assert np.all(np.isfinite(seds))
-        
-        # Test rv=None branch (line 182) 
+
+        # Test rv=None branch (line 182)
         seds = get_seds(mag_coeffs, av=0.1, rv=None)
         assert seds.shape == (Nmodels, Nbands)
         assert np.all(np.isfinite(seds))
-        
+
         # Test both None
         seds = get_seds(mag_coeffs, av=None, rv=None)
         assert seds.shape == (Nmodels, Nbands)
         assert np.all(np.isfinite(seds))
-    
+
     def test_get_seds_wrapper_return_combinations(self):
         """Test all return value combinations in get_seds wrapper."""
         from brutus.core.sed_utils import get_seds
-        
+
         # Create test data
         Nmodels, Nbands = 2, 3
         mag_coeffs = np.random.random((Nmodels, Nbands, 3))
         mag_coeffs[:, :, 0] = 15.0
         mag_coeffs[:, :, 1] = 1.0
         mag_coeffs[:, :, 2] = 0.1
-        
+
         av = 0.1
         rv = 3.1
-        
+
         # Test return_rvec and return_drvec (line 191)
-        result = get_seds(mag_coeffs, av=av, rv=rv, 
-                         return_rvec=True, return_drvec=True)
+        result = get_seds(mag_coeffs, av=av, rv=rv, return_rvec=True, return_drvec=True)
         assert len(result) == 3  # seds, rvecs, drvecs
         seds, rvecs, drvecs = result
         assert seds.shape == (Nmodels, Nbands)
         assert rvecs.shape == (Nmodels, Nbands)
         assert drvecs.shape == (Nmodels, Nbands)
-        
+
         # Test just return_rvec (line 193)
         result = get_seds(mag_coeffs, av=av, rv=rv, return_rvec=True)
         assert len(result) == 2  # seds, rvecs
         seds, rvecs = result
         assert seds.shape == (Nmodels, Nbands)
         assert rvecs.shape == (Nmodels, Nbands)
-        
+
         # Test just return_drvec (line 195)
         result = get_seds(mag_coeffs, av=av, rv=rv, return_drvec=True)
         assert len(result) == 2  # seds, drvecs
         seds, drvecs = result
         assert seds.shape == (Nmodels, Nbands)
         assert drvecs.shape == (Nmodels, Nbands)
-        
+
         # Test neither (line 197) - default case
         seds = get_seds(mag_coeffs, av=av, rv=rv)
         assert seds.shape == (Nmodels, Nbands)
-    
+
     def test_numba_function_coverage(self):
         """Test _get_seds function for full coverage measurement."""
         from brutus.core.sed_utils import _get_seds
-        
+
         # Test the function (JIT is disabled by default in tests via conftest.py)
         Nmodels, Nbands = 3, 4
         mag_coeffs = np.ones((Nmodels, Nbands, 3))
         mag_coeffs[:, :, 0] = 15.0  # Base magnitudes
-        mag_coeffs[:, :, 1] = 1.0   # R(V)=0 reddening
-        mag_coeffs[:, :, 2] = 0.1   # dR/dR(V)
-        
+        mag_coeffs[:, :, 1] = 1.0  # R(V)=0 reddening
+        mag_coeffs[:, :, 2] = 0.1  # dR/dR(V)
+
         av = np.array([0.0, 0.5, 1.0])
         rv = np.array([2.5, 3.1, 4.0])
-        
+
         # Test both return_flux cases
         seds_mag, rvecs_mag, drvecs_mag = _get_seds(
             mag_coeffs, av, rv, return_flux=False
@@ -216,7 +238,7 @@ class TestSedUtilsCoverage:
         seds_flux, rvecs_flux, drvecs_flux = _get_seds(
             mag_coeffs, av, rv, return_flux=True
         )
-        
+
         # Verify shapes and basic properties
         assert seds_mag.shape == (Nmodels, Nbands)
         assert rvecs_mag.shape == (Nmodels, Nbands)
@@ -224,11 +246,11 @@ class TestSedUtilsCoverage:
         assert seds_flux.shape == (Nmodels, Nbands)
         assert rvecs_flux.shape == (Nmodels, Nbands)
         assert drvecs_flux.shape == (Nmodels, Nbands)
-        
+
         # Check that flux conversion worked
         assert np.all(seds_flux > 0)  # Flux should be positive
         assert np.all(np.isfinite(seds_flux))
-        
+
         # Verify the conversion relationship
         expected_flux = 10.0 ** (-0.4 * seds_mag)
         npt.assert_array_almost_equal(seds_flux, expected_flux, decimal=10)
@@ -622,11 +644,11 @@ class TestSedEdgeCases:
         # This should work - wrapper converts scalars to arrays
         seds = get_seds(mag_coeffs, av=av_scalar, rv=rv_scalar)
         assert seds.shape == (2, 3)
-        
+
         # Array parameters with correct dimensions
         av_array = np.array([0.5, 0.8])
         rv_array = np.array([3.1, 3.3])
-        
+
         seds2 = get_seds(mag_coeffs, av=av_array, rv=rv_array)
         assert seds2.shape == (2, 3)
 
