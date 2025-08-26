@@ -11,8 +11,6 @@ utilities implementation.
 File: src/brutus/analysis/offsets.py
 """
 
-from __future__ import division, print_function
-
 import warnings
 import numpy as np
 from typing import Optional, Tuple
@@ -454,7 +452,12 @@ def photometric_offsets(
 
             # Single vectorized call for all objects and models
             lnl_all = phot_loglike(
-                obj_phot, obj_err, obj_seds, mask=temp_masks, dim_prior=dim_prior
+                obj_phot,
+                obj_err,
+                obj_seds,
+                mask=temp_masks,
+                dim_prior=dim_prior,
+                dof_reduction=1,
             )  # Shape: (N_objects, Nsamps)
 
             # Process all results at once

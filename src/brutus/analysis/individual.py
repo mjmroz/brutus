@@ -18,11 +18,9 @@ BruteForce : Grid-based stellar parameter estimation
     and log-posteriors over the grid.
 """
 
-import sys
 import warnings
 import numpy as np
 import h5py
-import time
 from numba import jit
 from math import log
 
@@ -40,14 +38,13 @@ from ..priors.stellar import logp_imf, logp_ps1_luminosity_function
 from ..priors.astrometric import (
     logp_parallax,
     logp_parallax_scale,
-    convert_parallax_to_scale,
 )
 from ..priors.galactic import logp_galactic_structure
 from ..priors.extinction import logp_extinction
 
 # Import utility functions
-from ..utils.math import inverse3 as _inverse3, chisquare_logpdf as _chisquare_logpdf
-from ..utils.photometry import magnitude, inv_magnitude
+from ..utils.math import inverse3 as _inverse3
+from ..utils.photometry import magnitude
 from ..utils.sampling import sample_multivariate_normal
 
 __all__ = ["BruteForce"]

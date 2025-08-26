@@ -18,6 +18,8 @@ __all__ = [
     "inv_luptitude",
     "add_mag",
     "phot_loglike",
+    "chisquare_outlier_loglike",
+    "uniform_outlier_loglike",
 ]
 
 
@@ -214,7 +216,7 @@ def add_mag(mag1, mag2):
     return mag_combined
 
 
-def phot_loglike(flux, err, mfluxes, mask=None, dim_prior=False):
+def phot_loglike(flux, err, mfluxes, mask=None, dim_prior=False, dof_reduction=0):
     """
     Compute the log-likelihood between observed and model fluxes.
 
@@ -236,6 +238,17 @@ def phot_loglike(flux, err, mfluxes, mask=None, dim_prior=False):
     dim_prior : bool, optional
         Whether to apply a dimensionality prior from the
         chi-squared distribution. Default is `False`.
+
+        .. warning::
+           When dim_prior=True, perfect model matches (chi2≈0) can cause
+           problematic behavior: +inf likelihood for DOF=1, -inf likelihood
+           for DOF≥3. Ensure test data has small but non-zero residuals.
+
+    dof_reduction : int, optional
+        Number of degrees of freedom to subtract from the effective DOF
+        when using dim_prior=True. This accounts for parameters being
+        fitted simultaneously (e.g., scale factors, extinction).
+        Default is 0.
 
     Returns
     -------
@@ -281,7 +294,8 @@ def phot_loglike(flux, err, mfluxes, mask=None, dim_prior=False):
     # Apply dimensionality prior if requested.
     if dim_prior:
         # Compute log-pdf of chi2 distribution in a vectorized way.
-        dof = Ndim - 3  # effective degrees of freedom
+        # NOTE: chi2=0 causes +inf (DOF=1) or -inf (DOF>=3) - see docstring warning
+        dof = Ndim - dof_reduction  # effective degrees of freedom
         a = 0.5 * dof[:, None]  # shape (Nobj, 1)
         mask_valid_dof = dof > 0  # shape (Nobj,)
 
@@ -301,3 +315,131 @@ def phot_loglike(flux, err, mfluxes, mask=None, dim_prior=False):
         lnl = lnl_dim
 
     return lnl
+
+
+def chisquare_outlier_loglike(
+    flux, err, stellar_params=None, parallax=None, parallax_err=None, p_value_cut=1e-5
+):
+    """
+    Compute chi-square based outlier model log-likelihood.
+
+    Uses a chi-square distribution with a p-value cut to model outlier
+    probabilities. This is the default outlier model for dim_prior=True.
+
+    Parameters
+    ----------
+    flux : array-like, shape (Nobj, Nfilt)
+        Observed flux values
+    err : array-like, shape (Nobj, Nfilt)
+        Flux errors
+    stellar_params : dict, optional
+        Stellar parameters (masses, colors, etc.) - not used in current implementation
+        but provided for future stellar-dependent outlier models
+    parallax : array-like, shape (Nobj,), optional
+        Parallax measurements (mas)
+    parallax_err : array-like, shape (Nobj,), optional
+        Parallax errors (mas)
+    p_value_cut : float, optional
+        P-value threshold for outlier definition. Default 1e-5.
+
+    Returns
+    -------
+    lnl_outlier : array-like, shape (Nobj,)
+        Log-likelihood for outlier model for each object
+    """
+    from scipy.stats import chi2 as chisquare
+
+    flux = np.asarray(flux)
+    err = np.asarray(err)
+
+    # Get effective dimensionality per object
+    mask = np.isfinite(flux) & np.isfinite(err) & (err > 0)
+    ndim = np.sum(mask, axis=1)  # shape (Nobj,)
+
+    # Add parallax contribution to dimensionality
+    if parallax is not None and parallax_err is not None:
+        parallax = np.asarray(parallax)
+        parallax_err = np.asarray(parallax_err)
+        parallax_mask = (
+            np.isfinite(parallax) & np.isfinite(parallax_err) & (parallax_err > 0)
+        )
+        ndim = ndim + parallax_mask.astype(int)
+
+    # Compute chi-square threshold and log-probability
+    chi2_threshold = chisquare.ppf(1.0 - p_value_cut, ndim)
+    lnl_outlier = chisquare.logpdf(chi2_threshold, ndim)
+
+    return lnl_outlier
+
+
+def uniform_outlier_loglike(
+    flux, err, stellar_params=None, parallax=None, parallax_err=None, sigma_clip=3.0
+):
+    """
+    Compute quasi-uniform outlier model log-likelihood.
+
+    Assumes uniform distribution within +/- sigma_clip * error bounds
+    around the data. This is the default outlier model for dim_prior=False.
+
+    Parameters
+    ----------
+    flux : array-like, shape (Nobj, Nfilt)
+        Observed flux values
+    err : array-like, shape (Nobj, Nfilt)
+        Flux errors
+    stellar_params : dict, optional
+        Stellar parameters - not used in current implementation
+    parallax : array-like, shape (Nobj,), optional
+        Parallax measurements (mas)
+    parallax_err : array-like, shape (Nobj,), optional
+        Parallax errors (mas)
+    sigma_clip : float, optional
+        Number of sigma for uniform bounds. Default 3.0.
+
+    Returns
+    -------
+    lnl_outlier : array-like, shape (Nobj,)
+        Log-likelihood for outlier model for each object
+    """
+    flux = np.asarray(flux)
+    err = np.asarray(err)
+
+    # Create mask for valid data
+    mask = np.isfinite(flux) & np.isfinite(err) & (err > 0)
+
+    # Compute uniform bounds for each filter
+    flux_max = np.nanmax(flux + sigma_clip * err, axis=0)  # shape (Nfilt,)
+    flux_min = np.nanmin(flux - sigma_clip * err, axis=0)  # shape (Nfilt,)
+
+    # Compute side length for uniform distribution in each filter
+    side_lengths = (2.0 * sigma_clip * err) / (
+        flux_max - flux_min
+    )  # shape (Nobj, Nfilt)
+
+    # Set invalid entries to 1 (no contribution)
+    side_lengths = np.where(mask, side_lengths, 1.0)
+
+    # Compute volume (product over valid filters only)
+    volume = np.prod(side_lengths * mask + (1.0 * ~mask), axis=1)  # shape (Nobj,)
+
+    # Add parallax contribution if present
+    if parallax is not None and parallax_err is not None:
+        parallax = np.asarray(parallax)
+        parallax_err = np.asarray(parallax_err)
+        parallax_mask = (
+            np.isfinite(parallax) & np.isfinite(parallax_err) & (parallax_err > 0)
+        )
+
+        if np.any(parallax_mask):
+            p_max = np.nanmax((parallax + sigma_clip * parallax_err)[parallax_mask])
+            p_min = np.nanmin((parallax - sigma_clip * parallax_err)[parallax_mask])
+            parallax_side = (2.0 * sigma_clip * parallax_err) / (p_max - p_min)
+            volume = np.where(parallax_mask, volume * parallax_side, volume)
+
+    # Compute log-likelihood of uniform distribution
+    lnl_outlier = np.log(1.0 / volume)
+
+    # Handle edge cases
+    lnl_outlier = np.where(np.isfinite(lnl_outlier), lnl_outlier, -np.inf)
+
+    return lnl_outlier

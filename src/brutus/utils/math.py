@@ -9,7 +9,7 @@ statistical distributions, and numerical utilities.
 """
 
 import numpy as np
-from math import gamma, log, sqrt
+from math import gamma, log
 from scipy.special import erf
 from numba import jit
 

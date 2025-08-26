@@ -78,7 +78,6 @@ References
 import sys
 import warnings
 import pickle
-import os
 from pathlib import Path
 
 import numpy as np
@@ -219,38 +218,46 @@ class EEPTracks(object):
             package_root = Path(__file__).parent.parent.parent.parent
             mistfile = package_root / "data" / "DATAFILES" / "MIST_1.2_EEPtrk.h5"
         self.mistfile = Path(mistfile)
-        
+
         # Generate cache file path based on original file and configuration
-        cache_key = f"{self.mistfile.stem}_ageweight{ageweight}_pred{''.join(predictions)}"
+        cache_key = (
+            f"{self.mistfile.stem}_ageweight{ageweight}_pred{''.join(predictions)}"
+        )
         cache_file = self.mistfile.parent / f"{cache_key}.pkl"
-        
+
         # Try to load from cache first
         if use_cache and cache_file.exists():
             try:
                 # Check if cache is newer than original file
                 cache_mtime = cache_file.stat().st_mtime
                 orig_mtime = self.mistfile.stat().st_mtime
-                
+
                 if cache_mtime > orig_mtime:
                     if verbose:
-                        sys.stderr.write(f"Loading cached EEPTracks from {cache_file}...\n")
-                    
-                    with open(cache_file, 'rb') as f:
+                        sys.stderr.write(
+                            f"Loading cached EEPTracks from {cache_file}...\n"
+                        )
+
+                    with open(cache_file, "rb") as f:
                         cached_data = pickle.load(f)
-                    
+
                     # Restore all cached attributes
                     for attr, value in cached_data.items():
                         setattr(self, attr, value)
-                    
+
                     if verbose:
                         sys.stderr.write("Cached EEPTracks loaded successfully!\n")
                     return
                 else:
                     if verbose:
-                        sys.stderr.write("Cache is older than data file, regenerating...\n")
+                        sys.stderr.write(
+                            "Cache is older than data file, regenerating...\n"
+                        )
             except Exception as e:
                 if verbose:
-                    sys.stderr.write(f"Cache loading failed ({e}), loading from original file...\n")
+                    sys.stderr.write(
+                        f"Cache loading failed ({e}), loading from original file...\n"
+                    )
 
         # Load from original file
         if verbose:
@@ -269,38 +276,50 @@ class EEPTracks(object):
 
             # Build interpolation grid
             self._build_interpolator()
-            
+
             # Save to cache if enabled
             if use_cache:
                 try:
                     # Collect all relevant attributes for caching
                     cache_data = {}
                     cache_attrs = [
-                        'labels', 'predictions', 'ndim', 'npred', 'null',
-                        'mini_idx', 'eep_idx', 'feh_idx', 'logt_idx', 'logl_idx', 'logg_idx',
-                        '_ageidx', 'mistfile', 'grid_dims', 'interpolator'
+                        "labels",
+                        "predictions",
+                        "ndim",
+                        "npred",
+                        "null",
+                        "mini_idx",
+                        "eep_idx",
+                        "feh_idx",
+                        "logt_idx",
+                        "logl_idx",
+                        "logg_idx",
+                        "_ageidx",
+                        "mistfile",
+                        "grid_dims",
+                        "interpolator",
                     ]
-                    
+
                     # Add dynamic attributes that get created during processing
                     for attr in dir(self):
-                        if not attr.startswith('__') and attr not in cache_attrs:
+                        if not attr.startswith("__") and attr not in cache_attrs:
                             if hasattr(self, attr):
                                 value = getattr(self, attr)
                                 # Only cache serializable objects
                                 if not callable(value):
                                     cache_attrs.append(attr)
-                    
+
                     # Cache all attributes
                     for attr in cache_attrs:
                         if hasattr(self, attr):
                             cache_data[attr] = getattr(self, attr)
-                    
-                    with open(cache_file, 'wb') as f:
+
+                    with open(cache_file, "wb") as f:
                         pickle.dump(cache_data, f)
-                    
+
                     if verbose:
                         sys.stderr.write(f"EEPTracks cached to {cache_file}\n")
-                
+
                 except Exception as e:
                     if verbose:
                         sys.stderr.write(f"Warning: Failed to cache EEPTracks ({e})\n")
@@ -983,15 +1002,15 @@ class StarEvolTrack(object):
 class StarGrid(object):
     """
     Grid-based stellar modeling and synthetic photometry generation.
-    
+
     This class provides an interface for working with pre-computed stellar
     model grids, enabling parameter interpolation and SED generation similar
     to StarEvolTrack but using grid-based models rather than evolutionary tracks.
-    
+
     The grid structure allows for irregular spacing in each dimension, with
     models indexed by their array location. Multi-linear interpolation is used
     to compute stellar parameters and photometry between grid points.
-    
+
     Parameters
     ----------
     models : numpy.ndarray of shape (Nmodel, Nfilt, Ncoef) or dict/h5py file
@@ -1001,94 +1020,95 @@ class StarGrid(object):
         - Unreddened magnitude
         - Reddening vector for R_V = 0
         - Change in reddening vector as function of R_V
-        
+
     models_labels : structured numpy.ndarray of shape (Nmodel,)
         Labels for each model in the grid (e.g., mini, eep, feh, afe, smf).
-        
+
     models_params : structured numpy.ndarray of shape (Nmodel,), optional
         Additional parameters for each model (e.g., loga, logl, logt, logg).
         If not provided, these won't be available in predictions.
-        
+
     filters : list of str, optional
         Filter names for photometry. If None, uses all available filters
         from the models.
-        
+
     verbose : bool, optional
         Whether to print progress messages. Default is True.
-        
+
     Attributes
     ----------
     nmodels : int
         Number of models in the grid
-        
+
     nfilters : int
         Number of filters
-        
+
     filters : numpy.ndarray
         Array of filter names
-        
+
     labels : structured numpy.ndarray
         Grid labels (mini, eep, feh, etc.)
-        
+
     params : structured numpy.ndarray or None
         Additional parameters if provided
-        
+
     label_names : list
         Names of available labels
-        
+
     param_names : list
         Names of available parameters
-        
+
     Limitations
     -----------
     Binary star support is currently limited. The `smf` parameter is accepted
     for API compatibility with StarEvolTrack, but full binary modeling requires
     a dedicated binary grid with pre-computed combined photometry. The current
     implementation returns empty placeholders for secondary parameters.
-        
+
     Examples
     --------
     Load a pre-computed grid and generate photometry:
-    
+
     >>> from brutus.data import load_models
     >>> models, labels, label_mask = load_models('grid_mist_v9.h5')
     >>> grid = StarGrid(models, labels)
-    >>> 
+    >>>
     >>> # Get predictions for specific stellar parameters
     >>> predictions = grid.get_predictions(mini=1.0, eep=350, feh=0.0)
-    >>> 
+    >>>
     >>> # Generate SED with extinction
     >>> sed, params, params2 = grid.get_seds(
-    ...     mini=1.0, eep=350, feh=0.0, 
+    ...     mini=1.0, eep=350, feh=0.0,
     ...     av=0.1, rv=3.3, dist=1000.0
     ... )
     """
-    
-    def __init__(self, models, models_labels, models_params=None, 
-                 filters=None, verbose=True):
+
+    def __init__(
+        self, models, models_labels, models_params=None, filters=None, verbose=True
+    ):
         """Initialize the StarGrid with model data."""
-        
+
         # Handle different input formats
         if isinstance(models, dict):
             # Dictionary input (e.g., from h5py file)
-            if 'mag_coeffs' in models:
-                mag_coeffs = models['mag_coeffs']
+            if "mag_coeffs" in models:
+                mag_coeffs = models["mag_coeffs"]
             else:
                 raise ValueError("models dict must contain 'mag_coeffs' key")
-                
-            if 'labels' in models and models_labels is None:
-                models_labels = models['labels']
-                
-            if 'parameters' in models and models_params is None:
-                models_params = models['parameters']
-                
+
+            if "labels" in models and models_labels is None:
+                models_labels = models["labels"]
+
+            if "parameters" in models and models_params is None:
+                models_params = models["parameters"]
+
             models = mag_coeffs
-            
+
         # Store model data
         self.models = np.asarray(models)
         self.labels = np.asarray(models_labels)
         self.params = np.asarray(models_params) if models_params is not None else None
-        
+
         # Get dimensions
         if self.models.ndim == 2:
             # Models are (Nmodel, Nfilt*3) - reshape to (Nmodel, Nfilt, 3)
@@ -1108,11 +1128,11 @@ class StarGrid(object):
                 if filters is not None:
                     # Filter to requested filters
                     filter_names = [f for f in filter_names if f in filters]
-                    
+
                 self.filters = np.array(filter_names)
                 self.nfilters = len(self.filters)
                 self.nmodels = len(models)
-                
+
                 # Extract coefficients for each filter
                 model_array = np.zeros((self.nmodels, self.nfilters, 3))
                 for i, filt in enumerate(self.filters):
@@ -1120,57 +1140,63 @@ class StarGrid(object):
                 self.models = model_array
             else:
                 raise ValueError(f"Unexpected models shape: {self.models.shape}")
-        
+
         # Set filter names if not already set
-        if not hasattr(self, 'filters'):
+        if not hasattr(self, "filters"):
             if filters is not None:
                 self.filters = np.array(filters)
             else:
                 # Generate default filter names
-                self.filters = np.array([f'filter_{i}' for i in range(self.nfilters)])
-                
+                self.filters = np.array([f"filter_{i}" for i in range(self.nfilters)])
+
         # Store label and parameter names
-        if hasattr(self.labels, 'dtype') and self.labels.dtype.names:
+        if hasattr(self.labels, "dtype") and self.labels.dtype.names:
             self.label_names = list(self.labels.dtype.names)
         else:
             self.label_names = []
-            
-        if self.params is not None and hasattr(self.params, 'dtype') and self.params.dtype.names:
+
+        if (
+            self.params is not None
+            and hasattr(self.params, "dtype")
+            and self.params.dtype.names
+        ):
             self.param_names = list(self.params.dtype.names)
         else:
             self.param_names = []
-            
+
         # Build lookup indices for efficient interpolation
         self._build_grid_indices()
-        
+
         # Initialize KD-tree placeholder (built on first use)
         self.kdtree = None
         self._kdtree_labels = None  # Track which labels are in KD-tree
-        
+
         if verbose:
-            print(f"Loaded StarGrid with {self.nmodels:,} models, "
-                  f"{self.nfilters} filters, {len(self.label_names)} labels")
+            print(
+                f"Loaded StarGrid with {self.nmodels:,} models, "
+                f"{self.nfilters} filters, {len(self.label_names)} labels"
+            )
             if self.param_names:
                 print(f"Additional parameters: {', '.join(self.param_names)}")
-                
+
     def _build_grid_indices(self):
         """Build indices for efficient grid lookup and interpolation."""
-        
+
         # Create unique value arrays for each label dimension
         self.grid_axes = {}
         self.grid_shape = []
-        
+
         for label in self.label_names:
-            if label in ['mini', 'eep', 'feh', 'afe', 'smf']:
+            if label in ["mini", "eep", "feh", "afe", "smf"]:
                 unique_vals = np.unique(self.labels[label])
                 self.grid_axes[label] = unique_vals
                 self.grid_shape.append(len(unique_vals))
-                
+
         # Create mapping from label values to grid indices
         self.label_to_idx = {}
         for label, values in self.grid_axes.items():
             self.label_to_idx[label] = {val: idx for idx, val in enumerate(values)}
-            
+
     def _build_kdtree(self, **kwargs):
         """
         Build KD-tree for efficient nearest neighbor queries.
@@ -1178,20 +1204,25 @@ class StarGrid(object):
         """
         if self.kdtree is not None:
             return  # Already built
-            
+
         from scipy.spatial import cKDTree
-        
+
         # Determine which labels to use for KD-tree
         active_labels = []
-        for label in ['mini', 'eep', 'feh', 'afe', 'smf']:
-            if label in self.label_names and label in kwargs and kwargs[label] is not None:
+        for label in ["mini", "eep", "feh", "afe", "smf"]:
+            if (
+                label in self.label_names
+                and label in kwargs
+                and kwargs[label] is not None
+            ):
                 active_labels.append(label)
-                
+
         if not active_labels:
             # Use all available labels
-            active_labels = [l for l in ['mini', 'eep', 'feh', 'afe', 'smf'] 
-                           if l in self.label_names]
-        
+            active_labels = [
+                l for l in ["mini", "eep", "feh", "afe", "smf"] if l in self.label_names
+            ]
+
         # Build normalized coordinates for KD-tree
         coords = []
         for label in active_labels:
@@ -1203,52 +1234,52 @@ class StarGrid(object):
             else:
                 normalized = np.zeros_like(vals)
             coords.append(normalized)
-            
+
         if coords:
             self.kdtree = cKDTree(np.column_stack(coords))
             self._kdtree_labels = active_labels
-            
+
     def _find_neighbors_multilinear(self, **kwargs):
         """
         Find bracketing grid points and compute multi-linear interpolation weights.
-        
-        For each dimension, finds the two bracketing values and computes 
+
+        For each dimension, finds the two bracketing values and computes
         interpolation weights. This gives us 2^N neighbors for N dimensions.
-        
+
         Parameters
         ----------
         **kwargs : keyword arguments
             Stellar parameters (mini, eep, feh, afe, smf)
-            
+
         Returns
         -------
         indices : numpy.ndarray
             Indices of neighboring grid points
-            
+
         weights : numpy.ndarray
             Interpolation weights for each neighbor
         """
         import itertools
-        
+
         # Get requested parameters
         req_params = {}
-        for key in ['mini', 'eep', 'feh', 'afe', 'smf']:
+        for key in ["mini", "eep", "feh", "afe", "smf"]:
             if key in kwargs and kwargs[key] is not None:
                 req_params[key] = kwargs[key]
-                
+
         if not req_params:
             # No parameters specified, return first model with weight 1
             return np.array([0]), np.array([1.0])
-            
+
         # For each parameter, find bracketing indices and weights
         bracket_info = {}
         for param, value in req_params.items():
             if param in self.grid_axes:
                 axis_values = self.grid_axes[param]
-                
+
                 # Find bracketing indices using searchsorted
                 idx = np.searchsorted(axis_values, value)
-                
+
                 if idx == 0:
                     # Before first point
                     idx_low = idx_high = 0
@@ -1268,89 +1299,113 @@ class StarGrid(object):
                         weight_high = (value - val_low) / (val_high - val_low)
                     else:
                         weight_high = 0.5
-                        
+
                 bracket_info[param] = {
-                    'indices': [idx_low, idx_high] if idx_low != idx_high else [idx_low],
-                    'weights': [1.0 - weight_high, weight_high] if idx_low != idx_high else [1.0],
-                    'values': axis_values[[idx_low, idx_high]] if idx_low != idx_high else axis_values[[idx_low]]
+                    "indices": (
+                        [idx_low, idx_high] if idx_low != idx_high else [idx_low]
+                    ),
+                    "weights": (
+                        [1.0 - weight_high, weight_high]
+                        if idx_low != idx_high
+                        else [1.0]
+                    ),
+                    "values": (
+                        axis_values[[idx_low, idx_high]]
+                        if idx_low != idx_high
+                        else axis_values[[idx_low]]
+                    ),
                 }
-                
+
         # Generate all combinations of bracket points
         param_names = list(bracket_info.keys())
-        index_combinations = itertools.product(*[bracket_info[p]['indices'] for p in param_names])
-        weight_combinations = itertools.product(*[bracket_info[p]['weights'] for p in param_names])
-        
+        index_combinations = itertools.product(
+            *[bracket_info[p]["indices"] for p in param_names]
+        )
+        weight_combinations = itertools.product(
+            *[bracket_info[p]["weights"] for p in param_names]
+        )
+
         # Find actual grid indices for each combination
         indices = []
         weights = []
-        
+
         for idx_combo, wt_combo in zip(index_combinations, weight_combinations):
             # Build selection criteria
             sel = np.ones(self.nmodels, dtype=bool)
             for param_name, param_idx in zip(param_names, idx_combo):
-                param_val = bracket_info[param_name]['values'][
-                    bracket_info[param_name]['indices'].index(param_idx)
+                param_val = bracket_info[param_name]["values"][
+                    bracket_info[param_name]["indices"].index(param_idx)
                 ]
-                sel &= (self.labels[param_name] == param_val)
-                
+                sel &= self.labels[param_name] == param_val
+
             # Handle other parameters not being interpolated
             for param in self.label_names:
-                if param not in req_params and param in ['mini', 'eep', 'feh', 'afe', 'smf']:
+                if param not in req_params and param in [
+                    "mini",
+                    "eep",
+                    "feh",
+                    "afe",
+                    "smf",
+                ]:
                     # Use first available value for unspecified parameters
                     if param in self.grid_axes:
-                        sel &= (self.labels[param] == self.grid_axes[param][0])
-                        
+                        sel &= self.labels[param] == self.grid_axes[param][0]
+
             # Find matching grid point
             grid_idx = np.where(sel)[0]
             if len(grid_idx) > 0:
                 indices.append(grid_idx[0])
                 # Weight is product of all dimension weights
                 weights.append(np.prod(wt_combo))
-                
+
         if not indices:
             # Fallback to KD-tree nearest neighbor if multi-linear fails
             return self._find_neighbors_kdtree(**kwargs)
-            
+
         # Normalize weights
         indices = np.array(indices)
         weights = np.array(weights)
         weights /= weights.sum()
-        
+
         return indices, weights
-        
+
     def _find_neighbors_kdtree(self, **kwargs):
         """
         Find nearest neighbors using KD-tree (fallback method).
-        
+
         Parameters
         ----------
         **kwargs : keyword arguments
             Stellar parameters (mini, eep, feh, afe, smf)
-            
+
         Returns
         -------
         indices : numpy.ndarray
             Indices of neighboring grid points
-            
+
         weights : numpy.ndarray
             Interpolation weights for each neighbor
         """
         # Build KD-tree on first use
         self._build_kdtree(**kwargs)
-        
+
         if self.kdtree is None:
             # KD-tree couldn't be built, use simple nearest neighbor
             distances = np.zeros(self.nmodels)
-            for label in ['mini', 'eep', 'feh', 'afe', 'smf']:
-                if label in kwargs and kwargs[label] is not None and label in self.label_names:
+            for label in ["mini", "eep", "feh", "afe", "smf"]:
+                if (
+                    label in kwargs
+                    and kwargs[label] is not None
+                    and label in self.label_names
+                ):
                     label_vals = self.labels[label]
                     val_range = label_vals.max() - label_vals.min()
                     if val_range > 0:
                         distances += ((label_vals - kwargs[label]) / val_range) ** 2
-                        
+
             nearest_idx = np.argmin(distances)
             return np.array([nearest_idx]), np.array([1.0])
-            
+
         # Build query point
         query_point = []
         for label in self._kdtree_labels:
@@ -1358,7 +1413,7 @@ class StarGrid(object):
                 val = kwargs[label]
             else:
                 val = self.grid_axes[label][0] if label in self.grid_axes else 0
-                
+
             # Normalize
             vals = self.labels[label]
             val_min, val_max = vals.min(), vals.max()
@@ -1367,56 +1422,64 @@ class StarGrid(object):
             else:
                 normalized = 0.0
             query_point.append(normalized)
-            
+
         # Query KD-tree for nearest neighbors
         k = min(8, self.nmodels)  # Use up to 8 neighbors
         distances, indices = self.kdtree.query(query_point, k=k)
-        
+
         # Convert distances to weights (inverse distance weighting)
         epsilon = 1e-10
         weights = 1.0 / (distances + epsilon)
         weights /= weights.sum()
-        
+
         return indices, weights
-        
-    def get_predictions(self, mini=None, eep=None, feh=None, afe=None, 
-                       smf=None, use_multilinear=True, **kwargs):
+
+    def get_predictions(
+        self,
+        mini=None,
+        eep=None,
+        feh=None,
+        afe=None,
+        smf=None,
+        use_multilinear=True,
+        **kwargs,
+    ):
         """
         Get stellar parameter predictions from the grid.
-        
+
         Interpolates grid models to estimate stellar parameters at the
         requested input values using multi-linear interpolation.
-        
+
         Parameters
         ----------
         mini : float, optional
             Initial mass in solar masses
-            
+
         eep : float, optional
             Equivalent evolutionary phase
-            
+
         feh : float, optional
             Metallicity [Fe/H]
-            
+
         afe : float, optional
             Alpha enhancement [α/Fe]
-            
+
         smf : float, optional
             Secondary mass fraction for binaries
-            
+
         use_multilinear : bool, optional
             Use multi-linear interpolation (True) or KD-tree nearest neighbor (False).
             Default is True.
-            
+
         **kwargs : additional parameters
             Any additional selection criteria
-            
+
         Returns
         -------
         predictions : dict or numpy.ndarray
             Predicted stellar parameters. Returns dict with parameter names
             as keys if parameters are available, otherwise returns array.
-            
+
         Examples
         --------
         >>> grid = StarGrid(models, labels, params)
@@ -1424,7 +1487,7 @@ class StarGrid(object):
         >>> print(f"log(age) = {preds['loga']:.2f}")
         >>> print(f"log(L) = {preds['logl']:.2f}")
         """
-        
+
         # Find neighboring grid points
         if use_multilinear:
             indices, weights = self._find_neighbors_multilinear(
@@ -1434,101 +1497,113 @@ class StarGrid(object):
             indices, weights = self._find_neighbors_kdtree(
                 mini=mini, eep=eep, feh=feh, afe=afe, smf=smf, **kwargs
             )
-        
+
         # Interpolate parameters if available
         if self.params is not None and self.param_names:
             predictions = {}
-            
+
             # Add input labels to predictions
-            for label in ['mini', 'eep', 'feh', 'afe', 'smf']:
+            for label in ["mini", "eep", "feh", "afe", "smf"]:
                 value = locals()[label]
                 if label in self.label_names and value is not None:
                     predictions[label] = value
-                    
+
             # Interpolate each parameter
             for param in self.param_names:
                 param_vals = self.params[param][indices]
                 predictions[param] = np.sum(param_vals * weights)
-                
+
             return predictions
-            
+
         else:
             # Return weighted average of labels only
             predictions = {}
             for label in self.label_names:
                 label_vals = self.labels[label][indices]
                 predictions[label] = np.sum(label_vals * weights)
-                
+
             return predictions
-            
-    def get_seds(self, mini=None, eep=None, feh=None, afe=None,
-                 av=0.0, rv=3.3, smf=None, dist=1000.0,
-                 return_dict=True, return_flux=False, 
-                 return_predictions=True, use_multilinear=True, **kwargs):
+
+    def get_seds(
+        self,
+        mini=None,
+        eep=None,
+        feh=None,
+        afe=None,
+        av=0.0,
+        rv=3.3,
+        smf=None,
+        dist=1000.0,
+        return_dict=True,
+        return_flux=False,
+        return_predictions=True,
+        use_multilinear=True,
+        **kwargs,
+    ):
         """
         Generate synthetic SED from the grid.
-        
+
         Interpolates grid models and applies extinction to generate
         synthetic photometry using multi-linear interpolation.
-        
+
         Parameters
         ----------
         mini : float, optional
             Initial mass in solar masses
-            
+
         eep : float, optional
             Equivalent evolutionary phase
-            
+
         feh : float, optional
             Metallicity [Fe/H]
-            
+
         afe : float, optional
             Alpha enhancement [α/Fe]
-            
+
         av : float, optional
             V-band extinction in magnitudes. Default is 0.0.
-            
+
         rv : float, optional
             Reddening law parameter. Default is 3.3.
-            
+
         smf : float, optional
             Secondary mass fraction for binaries. NOTE: Currently returns
             empty placeholder for params2. Full binary support requires
             a dedicated binary grid with pre-computed combined photometry.
-            
+
         dist : float, optional
             Distance in parsecs. Default is 1000.0 (1 kpc), which corresponds
             to parallax = 1 mas for consistency with Gaia units.
-            
+
         return_dict : bool, optional
             If True, return parameters as dict. Default is True.
-            
+
         return_flux : bool, optional
             If True, return fluxes instead of magnitudes. Default is False.
-            
+
         return_predictions : bool, optional
             If True, compute and return stellar parameters. Set to False
             to only get photometry (more efficient). Default is True.
-            
+
         use_multilinear : bool, optional
             Use multi-linear interpolation (True) or KD-tree nearest neighbor (False).
             Default is True.
-            
+
         **kwargs : additional parameters
             Passed to interpolation methods
-            
+
         Returns
         -------
         sed : numpy.ndarray of shape (Nfilt,)
             Synthetic photometry (magnitudes or fluxes)
-            
+
         params : dict or numpy.ndarray or None
             Primary star parameters (None if return_predictions=False)
-            
+
         params2 : dict or numpy.ndarray or None
-            Secondary star parameters (empty placeholder - full binary 
+            Secondary star parameters (empty placeholder - full binary
             implementation requires dedicated binary grid)
-            
+
         Examples
         --------
         >>> grid = StarGrid(models, labels)
@@ -1538,18 +1613,19 @@ class StarGrid(object):
         ... )
         >>> print(f"G magnitude: {sed[0]:.2f}")
         """
-        
+
         # Warning for binary support limitations
         if smf is not None and smf > 0:
             import warnings
+
             warnings.warn(
                 "Binary star support in StarGrid is limited. Secondary parameters "
                 "(params2) will be empty. For full binary modeling, use StarEvolTrack "
                 "or wait for binary grid implementation.",
                 UserWarning,
-                stacklevel=2
+                stacklevel=2,
             )
-        
+
         # Find neighboring grid points using chosen interpolation method
         if use_multilinear:
             indices, weights = self._find_neighbors_multilinear(
@@ -1559,48 +1635,51 @@ class StarGrid(object):
             indices, weights = self._find_neighbors_kdtree(
                 mini=mini, eep=eep, feh=feh, afe=afe, smf=smf, **kwargs
             )
-        
+
         # Get weighted average of magnitude coefficients
         weighted_coeffs = np.zeros((self.nfilters, 3))
         for idx, weight in zip(indices, weights):
             weighted_coeffs += self.models[idx] * weight
-            
+
         # Apply extinction and distance modulus using sed_utils
         from .sed_utils import _get_seds
-        
+
         # Get reddened magnitudes
         # _get_seds expects (Nmodels, Nbands, Ncoef) and arrays for av/rv
         weighted_coeffs_3d = weighted_coeffs[np.newaxis, :, :]
         av_array = np.array([av])
         rv_array = np.array([rv])
-        seds_array, _, _ = _get_seds(weighted_coeffs_3d, av_array, rv_array, return_flux=False)
+        seds_array, _, _ = _get_seds(
+            weighted_coeffs_3d, av_array, rv_array, return_flux=False
+        )
         mags = seds_array[0]  # Extract the single model result
-        
+
         # Apply distance modulus (default 1 kpc = 1000 pc for parallax = 1 mas)
         if dist is not None and dist != 10.0:  # 10 pc is absolute magnitude reference
             dist_mod = 5.0 * np.log10(dist / 10.0)
             mags += dist_mod
-            
+
         # Convert to flux if requested
         if return_flux:
             from ..utils.photometry import inv_magnitude
+
             # Use zero errors for now (could be improved with proper error propagation)
             sed, _ = inv_magnitude(mags, np.zeros_like(mags))
         else:
             sed = mags
-            
+
         # Get parameter predictions using same neighbors (avoid redundant computation)
         if return_predictions:
             # Interpolate parameters using already-found neighbors
             if self.params is not None and self.param_names:
                 params = {}
-                
+
                 # Add input labels
-                for label in ['mini', 'eep', 'feh', 'afe', 'smf']:
+                for label in ["mini", "eep", "feh", "afe", "smf"]:
                     value = locals()[label]
                     if label in self.label_names and value is not None:
                         params[label] = value
-                        
+
                 # Interpolate parameters
                 for param in self.param_names:
                     param_vals = self.params[param][indices]
@@ -1613,22 +1692,22 @@ class StarGrid(object):
                     params[label] = np.sum(label_vals * weights)
         else:
             params = None
-        
+
         # Binary placeholder (full implementation requires dedicated binary grid)
         params2 = None
-        
+
         # Format output for compatibility
         if not return_dict:
             if isinstance(params, dict):
                 params = np.array(list(params.values())) if params else np.array([])
             if params2 is None:
                 params2 = np.array([])
-                
+
         elif params2 is None:
             params2 = {}
-                
+
         return sed, params, params2
-        
+
     def __repr__(self):
         """String representation of the StarGrid object."""
         rep = f"StarGrid(nmodels={self.nmodels:,}, nfilters={self.nfilters}"
@@ -1636,7 +1715,7 @@ class StarGrid(object):
             rep += f", labels={self.label_names}"
         rep += ")"
         return rep
-        
+
     def __len__(self):
         """Return the number of models in the grid."""
         return self.nmodels
