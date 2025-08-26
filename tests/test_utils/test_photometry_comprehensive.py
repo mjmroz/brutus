@@ -186,7 +186,7 @@ class TestPhotometryFunctions:
 
 class TestPhotometryComparison:
     """Comparison tests between old and new implementations.
-    
+
     NOTE: These tests will be removed after refactoring is complete.
     They exist to ensure consistency during the transition period.
     """
@@ -333,7 +333,7 @@ class TestPhotometryEdgeCases:
         flux_err = np.array([[0.1, 0.1]])
 
         # Suppress expected divide-by-zero warning
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             mag, mag_err = magnitude(flux, flux_err)
 
         # Zero flux should give infinite magnitude
@@ -349,7 +349,7 @@ class TestPhotometryEdgeCases:
         flux_err = np.array([[0.1, 0.1]])
 
         # Suppress expected invalid value warning
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             mag, mag_err = magnitude(flux, flux_err)
 
         # Negative flux should give NaN magnitude (log of negative number)
@@ -472,19 +472,25 @@ class TestPhotometryIntegration:
 
         # Test with dimensionality prior enabled
         lnl_dim = phot_loglike(fluxes, flux_errors, model_fluxes, dim_prior=True)
-        
+
         assert lnl_dim.shape == (nobjs, nmods)
-        assert np.all(np.isfinite(lnl_dim)), "Log-likelihood with dim prior should be finite"
+        assert np.all(
+            np.isfinite(lnl_dim)
+        ), "Log-likelihood with dim prior should be finite"
 
         # Test with insufficient degrees of freedom (should handle gracefully)
         small_fluxes = fluxes[:, :2]  # Only 2 filters, dof = 2-3 = -1
         small_errors = flux_errors[:, :2]
         small_models = model_fluxes[:, :, :2]
-        
-        lnl_small = phot_loglike(small_fluxes, small_errors, small_models, dim_prior=True)
+
+        lnl_small = phot_loglike(
+            small_fluxes, small_errors, small_models, dim_prior=True
+        )
         assert lnl_small.shape == (nobjs, nmods)
         # Should be -inf when dof <= 0
-        assert np.all(lnl_small == -np.inf), "Should be -inf when degrees of freedom <= 0"
+        assert np.all(
+            lnl_small == -np.inf
+        ), "Should be -inf when degrees of freedom <= 0"
 
 
 if __name__ == "__main__":
