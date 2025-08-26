@@ -21,6 +21,13 @@ try:
         apply_isochrone_mixture_model,
         marginalize_isochrone_grid,
     )
+    from .los_dust import (
+        los_clouds_priortransform,
+        los_clouds_loglike_samples,
+        kernel_tophat,
+        kernel_gauss,
+        kernel_lorentz,
+    )
 
     __all__ = [
         # Individual star fitting
@@ -35,6 +42,12 @@ try:
         # Photometric offset analysis
         "photometric_offsets",
         "PhotometricOffsetsConfig",
+        # Line-of-sight dust extinction analysis
+        "los_clouds_priortransform",
+        "los_clouds_loglike_samples",
+        "kernel_tophat",
+        "kernel_gauss",
+        "kernel_lorentz",
     ]
 except ImportError:
     # During development, modules might not be available yet
