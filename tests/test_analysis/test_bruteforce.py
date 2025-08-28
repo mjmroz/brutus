@@ -9,10 +9,7 @@ Tests the BruteForce class for grid-based Bayesian stellar parameter estimation.
 
 import pytest
 import numpy as np
-import warnings
 import time
-import tempfile
-import os
 
 try:
     import h5py
@@ -227,9 +224,8 @@ class TestBruteForceInitialization:
         """Test proper initialization with StarGrid."""
         fitter = BruteForce(mock_grid, verbose=False)
 
-        assert fitter.NMODEL == 27
-        assert fitter.NDIM == 5
-        assert fitter.NCOEF == 3
+        assert fitter.nmodels == 27
+        assert fitter.nfilters == 5
         assert hasattr(fitter, "star_grid")
         assert hasattr(fitter, "labels_mask")
 
@@ -541,7 +537,7 @@ class TestBruteForceInternal:
         np.testing.assert_array_equal(proc_mask, data_mask)
 
         # Prior should be initialized
-        assert len(lnprior) == bruteforce_fitter.NMODEL
+        assert len(lnprior) == bruteforce_fitter.nmodels
         assert gal_prior is not None  # Function should be set
 
     def test_fit_internal(self, bruteforce_fitter, synthetic_observation):
@@ -591,8 +587,8 @@ class TestBruteForceRealGrid:
         assert fitter.labels_mask["feh"] == True
 
         # Test properties
-        assert fitter.nmodels == fitter.NMODEL
-        assert fitter.nfilters == fitter.NDIM
+        assert fitter.nmodels == 27
+        assert fitter.nfilters == 5
 
     def test_get_sed_grid_real_data(self, test_bruteforce):
         """Test SED computation with real grid."""
@@ -953,7 +949,7 @@ class TestBruteForceEdgeCases:
         data_mask = np.ones(5, dtype=bool)
 
         # Test with custom prior
-        custom_prior = np.random.normal(0, 1, bruteforce_fitter.NMODEL)
+        custom_prior = np.random.normal(0, 1, bruteforce_fitter.nmodels)
 
         results = bruteforce_fitter._setup(
             data,
@@ -976,8 +972,8 @@ class TestBruteForceEdgeCases:
         assert bruteforce_fitter.nfilters == 5
 
         # Properties should match legacy attributes
-        assert bruteforce_fitter.nmodels == bruteforce_fitter.NMODEL
-        assert bruteforce_fitter.nfilters == bruteforce_fitter.NDIM
+        assert bruteforce_fitter.nmodels == 27
+        assert bruteforce_fitter.nfilters == 5
 
 
 class TestBruteForceCoverageCompletion:

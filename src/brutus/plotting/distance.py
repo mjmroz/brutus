@@ -199,7 +199,7 @@ def dist_vs_red(
         H = binned_vals[0]
     else:
         # For multiple objects, we need to decide how to combine them
-        # Default behavior: use the first object (backward compatibility)
+        # Default behavior: use the first object
         H = binned_vals[0]
 
     # Set up axis labels

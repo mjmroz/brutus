@@ -100,13 +100,16 @@ Core dependencies that will be automatically installed:
 
 ```python
 import numpy as np
-from brutus import BruteForce, load_models
+from brutus import BruteForce, StarGrid, load_models
 
 # Load stellar models
-models, labels, label_mask = load_models('path/to/models.h5')
+models, labels = load_models('path/to/models.h5')
+
+# Create a StarGrid
+star_grid = StarGrid(models, labels)
 
 # Set up the fitter
-fitter = BruteForce(models, labels, label_mask)
+fitter = BruteForce(star_grid)
 
 # Your photometry data (flux units)
 photometry = np.array([1.2e-3, 0.8e-3, 0.6e-3])  # g, r, i bands
@@ -122,27 +125,29 @@ results = fitter.fit(photometry, errors, parallax=2.5, parallax_err=0.1)
 from brutus import Isochrone
 
 # Create isochrone generator
-iso = Isochrone(filters=['g', 'r', 'i'])
+iso = Isochrone()
 
-# Generate an isochrone
-sed, params = iso.get_isochrone(
-    age=1e9,        # 1 Gyr
-    metallicity=0.0, # Solar metallicity
-    distance=1000,   # 1 kpc
-    av=0.1          # Small extinction
+# Generate stellar parameters for an isochrone
+params = iso.get_predictions(
+    feh=0.0,        # Solar metallicity [Fe/H]
+    afe=0.0,        # Solar alpha enhancement [alpha/Fe] 
+    loga=9.0        # 1 Gyr age (log10(age/yr))
 )
 ```
 
 ### Data Management
 
 ```python
-from brutus import fetch_grids, fetch_isos
+from brutus import fetch_grids, fetch_isos, fetch_dustmaps
 
-# Download stellar evolution grids
-fetch_grids(target_dir='./data/', grid='mist_v9')
+# Download stellar evolution grids  
+fetch_grids()
 
 # Download isochrone data
-fetch_isos(target_dir='./data/', iso='MIST_1.2_vvcrit0.0')
+fetch_isos()
+
+# Download 3D dust maps
+fetch_dustmaps()
 ```
 
 ## Documentation
@@ -151,28 +156,23 @@ fetch_isos(target_dir='./data/', iso='MIST_1.2_vvcrit0.0')
 
 🎓 **Tutorials**: The `tutorials/` directory contains Jupyter notebooks demonstrating key workflows
 
-📖 **Examples**: The `examples/` directory contains standalone Python scripts
-
-🔬 **Demos**: The `demos/` folder contains detailed Jupyter notebooks illustrating how to use various parts of the code
 
 ## Data
 
 Brutus requires stellar evolution models and other data files to function. These can be downloaded automatically using built-in utilities:
 
 ```python
-from brutus.data import fetch_grids, fetch_isos, fetch_dustmaps
+from brutus import fetch_grids, fetch_isos, fetch_dustmaps
 
 # Download MIST stellar evolution grids
-fetch_grids(grid='mist_v9')
+fetch_grids()
 
 # Download MIST isochrones  
-fetch_isos(iso='MIST_1.2_vvcrit0.0')
+fetch_isos()
 
 # Download 3D dust maps
-fetch_dustmaps(dustmap='bayestar19')
+fetch_dustmaps()
 ```
-
-All data files are also available directly from the **[Harvard Dataverse](https://dataverse.harvard.edu/dataverse/astro-brutus)**.
 
 ## Recent Changes (v0.9.0)
 
@@ -213,20 +213,6 @@ RUN_SLOW_TESTS=1 pytest
 
 # With coverage
 pytest --cov=brutus
-```
-
-## Citation
-
-If you use brutus in your research, please cite:
-
-```bibtex
-@software{brutus,
-  author = {Speagle, Joshua S.},
-  title = {brutus: Brute-force Bayesian inference for stellar photometry},
-  url = {https://github.com/joshspeagle/brutus},
-  version = {0.9.0},
-  year = {2025}
-}
 ```
 
 ## License

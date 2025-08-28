@@ -93,8 +93,7 @@ def get_seds(
     Compute reddened SEDs from the provided magnitude coefficients.
 
     This is a convenience wrapper around `_get_seds` that provides parameter
-    handling and optional return values. It preserves the original API for
-    backward compatibility.
+    handling and optional return values.
 
     Parameters
     ----------

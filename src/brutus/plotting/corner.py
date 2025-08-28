@@ -17,8 +17,6 @@ from scipy.ndimage import gaussian_filter as norm_kde
 
 from ..priors import logp_galactic_structure as gal_lnprior, logp_parallax
 
-# For backward compatibility with original pdf.py function name
-parallax_lnprior = logp_parallax
 from ..utils.sampling import quantile, draw_sar
 from .utils import hist2d
 
@@ -321,7 +319,7 @@ def cornerplot(
         # Re-apply distance and parallax priors to realizations.
         lnp_draws = lndistprior(ddraws, coord)
         if applied_parallax:
-            lnp_draws += parallax_lnprior(pdraws, parallax, parallax_err)
+            lnp_draws += logp_parallax(pdraws, parallax, parallax_err)
 
         # Resample draws.
         lnp = logsumexp(lnp_draws, axis=1)
@@ -480,7 +478,7 @@ def cornerplot(
                 ax.set_title(title, **title_kwargs)
         # Add parallax prior.
         if i == ndim - 2 and parallax is not None and parallax_err is not None:
-            parallax_logpdf = parallax_lnprior(b, parallax, parallax_err)
+            parallax_logpdf = logp_parallax(b, parallax, parallax_err)
             parallax_pdf = np.exp(parallax_logpdf - max(parallax_logpdf))
             parallax_pdf *= max(n) / max(parallax_pdf)
             ax.fill_between(b, parallax_pdf, color=pcolor, **parallax_kwargs)

@@ -632,14 +632,11 @@ class BruteForce:
         Mask indicating which labels are grid parameters (True)
         vs predictions (False).
 
-    NMODEL : int
+    nmodels : int
         Number of models in the grid.
 
-    NDIM : int
+    nfilters : int
         Number of filters.
-
-    NCOEF : int
-        Number of coefficients per filter (always 3).
 
     Examples
     --------
@@ -679,19 +676,13 @@ class BruteForce:
         # Generate labels mask automatically
         self.labels_mask = self._generate_labels_mask()
 
-        # Legacy attributes for compatibility
-        self.NMODEL = star_grid.nmodels
-        self.NDIM = star_grid.nfilters
-        self.NCOEF = 3
-        self.NLABELS = len(star_grid.label_names) + len(star_grid.param_names or [])
-
         if verbose:
             n_grid = sum(1 for m in self.labels_mask.values() if m)
             n_pred = sum(1 for m in self.labels_mask.values() if not m)
             grid_params = [l for l, m in self.labels_mask.items() if m]
             pred_params = [l for l, m in self.labels_mask.items() if not m]
 
-            print(f"BruteForce initialized with {self.NMODEL:,} models")
+            print(f"BruteForce initialized with {self.nmodels:,} models")
             print(f"  Grid parameters ({n_grid}): {', '.join(grid_params)}")
             if n_pred > 0:
                 preview = ", ".join(pred_params[:3])
@@ -839,7 +830,7 @@ class BruteForce:
             elif "Mr" in self.models_labels.dtype.names:
                 lnprior = logp_ps1_luminosity_function(self.models_labels["Mr"])
             else:
-                lnprior = np.zeros(self.NMODEL)
+                lnprior = np.zeros(self.nmodels)
 
         # Apply age weighting if requested
         if apply_agewt:
@@ -1461,7 +1452,7 @@ class BruteForce:
     def __repr__(self):
         """String representation of BruteForce object."""
         return (
-            f"BruteForce(nmodels={self.NMODEL:,}, "
-            f"nfilters={self.NDIM}, "
+            f"BruteForce(nmodels={self.nmodels:,}, "
+            f"nfilters={self.nfilters}, "
             f"labels={len(self.labels_mask)})"
         )

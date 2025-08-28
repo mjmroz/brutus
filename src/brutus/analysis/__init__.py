@@ -10,45 +10,41 @@ statistical analysis tools.
 """
 
 # Import analysis utilities
-try:
-    from .offsets import photometric_offsets, PhotometricOffsetsConfig
-    from .individual import BruteForce
-    from .populations import (
-        isochrone_population_loglike,
-        generate_isochrone_population_grid,
-        compute_isochrone_cluster_likelihood,
-        compute_isochrone_outlier_likelihood,
-        apply_isochrone_mixture_model,
-        marginalize_isochrone_grid,
-    )
-    from .los_dust import (
-        los_clouds_priortransform,
-        los_clouds_loglike_samples,
-        kernel_tophat,
-        kernel_gauss,
-        kernel_lorentz,
-    )
+from .offsets import photometric_offsets, PhotometricOffsetsConfig
+from .individual import BruteForce
+from .populations import (
+    isochrone_population_loglike,
+    generate_isochrone_population_grid,
+    compute_isochrone_cluster_likelihood,
+    compute_isochrone_outlier_likelihood,
+    apply_isochrone_mixture_model,
+    marginalize_isochrone_grid,
+)
+from .los_dust import (
+    los_clouds_priortransform,
+    los_clouds_loglike_samples,
+    kernel_tophat,
+    kernel_gauss,
+    kernel_lorentz,
+)
 
-    __all__ = [
-        # Individual star fitting
-        "BruteForce",
-        # Stellar population analysis (isochrone-based)
-        "isochrone_population_loglike",
-        "generate_isochrone_population_grid",
-        "compute_isochrone_cluster_likelihood",
-        "compute_isochrone_outlier_likelihood",
-        "apply_isochrone_mixture_model",
-        "marginalize_isochrone_grid",
-        # Photometric offset analysis
-        "photometric_offsets",
-        "PhotometricOffsetsConfig",
-        # Line-of-sight dust extinction analysis
-        "los_clouds_priortransform",
-        "los_clouds_loglike_samples",
-        "kernel_tophat",
-        "kernel_gauss",
-        "kernel_lorentz",
-    ]
-except ImportError:
-    # During development, modules might not be available yet
-    __all__ = []
+__all__ = [
+    # Individual star fitting
+    "BruteForce",
+    # Stellar population analysis (isochrone-based)
+    "isochrone_population_loglike",
+    "generate_isochrone_population_grid",
+    "compute_isochrone_cluster_likelihood",
+    "compute_isochrone_outlier_likelihood",
+    "apply_isochrone_mixture_model",
+    "marginalize_isochrone_grid",
+    # Photometric offset analysis
+    "photometric_offsets",
+    "PhotometricOffsetsConfig",
+    # Line-of-sight dust extinction analysis
+    "los_clouds_priortransform",
+    "los_clouds_loglike_samples",
+    "kernel_tophat",
+    "kernel_gauss",
+    "kernel_lorentz",
+]

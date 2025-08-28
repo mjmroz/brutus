@@ -15,8 +15,6 @@ import copy
 
 from ..priors import logp_galactic_structure as gal_lnprior, logp_parallax
 
-# For backward compatibility with original pdf.py function name
-parallax_lnprior = logp_parallax
 from ..utils.sampling import draw_sar
 from scipy.ndimage import gaussian_filter as norm_kde
 
@@ -265,7 +263,7 @@ def bin_pdfs_distred(
             # Re-apply distance and parallax priors to realizations.
             lnp_draws = lndistprior(ddraws, crd)
             if parallax is not None and parallax_err is not None:
-                lnp_draws += parallax_lnprior(pdraws, parallax, parallax_err)
+                lnp_draws += logp_parallax(pdraws, parallax, parallax_err)
             lnp = logsumexp(lnp_draws, axis=1)
             weights = np.exp(lnp_draws - lnp[:, None])
             weights /= weights.sum(axis=1)[:, None]
