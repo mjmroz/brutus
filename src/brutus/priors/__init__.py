@@ -28,9 +28,6 @@ from .galactic import (
 # Extinction priors
 from .extinction import logp_extinction
 
-# Utility functions
-from .utilities import bin_distance_reddening_pdfs
-
 __all__ = [
     # Stellar priors
     "logp_imf",
@@ -47,6 +44,4 @@ __all__ = [
     "logp_age_from_feh",
     # Extinction priors
     "logp_extinction",
-    # Utilities
-    "bin_distance_reddening_pdfs",
 ]

@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+brutus plotting module: Visualization utilities for stellar photometry analysis.
+
+This module provides plotting functions for visualizing posterior distributions,
+SEDs, photometric offsets, and other analysis results from brutus.
+"""
+
+# Import available functions
+from .binning import bin_pdfs_distred
+from .utils import hist2d
+from .distance import dist_vs_red
+from .corner import cornerplot
+from .sed import posterior_predictive
+from .offsets import photometric_offsets, photometric_offsets_2d
+
+__all__ = [
+    # Data preparation utilities
+    "bin_pdfs_distred",
+    # Low-level utilities
+    "hist2d",
+    # Main plotting functions
+    "dist_vs_red",
+    "cornerplot",
+    "posterior_predictive",
+    "photometric_offsets",
+    "photometric_offsets_2d",
+]
