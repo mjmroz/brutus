@@ -34,7 +34,7 @@ def lb2pix(nside, l, b, nest=True):
     -------
     pix_ids : int or ndarray
         HEALPix pixel indices corresponding to the input (l, b) coordinates.
-        Invalid coordinates (|b| > 90°) return -1.
+        Invalid coordinates (absolute b > 90°) return -1.
 
     Examples
     --------

@@ -67,6 +67,8 @@ The StarEvolTrack class uses dependency injection, accepting an EEPTracks
 instance rather than inheriting from it. This makes the code more modular
 and allows for different track implementations.
 
+This implementation is based on the MIST stellar evolution framework [1]_ [2]_.
+
 References
 ----------
 .. [1] Choi et al. 2016, "MESA Isochrones and Stellar Tracks (MIST) 0. Methods
@@ -1058,8 +1060,8 @@ class StarGrid(object):
     param_names : list
         Names of available parameters
 
-    Limitations
-    -----------
+    Notes
+    -----
     Binary star support is currently limited. The `smf` parameter is accepted
     for API compatibility with StarEvolTrack, but full binary modeling requires
     a dedicated binary grid with pre-computed combined photometry. The current
