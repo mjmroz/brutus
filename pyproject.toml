@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astro-brutus"
-version = "0.9.0"
+version = "1.0.0"
 description = "Brute-force Bayesian inference for photometric distances, reddenings, and stellar properties"
 readme = "README.md"
 license = {text = "MIT"}
@@ -15,7 +15,7 @@ maintainers = [
     {name = "Joshua S Speagle", email = "j.speagle@utoronto.ca"}
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",

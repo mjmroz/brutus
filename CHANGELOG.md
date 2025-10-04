@@ -5,7 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.0] - 2025-08-28
+## [1.0.0] - 2025-10-04
+
+### 🎉 First Stable Release
+
+This is the first stable release of brutus following comprehensive code verification, testing, and documentation improvements.
+
+### Added
+
+#### 📚 Publication-Quality Documentation
+
+- **Scientific Background Pages**: 6 comprehensive guides covering Bayesian framework, stellar models, grid generation, priors, cluster modeling, and photometric offsets
+- **User Guides**: 3 detailed guides for understanding results, choosing options, and FAQ with 40+ questions
+- **Enhanced API Documentation**: All API pages include module overviews, typical usage patterns, and code examples
+- **Tutorial Descriptions**: Complete learning path with time estimates, prerequisites, and learning objectives
+- **ReadTheDocs Hosting**: Full documentation hosted at [brutus.readthedocs.io](https://brutus.readthedocs.io)
+- **LaTeX Math Rendering**: Mathematical equations and derivations throughout documentation
+- **Cross-References**: Extensive interconnections between conceptual guides and API documentation
+
+#### 🔍 Code Verification
+
+- **Complete Function Verification**: All 106 functions across 17 modules verified for mathematical correctness
+- **Docstring Consistency**: Comprehensive verification of docstring-implementation alignment
+- **Critical Bug Fixes**:
+  - Fixed IMF normalization in `priors/stellar.py` (swapped power-law indices)
+  - Fixed StarGrid distance reference in `core/individual.py` (corrected from 10 pc to 1 kpc)
+- **Grid Generation Restored**: Fully modernized `GridGenerator` class with comprehensive tests
+
+### Changed
+
+- **Development Status**: Updated from Beta to Production/Stable
+- **Documentation Standards**: All documentation follows NumPy docstring conventions
+- **Project Instructions**: Updated CLAUDE.md with comprehensive documentation structure section
+
+### [0.9.0] - 2025-08-28
 
 ### 🚀 Major Refactoring Release
 
