@@ -5,7 +5,45 @@
 Astrometric priors for Bayesian stellar parameter estimation.
 
 This module provides log-prior functions for astrometric measurements
-including parallax priors and coordinate transformations.
+including parallax priors and coordinate transformations. These priors
+are essential for incorporating Gaia astrometry into stellar parameter
+estimation.
+
+Functions
+---------
+logp_parallax : Parallax prior
+    Gaussian prior from measured parallax
+logp_parallax_scale : Scale factor prior
+    Prior on distance scale (s = 1/d^2)
+convert_parallax_to_scale : Coordinate transform
+    Convert parallax to flux scale factor
+
+See Also
+--------
+brutus.priors.galactic : Galactic structure distance priors
+brutus.analysis.individual.BruteForce : Uses parallax priors for fitting
+
+Notes
+-----
+These priors incorporate astrometric information from missions like Gaia
+to constrain stellar distances and luminosities.
+
+The parallax prior is straightforward Gaussian, but care must be taken
+with the coordinate transformation when using scale factors (s = 1/d^2)
+rather than distances directly. The Jacobian must be properly accounted for.
+
+Examples
+--------
+>>> from brutus.priors.astrometric import logp_parallax
+>>> import numpy as np
+>>>
+>>> # Gaia parallax measurement
+>>> p_meas = 2.5  # mas
+>>> p_err = 0.1   # mas
+>>>
+>>> # Evaluate prior for model parallaxes
+>>> parallaxes = np.linspace(1.0, 4.0, 100)
+>>> log_prior = logp_parallax(parallaxes, p_meas, p_err)
 """
 
 import numpy as np

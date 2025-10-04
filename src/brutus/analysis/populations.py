@@ -9,11 +9,69 @@ parameters using isochrone fitting. The implementation uses the mathematically
 correct approach of applying mixture models before marginalization over stellar
 parameters (mass, secondary mass fraction).
 
-Key features:
-- Vectorized computation over (mass, SMF) grids
-- Mixture model applied at each grid point before marginalization
-- Interface designed for external MCMC/optimization codes
-- Support for stellar-parameter-dependent outlier models
+The key innovation is the mixture-before-marginalization approach, which properly
+accounts for field contamination by applying the mixture model at each grid point
+before integrating over stellar parameters. This differs from traditional approaches
+that marginalize first and mix later, which can produce biased results.
+
+Functions
+---------
+isochrone_population_loglike : Main likelihood function
+    Compute log-likelihood for coeval stellar population
+generate_isochrone_population_grid : Grid generation
+    Generate (mass, SMF) grid for population modeling
+compute_isochrone_cluster_loglike : Cluster likelihood
+    Compute membership likelihood for each grid point
+compute_isochrone_outlier_loglike : Outlier likelihood
+    Compute field contamination likelihood
+apply_isochrone_mixture_model : Mixture model
+    Apply mixture before marginalization
+marginalize_isochrone_grid : Marginalization
+    Integrate over stellar parameters with geometric jacobians
+
+See Also
+--------
+brutus.core.populations.StellarPop : Stellar population synthesis
+brutus.utils.photometry : Photometric likelihood functions
+brutus.priors : Prior probability distributions
+
+Notes
+-----
+The workflow follows these steps:
+
+1. Generate isochrone grid over (mass, SMF) parameter space
+2. Compute cluster likelihood for each (grid_point, object) pair
+3. Compute outlier likelihood for each (grid_point, object) pair
+4. Apply mixture model: P(data|mass,SMF) = w_c * P_c + w_o * P_o
+5. Marginalize over (mass, SMF) with proper geometric jacobians
+6. Sum log-likelihoods over all objects
+
+This approach is designed for use with external MCMC or optimization codes
+(e.g., emcee, dynesty, scipy.optimize) that vary the population parameters
+[Fe/H], log(age), A_V, R_V, distance.
+
+Examples
+--------
+Basic usage with emcee:
+
+>>> from brutus.core.populations import StellarPop, Isochrone
+>>> from brutus.analysis.populations import isochrone_population_loglike
+>>>
+>>> # Initialize stellar population model
+>>> iso = Isochrone()
+>>> pop = StellarPop(isochrone=iso)
+>>>
+>>> # Define log-likelihood function for MCMC
+>>> def lnprob(theta):
+...     return isochrone_population_loglike(
+...         theta, pop, obs_flux, obs_err,
+...         parallax=parallax, parallax_err=parallax_err
+...     )
+>>>
+>>> # Run MCMC
+>>> import emcee
+>>> sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob)
+>>> sampler.run_mcmc(initial_pos, nsteps)
 """
 
 from __future__ import print_function, division
@@ -82,6 +140,30 @@ def generate_isochrone_population_grid(
         - 'mass_jacobians': array, shape (N_total_points,) - mass grid spacing
         - 'smf_jacobians': array, shape (N_total_points,) - SMF grid spacing
         - 'grid_info': dict with SMF grid structure information
+
+    See Also
+    --------
+    compute_isochrone_cluster_loglike : Use this grid for likelihood computation
+    StellarPop.get_seds : Underlying SED generation
+
+    Notes
+    -----
+    The grid is constructed by:
+
+    1. Looping over SMF values (binary mass ratios)
+    2. For each SMF, computing isochrone along EEP dimension
+    3. Extracting masses from the isochrone
+    4. Computing geometric jacobians (grid spacings) for proper integration
+    5. Filtering invalid models (NaN photometry from impossible binaries)
+
+    The jacobians are critical for proper marginalization - they represent
+    the geometric factors :math:`dm` and :math:`d({\\rm SMF})` in the integral:
+
+    .. math::
+        P({\\rm data}) = \\int \\int P({\\rm data}|m, {\\rm SMF}) \\, dm \\, d({\\rm SMF})
+
+    Binary models are only computed for EEP ≤ eep_binary_max (typically
+    main sequence) to avoid unphysical binary configurations.
     """
     # Set default grids
     if smf_grid is None:
@@ -245,7 +327,28 @@ def compute_isochrone_cluster_loglike(
     Returns
     -------
     lnl_cluster : array-like, shape (N_grid_points, N_objects)
-        Cluster likelihood for each grid point and object
+        Cluster membership log-likelihood for each grid point and object.
+        Invalid models (NaN photometry) are assigned NaN likelihood.
+
+    See Also
+    --------
+    brutus.utils.photometry.phot_loglike : Photometric likelihood function
+    compute_isochrone_outlier_loglike : Complementary outlier likelihood
+    generate_isochrone_population_grid : Creates the isochrone_grid input
+
+    Notes
+    -----
+    The likelihood includes both photometric and parallax components:
+
+    .. math::
+        \\ln L_{\\rm cluster} = \\ln L_{\\rm phot} + \\ln L_{\\rm parallax}
+
+    where the photometric likelihood uses either chi-square (dim_prior=True)
+    or Gaussian (dim_prior=False) formulation.
+
+    Invalid models with NaN photometry are preserved as NaN in the output
+    to be properly handled during marginalization (they contribute zero
+    probability via logsumexp).
     """
     obs_flux = np.asarray(obs_flux)
     obs_err = np.asarray(obs_err)
@@ -445,7 +548,35 @@ def apply_isochrone_mixture_model(
     Returns
     -------
     lnl_mixture : array-like, shape (N_grid_points, N_objects)
-        Mixed likelihoods for each grid point and object
+        Mixed log-likelihoods for each grid point and object
+
+    See Also
+    --------
+    marginalize_isochrone_grid : Next step after mixture application
+    compute_isochrone_cluster_loglike : Cluster likelihood component
+    compute_isochrone_outlier_loglike : Outlier likelihood component
+
+    Notes
+    -----
+    The mixture model is applied as:
+
+    .. math::
+        P({\\rm data}|m, {\\rm SMF}) = w_c \\cdot P_c + w_o \\cdot P_o
+
+    where:
+    - :math:`w_c = P_{\\rm cluster} \\cdot (1 - f_{\\rm field})`
+    - :math:`w_o = 1 - w_c`
+    - :math:`P_{\\rm cluster}` is the prior probability (cluster_prob)
+    - :math:`f_{\\rm field}` is the field contamination fraction
+
+    This is computed in log-space using logsumexp for numerical stability:
+
+    .. math::
+        \\ln L_{\\rm mix} = \\ln(\\exp(\\ln L_c + \\ln w_c) + \\exp(\\ln L_o + \\ln w_o))
+
+    The key distinction from traditional approaches is that this mixture
+    is applied **before** marginalization over stellar parameters, which
+    is mathematically correct for contaminated populations.
     """
     lnl_cluster = np.asarray(lnl_cluster)
     lnl_outlier = np.asarray(lnl_outlier)
@@ -492,7 +623,35 @@ def marginalize_isochrone_grid(lnl_mixture, mass_jacobians, smf_jacobians):
     Returns
     -------
     lnl_marginalized : array-like, shape (N_objects,)
-        Marginalized likelihoods for each object
+        Marginalized log-likelihoods for each object
+
+    See Also
+    --------
+    apply_isochrone_mixture_model : Previous step before marginalization
+    generate_isochrone_population_grid : Provides the jacobians
+
+    Notes
+    -----
+    Performs the integration:
+
+    .. math::
+        P({\\rm data}|\\theta) = \\int \\int P({\\rm data}|m, {\\rm SMF}, \\theta) \\, dm \\, d({\\rm SMF})
+
+    numerically using a grid-based approach:
+
+    .. math::
+        \\ln P \\approx \\ln \\sum_{i,j} \\exp(\\ln L_{i,j}) \\cdot \\Delta m_i \\cdot \\Delta({\\rm SMF})_j
+
+    where:
+    - :math:`\\ln L_{i,j}` is the mixed likelihood at grid point (i,j)
+    - :math:`\\Delta m_i` is the mass grid spacing (mass_jacobians)
+    - :math:`\\Delta({\\rm SMF})_j` is the SMF grid spacing (smf_jacobians)
+
+    Invalid models (with NaN likelihood) are converted to -∞ before the
+    logsumexp operation, so they contribute zero probability.
+
+    The jacobians represent geometric integration weights and are crucial
+    for obtaining unbiased parameter estimates.
     """
     lnl_mixture = np.asarray(lnl_mixture)
     mass_jacobians = np.asarray(mass_jacobians)
@@ -584,9 +743,63 @@ def isochrone_population_loglike(
     Returns
     -------
     lnl_total : float
-        Total log-likelihood for the population
+        Total log-likelihood summed over all objects
     components : dict, optional
-        Intermediate results (if return_components=True)
+        Intermediate results (if return_components=True) containing:
+        - 'lnl_total': same as primary return value
+        - 'lnl_per_object': array of per-object likelihoods
+        - 'isochrone_grid': the generated grid dictionary
+        - 'lnl_cluster': cluster likelihood array
+        - 'lnl_outlier': outlier likelihood array
+        - 'lnl_mixture': mixed likelihood array
+
+    See Also
+    --------
+    generate_isochrone_population_grid : Step 1 - Grid generation
+    compute_isochrone_cluster_loglike : Step 2 - Cluster likelihood
+    compute_isochrone_outlier_loglike : Step 3 - Outlier likelihood
+    apply_isochrone_mixture_model : Step 4 - Mixture model
+    marginalize_isochrone_grid : Step 5 - Marginalization
+    brutus.core.populations.StellarPop : Stellar population model
+
+    Notes
+    -----
+    This function implements the complete mixture-before-marginalization
+    workflow:
+
+    .. math::
+        \\ln L(\\theta) = \\sum_i \\ln \\left[ \\int \\int \\left( w_c P_c(d_i|m, s, \\theta) + w_o P_o(d_i) \\right) dm \\, ds \\right]
+
+    where:
+    - :math:`\\theta = [{\\rm Fe/H}, \\log {\\rm age}, A_V, R_V, d]` are population parameters
+    - :math:`m` is stellar mass
+    - :math:`s` is secondary mass fraction (SMF)
+    - :math:`w_c, w_o` are mixture weights
+    - :math:`P_c, P_o` are cluster and outlier likelihoods
+    - :math:`d_i` is data for object i
+
+    The function is designed for use with MCMC samplers like emcee or
+    nested sampling codes like dynesty. It handles errors gracefully by
+    returning -∞ for failed computations.
+
+    Examples
+    --------
+    Use with emcee for MCMC sampling:
+
+    >>> def lnprob(theta):
+    ...     if not in_prior_bounds(theta):
+    ...         return -np.inf
+    ...     return isochrone_population_loglike(theta, pop, flux, err)
+    >>>
+    >>> sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob)
+    >>> sampler.run_mcmc(p0, nsteps)
+
+    Extract intermediate results for diagnostics:
+
+    >>> lnl, components = isochrone_population_loglike(
+    ...     theta, pop, flux, err, return_components=True
+    ... )
+    >>> print(f"Per-object likelihoods: {components['lnl_per_object']}")
     """
     theta = np.asarray(theta)
     if len(theta) != 5:

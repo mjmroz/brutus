@@ -5,7 +5,54 @@
 Mathematical utility functions for brutus.
 
 This module contains mathematical utility functions including matrix operations,
-statistical distributions, and numerical utilities.
+statistical distributions, and numerical utilities. Many functions are JIT-compiled
+with numba for performance.
+
+Functions
+---------
+_function_wrapper : Callable wrapper
+    Make functions pickleable with args/kwargs
+inverse3 : Matrix inversion
+    Fast 3x3 matrix inversion with regularization
+isPSD : Matrix check
+    Check if matrix is positive semi-definite
+chisquare_logpdf : Chi-square log-PDF
+    Log-probability density for chi-square distribution
+truncnorm_pdf : Truncated normal PDF
+    Probability density for truncated normal
+truncnorm_logpdf : Truncated normal log-PDF
+    Log-probability density for truncated normal
+
+See Also
+--------
+brutus.utils.sampling : Sampling utilities
+brutus.priors.galactic : Uses truncated normal distributions
+
+Notes
+-----
+The numba-compiled functions provide significant speedups for tight loops
+in Bayesian inference. The `inverse3` function is specifically optimized
+for the (scale, A_V, R_V) covariance matrices used throughout brutus.
+
+Matrix regularization in `inverse3` prevents numerical issues when matrices
+are near-singular by adding a small value to the diagonal when eigenvalues
+are too small.
+
+Examples
+--------
+>>> import numpy as np
+>>> from brutus.utils.math import inverse3, isPSD
+>>>
+>>> # Create a 3x3 covariance matrix
+>>> cov = np.array([[1.0, 0.1, 0.05],
+...                 [0.1, 0.5, 0.02],
+...                 [0.05, 0.02, 0.3]])
+>>>
+>>> # Check if positive semi-definite
+>>> is_valid = isPSD(cov)
+>>>
+>>> # Invert with regularization
+>>> icov = inverse3(cov, reg_val=1e-10)
 """
 
 import numpy as np

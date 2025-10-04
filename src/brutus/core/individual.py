@@ -333,7 +333,25 @@ class EEPTracks(object):
             sys.stderr.write("done!\n")
 
     def _make_lib(self, misth5, verbose=True):
-        """Convert HDF5 input to numpy arrays for labels and outputs."""
+        """
+        Convert HDF5 input to numpy arrays for labels and outputs.
+
+        Reads evolutionary track data from MIST HDF5 file and organizes it
+        into structured arrays for input parameters (mini, eep, feh, afe) and
+        predicted outputs (loga, logl, logt, logg, etc.).
+
+        Parameters
+        ----------
+        misth5 : h5py.File
+            Open HDF5 file containing MIST evolutionary track data.
+        verbose : bool, optional
+            Whether to print progress messages. Default is True.
+
+        Notes
+        -----
+        This method handles the case where alpha enhancement data ([α/Fe])
+        is not available in the file by setting it to zero.
+        """
 
         if verbose:
             sys.stderr.write("  Constructing track library...\n")
@@ -394,7 +412,21 @@ class EEPTracks(object):
             self.output[:, afe_surf_idx] = 0.0
 
     def _lib_as_grid(self):
-        """Convert library parameters to pixel indices for interpolation."""
+        """
+        Convert library parameters to pixel indices for interpolation.
+
+        Determines the unique grid points in each parameter dimension
+        (mini, eep, feh, afe) and creates mappings from continuous parameter
+        values to discrete grid indices for efficient interpolation.
+
+        Notes
+        -----
+        This method populates the following attributes:
+        - gridpoints: dict of unique values for each parameter
+        - binwidths: dict of grid spacings for each parameter
+        - X: array of grid indices for each library point
+        - mini_bound: minimum initial mass in the grid
+        """
 
         # Get unique grid points in each dimension
         self.gridpoints = {}
@@ -416,7 +448,29 @@ class EEPTracks(object):
         self.mini_bound = self.gridpoints["mini"].min()
 
     def _add_age_weights(self, verbose=True):
-        """Compute age gradient d(age)/d(EEP) for age priors."""
+        """
+        Compute age gradient d(age)/d(EEP) for age priors.
+
+        Calculates the derivative of age with respect to evolutionary point
+        (EEP) for each track. This is used to properly weight age priors when
+        sampling in EEP space, accounting for the non-uniform mapping between
+        EEP and age.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Whether to print progress messages. Default is True.
+
+        Notes
+        -----
+        Uses pandas for vectorized computation if available, otherwise falls
+        back to a slower loop-based implementation. The age weights are
+        appended to the predictions array and "agewt" is added to the
+        predictions list.
+
+        The gradient is computed as d(age)/d(EEP) where age is in linear
+        (not logarithmic) units, even though ages are stored as log(age).
+        """
 
         if verbose:
             sys.stderr.write("  Computing age weights...\n")
@@ -473,7 +527,22 @@ class EEPTracks(object):
         self.predictions += ["agewt"]
 
     def _build_interpolator(self):
-        """Build the RegularGridInterpolator for fast predictions."""
+        """
+        Build the RegularGridInterpolator for fast predictions.
+
+        Creates a scipy RegularGridInterpolator object that enables fast
+        multi-linear interpolation of stellar parameters across the
+        4-dimensional grid (mini, eep, feh, afe).
+
+        Notes
+        -----
+        Handles the special case where alpha enhancement has only one value
+        by padding the grid dimension to enable interpolation. Uses linear
+        interpolation with NaN fill values for out-of-bounds queries.
+
+        The interpolator maps from (mini, eep, feh, afe) input coordinates
+        to all predicted stellar parameters simultaneously.
+        """
 
         # Set up grid dimensions
         self.grid_dims = np.append(
@@ -534,7 +603,13 @@ class EEPTracks(object):
         Returns
         -------
         preds : numpy.ndarray of shape (Npred,) or (Nobj, Npred)
-            Predicted stellar parameters.
+            Predicted stellar parameters in the order specified by
+            `self.predictions` attribute.
+
+        See Also
+        --------
+        get_corrections : Computes empirical corrections applied when apply_corr=True
+        StarEvolTrack.get_seds : Uses these predictions to generate photometry
 
         Examples
         --------
@@ -582,19 +657,50 @@ class EEPTracks(object):
         """
         Compute empirical corrections to stellar parameters.
 
+        Applies empirical corrections to effective temperature and radius
+        based on stellar mass, evolutionary phase (EEP), and metallicity.
+        These corrections account for systematic offsets between MIST models
+        and observations, particularly for low-mass stars.
+
         Parameters
         ----------
         labels : array-like of shape (4,) or (Nobj, 4)
-            Input parameters [mini, eep, feh, afe].
+            Input parameters [mini, eep, feh, afe] where:
+            - mini: Initial mass in solar masses
+            - eep: Equivalent evolutionary point
+            - feh: Metallicity [Fe/H]
+            - afe: Alpha enhancement [α/Fe]
 
-        corr_params : tuple, optional
-            Correction parameters (dtdm, drdm, msto_smooth, feh_scale).
-            Default values are (0.09, -0.09, 30.0, 0.5).
+        corr_params : tuple of float, optional
+            Correction parameters (dtdm, drdm, msto_smooth, feh_scale) where:
+            - dtdm: Temperature correction slope with mass
+            - drdm: Radius correction slope with mass
+            - msto_smooth: Smoothing scale for main sequence turnoff transition
+            - feh_scale: Metallicity scaling factor
+            Default is (0.09, -0.09, 30.0, 0.5).
 
         Returns
         -------
         corrs : numpy.ndarray of shape (2,) or (Nobj, 2)
-            Corrections to [log(Teff), log(R)].
+            Corrections to [log(Teff), log(R)]. These are added to the
+            base predictions from the interpolator.
+
+        See Also
+        --------
+        get_predictions : Applies these corrections to stellar parameters
+
+        Notes
+        -----
+        Corrections are applied as:
+
+        .. math::
+            \\Delta \\log T_{\\rm eff} = f_{\\rm EEP} \\cdot f_{\\rm [Fe/H]} \\cdot \\log(1 + \\Delta M \\cdot \\alpha_T)
+            \\Delta \\log R = f_{\\rm EEP} \\cdot f_{\\rm [Fe/H]} \\cdot \\log(1 + \\Delta M \\cdot \\alpha_R)
+
+        where :math:`\\Delta M = M_{\\rm ini} - 1.0` and the EEP factor smoothly
+        transitions from 0 (pre-main sequence) to 1 (post-turnoff).
+
+        Corrections are set to zero for stars with :math:`M_{\\rm ini} \\geq 1.0 M_\\odot`.
         """
 
         labels = np.array(labels)
@@ -691,6 +797,12 @@ class StarEvolTrack(object):
 
     predictor : FastNNPredictor
         Neural network predictor for photometry
+
+    See Also
+    --------
+    EEPTracks : Stellar parameter predictions used by this class
+    StarGrid : Alternative grid-based approach for photometry
+    brutus.core.neural_nets.FastNNPredictor : Neural network used for SEDs
 
     Examples
     --------
@@ -832,6 +944,26 @@ class StarEvolTrack(object):
         eep2 : float, optional
             Secondary EEP (if return_eep2=True).
 
+        See Also
+        --------
+        EEPTracks.get_predictions : Stellar parameter predictions
+        FastNNPredictor.sed : Neural network SED generation
+        _get_eep_for_secondary : Binary companion EEP calculation
+
+        Notes
+        -----
+        Distance modulus is applied as:
+
+        .. math::
+            m = M + 5 \\log_{10}(d/10\\,{\\rm pc})
+
+        where d is the distance in parsecs.
+
+        Binary SEDs are combined using magnitude addition (flux summing):
+
+        .. math::
+            m_{\\rm combined} = -2.5 \\log_{10}(10^{-0.4 m_1} + 10^{-0.4 m_2})
+
         Examples
         --------
         Single star:
@@ -942,30 +1074,44 @@ class StarEvolTrack(object):
 
         This method solves the inverse problem: given a target age (from the primary),
         find the EEP that produces that age for the secondary star with mass mini*smf.
-
-        This is the correct implementation from the original SEDmaker.get_eep method.
+        Uses scipy.optimize.minimize with Nelder-Mead to find the best-fit EEP.
 
         Parameters
         ----------
         loga : float
-            Target log10(age in years) to match
+            Target log10(age in years) to match from primary star
         mini : float
-            Primary star initial mass
+            Primary star initial mass in solar masses
         eep : float
-            Primary star EEP (used as initial guess)
+            Primary star EEP (used as initial guess for optimization)
         feh : float
-            Metallicity [Fe/H]
+            Metallicity [Fe/H] in logarithmic solar units
         afe : float
-            Alpha enhancement [α/Fe]
+            Alpha enhancement [α/Fe] in logarithmic solar units
         smf : float
-            Secondary mass fraction
+            Secondary mass fraction (secondary mass = mini * smf)
         tol : float
-            Tolerance for age matching
+            Tolerance for age matching convergence
 
         Returns
         -------
         eep2 : float
-            EEP for secondary star that produces the target age
+            EEP for secondary star that produces the target age.
+            Returns NaN if optimization fails or doesn't converge within tolerance.
+
+        See Also
+        --------
+        get_seds : Uses this method for binary star modeling
+        EEPTracks.get_predictions : Called to evaluate ages at different EEPs
+
+        Notes
+        -----
+        The optimization minimizes the squared age difference:
+
+        .. math::
+            L(EEP_2) = (\\log_{10} age(M_2, EEP_2) - \\log_{10} age_{\\rm target})^2
+
+        where :math:`M_2 = M_1 \\times smf` is the secondary mass.
         """
 
         # Get age index from tracks
@@ -1260,6 +1406,17 @@ class StarGrid(object):
 
         weights : numpy.ndarray
             Interpolation weights for each neighbor
+
+        Notes
+        -----
+        Performs multi-linear interpolation by:
+        1. Finding bracketing grid points in each dimension
+        2. Computing linear interpolation weights
+        3. Generating all 2^N corner points for N dimensions
+        4. Weighting each corner by product of dimension weights
+
+        Falls back to KD-tree method if grid structure is irregular or
+        interpolation fails.
         """
         import itertools
 
@@ -1387,6 +1544,15 @@ class StarGrid(object):
 
         weights : numpy.ndarray
             Interpolation weights for each neighbor
+
+        Notes
+        -----
+        Uses inverse distance weighting with up to k=8 neighbors.
+        Distances are computed in normalized parameter space where
+        each dimension is scaled to [0, 1] for balanced metrics.
+
+        The KD-tree is built lazily on first call and cached for
+        subsequent queries.
         """
         # Build KD-tree on first use
         self._build_kdtree(**kwargs)
@@ -1481,6 +1647,12 @@ class StarGrid(object):
         predictions : dict or numpy.ndarray
             Predicted stellar parameters. Returns dict with parameter names
             as keys if parameters are available, otherwise returns array.
+
+        See Also
+        --------
+        get_seds : Generate photometry along with parameter predictions
+        _find_neighbors_multilinear : Multi-linear interpolation method
+        _find_neighbors_kdtree : KD-tree nearest neighbor method
 
         Examples
         --------
@@ -1605,6 +1777,23 @@ class StarGrid(object):
         params2 : dict or numpy.ndarray or None
             Secondary star parameters (empty placeholder - full binary
             implementation requires dedicated binary grid)
+
+        See Also
+        --------
+        get_predictions : Get stellar parameters without photometry
+        StarEvolTrack.get_seds : Alternative track-based SED generation
+        brutus.analysis.BruteForce : Fitting with StarGrid
+
+        Notes
+        -----
+        The SED is computed by interpolating magnitude coefficients and
+        applying the extinction law:
+
+        .. math::
+            m(\\lambda) = m_0(\\lambda) + A_V \\cdot [r_0(\\lambda) + R_V \\cdot dr(\\lambda)]
+
+        where :math:`m_0` is the unreddened magnitude, :math:`r_0` and :math:`dr`
+        are the reddening vector coefficients from the grid.
 
         Examples
         --------

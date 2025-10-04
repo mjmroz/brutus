@@ -5,7 +5,58 @@
 Sampling utility functions for brutus.
 
 This module contains functions for statistical sampling, quantile computation,
-and random number generation used in Bayesian inference workflows.
+and random number generation used in Bayesian inference workflows. These
+utilities are essential for posterior sampling and uncertainty quantification.
+
+Functions
+---------
+quantile : Weighted quantiles
+    Compute (weighted) quantiles from samples
+draw_sar : Posterior sampling
+    Draw from (scale, A_V, R_V) posterior
+sample_multivariate_normal : Gaussian sampling
+    Sample from multivariate normal with bounds
+
+See Also
+--------
+brutus.analysis.individual.BruteForce : Uses these for posterior sampling
+brutus.utils.math : Mathematical utilities
+
+Notes
+-----
+The `quantile` function supports weighted samples, which is crucial for
+computing credible intervals from posterior samples with non-uniform weights
+(e.g., from importance sampling or nested sampling).
+
+The `draw_sar` function is specifically designed for sampling the joint
+posterior of distance scale, extinction, and reddening curve shape from
+BruteForce fitting results.
+
+Examples
+--------
+Weighted quantile computation:
+
+>>> import numpy as np
+>>> from brutus.utils.sampling import quantile
+>>>
+>>> # Samples with different weights
+>>> samples = np.array([1, 2, 3, 4, 5])
+>>> weights = np.array([1, 1, 1, 1, 10])  # Last sample heavily weighted
+>>>
+>>> # Compute median and 68% credible interval
+>>> q = np.array([0.16, 0.5, 0.84])
+>>> intervals = quantile(samples, q, weights=weights)
+>>> print(f"Median: {intervals[1]:.2f}")
+
+Drawing from posterior:
+
+>>> from brutus.utils.sampling import draw_sar
+>>>
+>>> # Posterior means and covariances from fitting
+>>> # scales, avs, rvs, covs_sar = ... (from BruteForce)
+>>>
+>>> # Generate posterior samples
+>>> # samples = draw_sar(scales, avs, rvs, covs_sar, ndraws=1000)
 """
 
 import numpy as np

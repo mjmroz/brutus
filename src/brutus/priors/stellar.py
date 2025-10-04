@@ -5,7 +5,61 @@
 Stellar priors for Bayesian parameter estimation.
 
 This module provides log-prior functions for stellar properties including
-the initial mass function (IMF) and luminosity functions.
+the initial mass function (IMF) and luminosity functions. These priors
+are used in Bayesian inference of stellar parameters to incorporate
+physical constraints from stellar populations.
+
+Functions
+---------
+logp_imf : Initial mass function prior
+    Kroupa-like broken power-law IMF
+logp_ps1_luminosity_function : Luminosity function prior
+    Pan-STARRS 1 r-band luminosity function
+
+See Also
+--------
+brutus.analysis.individual.BruteForce : Uses these priors for stellar fitting
+brutus.priors.galactic : Galactic structure priors
+brutus.priors.extinction : Extinction priors
+
+Notes
+-----
+These priors provide physically-motivated probability distributions for
+stellar parameters:
+
+- **IMF priors** weight stellar masses according to population statistics,
+  ensuring realistic mass distributions in Bayesian fits
+
+- **Luminosity function priors** weight absolute magnitudes according to
+  observed stellar populations, useful when fitting distance and extinction
+
+The priors are normalized and return log-probabilities suitable for direct
+use in MCMC or nested sampling codes.
+
+Examples
+--------
+Basic IMF prior usage:
+
+>>> import numpy as np
+>>> from brutus.priors.stellar import logp_imf
+>>>
+>>> # Evaluate IMF prior for solar-mass star
+>>> masses = np.array([1.0])
+>>> log_prior = logp_imf(masses)
+>>> print(f"Log-prior for 1 solar mass: {log_prior[0]:.3f}")
+>>>
+>>> # Binary system with 1.0 + 0.5 solar mass components
+>>> log_prior_binary = logp_imf(masses, mgrid2=np.array([0.5]))
+>>> print(f"Binary log-prior: {log_prior_binary[0]:.3f}")
+
+Luminosity function prior:
+
+>>> from brutus.priors.stellar import logp_ps1_luminosity_function
+>>>
+>>> # Absolute r-band magnitude for main sequence star
+>>> Mr = np.array([5.0])
+>>> log_prior = logp_ps1_luminosity_function(Mr)
+>>> print(f"Log-prior for Mr=5: {log_prior[0]:.3f}")
 """
 
 import numpy as np
@@ -43,6 +97,11 @@ def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None):
     logp : array_like
         Normalized log-prior probability density for the input mass grid(s).
         Returns -inf for masses below hydrogen burning limit (0.08 solar masses).
+
+    See Also
+    --------
+    logp_ps1_luminosity_function : Alternative luminosity-based prior
+    brutus.analysis.individual.BruteForce : Uses IMF priors for fitting
 
     Notes
     -----
@@ -132,6 +191,12 @@ def logp_ps1_luminosity_function(Mr):
     -------
     logp : array_like
         Log-prior probability density for the given absolute magnitudes.
+        Interpolates from empirical Pan-STARRS 1 luminosity function.
+
+    See Also
+    --------
+    logp_imf : Alternative mass-based IMF prior
+    brutus.analysis.individual.BruteForce : Uses luminosity priors for fitting
 
     Notes
     -----

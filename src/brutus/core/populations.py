@@ -206,7 +206,19 @@ class Isochrone(object):
         Construct the RegularGridInterpolator for stellar parameter prediction.
 
         This method processes the MIST isochrone grid and creates the interpolation
-        machinery. It includes gap filling and handles singular dimensions.
+        machinery for fast multi-dimensional interpolation. It includes gap filling
+        along the EEP dimension and handles singular alpha enhancement dimensions.
+
+        Notes
+        -----
+        The interpolator operates on a 4D grid (feh, afe, loga, eep) and
+        returns predictions for all stellar parameters simultaneously.
+
+        Gap filling is performed by linear interpolation along the EEP
+        dimension for each (feh, afe, loga) combination where data exists.
+
+        If alpha enhancement has only one value, the grid is padded with
+        duplicate values to enable scipy interpolation.
         """
 
         # Set up coordinate grids
@@ -304,7 +316,34 @@ class Isochrone(object):
         Returns
         -------
         preds : numpy.ndarray of shape (Neep, Npred)
-            Stellar parameter predictions for each EEP value.
+            Stellar parameter predictions for each EEP value. The columns
+            correspond to the parameters listed in `self.pred_labels`.
+
+        See Also
+        --------
+        StellarPop.synthesize : Uses these predictions for photometry generation
+        brutus.core.EEPTracks.get_predictions : Similar function for individual stars
+
+        Notes
+        -----
+        The method interpolates across the pre-computed MIST isochrone grid.
+        Returns NaN for parameters outside the grid bounds or where data is
+        not available.
+
+        Common EEP ranges:
+        - Pre-main sequence: EEP < 202
+        - Zero-age main sequence: EEP = 202
+        - Terminal-age main sequence: EEP = 454
+        - Subgiant branch: EEP 454-605
+        - Red giant branch: EEP 605-1409
+
+        Examples
+        --------
+        >>> iso = Isochrone()
+        >>> # Get parameters for a 1 Gyr solar metallicity population
+        >>> params = iso.get_predictions(feh=0.0, afe=0.0, loga=9.0)
+        >>> masses = params[:, 0]  # Initial masses
+        >>> temps = 10**params[:, 3]  # Effective temperatures
         """
 
         # Set default EEP grid
@@ -351,7 +390,35 @@ class Isochrone(object):
         return preds
 
     def _apply_corrections(self, mini, feh, eep, corr_params=None):
-        """Apply empirical corrections (same as MISTtracks implementation)."""
+        """
+        Apply empirical corrections to stellar parameters.
+
+        Computes corrections to effective temperature and radius based on
+        stellar mass, evolutionary phase, and metallicity. This method
+        parallels the corrections in EEPTracks but adapted for isochrone data.
+
+        Parameters
+        ----------
+        mini : array_like
+            Initial stellar masses in solar masses
+        feh : array_like
+            Metallicities [Fe/H]
+        eep : array_like
+            Equivalent evolutionary points
+        corr_params : tuple, optional
+            Correction parameters (dtdm, drdm, msto_smooth, feh_scale).
+            Default is (0.09, -0.09, 30.0, 0.5).
+
+        Returns
+        -------
+        corrs : numpy.ndarray of shape (N, 2)
+            Corrections to [log(Teff), log(R)]
+
+        See Also
+        --------
+        brutus.core.EEPTracks.get_corrections : Individual star corrections
+        get_predictions : Applies these corrections to predictions
+        """
         if corr_params is not None:
             dtdm, drdm, msto_smooth, feh_scale = corr_params
         else:
@@ -442,6 +509,12 @@ class StellarPop(object):
     ...     binary_fraction=0.4,
     ...     av=0.2, dist=2000.0
     ... )
+
+    See Also
+    --------
+    Isochrone : Stellar parameter predictions used by this class
+    StarEvolTrack : Individual star analog
+    brutus.core.neural_nets.FastNNPredictor : Neural network SED generation
 
     Notes
     -----
@@ -559,6 +632,27 @@ class StellarPop(object):
 
         params2 : dict or numpy.ndarray
             Secondary component parameters (for binaries).
+
+        See Also
+        --------
+        Isochrone.get_predictions : Stellar parameter predictions
+        FastNNPredictor.sed : Neural network photometry generation
+        StarEvolTrack.get_seds : Individual star analog
+
+        Notes
+        -----
+        The photometry generation workflow:
+
+        1. Predict stellar parameters from isochrone
+        2. Generate primary SEDs using neural network
+        3. For binaries: generate secondary SEDs and combine
+        4. Apply dust extinction with specified R(V)
+        5. Apply distance modulus
+
+        Binary stars are modeled with the same age and metallicity as
+        primaries, with masses determined by the binary_fraction parameter.
+        Binary companions are only added for stars below eep_binary_max
+        (typically restricted to main sequence).
 
         Examples
         --------

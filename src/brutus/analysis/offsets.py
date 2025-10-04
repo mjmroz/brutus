@@ -2,13 +2,95 @@
 # -*- coding: utf-8 -*-
 
 """
-Enhanced photometric offset analysis for brutus.
+Photometric offset analysis for systematic calibration corrections.
 
-This module provides improved photometric offset computation with better
-performance, configurability, and robustness compared to the original
-utilities implementation.
+This module provides robust photometric offset computation for correcting
+systematic differences between observed photometry and model predictions.
+The implementation uses bootstrap resampling for uncertainty estimation
+and supports optional Bayesian prior constraints.
 
-File: src/brutus/analysis/offsets.py
+Photometric offsets are multiplicative corrections applied to observed fluxes
+to account for systematic calibration differences, photometric system
+transformations, or model systematics. The offsets are computed by analyzing
+model/data flux ratios across a sample of well-fit objects.
+
+Classes
+-------
+PhotometricOffsetsConfig : Configuration container
+    Encapsulates all configuration parameters with validation
+
+Functions
+---------
+photometric_offsets : Compute offsets
+    Main function for computing multiplicative photometric offsets
+_vectorized_bootstrap_median : Bootstrap implementation
+    Vectorized bootstrap for performance
+_validate_inputs : Input validation
+    Validate input arrays for consistency
+
+See Also
+--------
+brutus.analysis.individual.BruteForce : Provides fitted parameters for offset computation
+brutus.utils.photometry.phot_loglike : Likelihood reweighting
+brutus.core.sed_utils.get_seds : Model SED generation
+
+Notes
+-----
+The offset computation workflow:
+
+1. **Generate model SEDs** for all fitted objects and posterior samples
+2. **Scale by distance**: Apply inverse square law
+3. **Compute flux ratios**: model_flux / observed_flux for each band
+4. **Reweight samples**: For bands used in fitting, recompute likelihoods
+   excluding that band to avoid circularity
+5. **Bootstrap sampling**: Resample objects and models to estimate median
+   offset and uncertainty
+6. **Apply priors** (optional): Incorporate Bayesian prior constraints
+
+The key innovation is reweighting step 4, which excludes the current band
+from likelihood calculations to obtain unbiased offset estimates for bands
+that were used in the original fitting.
+
+Examples
+--------
+Basic offset computation from BruteForce results:
+
+>>> from brutus.analysis.offsets import photometric_offsets
+>>> from brutus.data import load_models
+>>> from brutus.core import StarGrid
+>>> from brutus.analysis import BruteForce
+>>>
+>>> # Fit photometry (assuming this has been done)
+>>> # fitter = BruteForce(grid)
+>>> # results = fitter.fit(phot, err, mask, ...)
+>>>
+>>> # Extract fitted parameters
+>>> # models, idxs, avs, rvs, dists = extract_from_results(results)
+>>>
+>>> # Compute offsets
+>>> offsets, errors, n_used = photometric_offsets(
+...     phot, err, mask, models, idxs, avs, rvs, dists
+... )
+>>>
+>>> # Apply corrections
+>>> phot_corrected = phot * offsets[None, :]
+
+Advanced usage with configuration:
+
+>>> from brutus.analysis.offsets import PhotometricOffsetsConfig
+>>>
+>>> # Custom configuration
+>>> config = PhotometricOffsetsConfig(
+...     min_bands_used=5,
+...     n_bootstrap=500,
+...     uncertainty_method='bootstrap_std',
+...     random_seed=42
+... )
+>>>
+>>> offsets, errors, n_used = photometric_offsets(
+...     phot, err, mask, models, idxs, avs, rvs, dists,
+...     config=config
+... )
 """
 
 import warnings
@@ -77,6 +159,32 @@ class PhotometricOffsetsConfig:
 
     validate_inputs : bool, optional
         Perform input validation. Default is True.
+
+    See Also
+    --------
+    photometric_offsets : Main function using this configuration
+
+    Notes
+    -----
+    The configuration defaults are chosen to balance statistical robustness
+    with computational efficiency:
+
+    - min_bands_used=4: Ensures robust likelihood reweighting
+    - min_bands_unused=3: Minimum for meaningful photometric constraints
+    - n_bootstrap=300: Sufficient for stable uncertainty estimates
+    - bootstrap_iqr: More robust to outliers than standard deviation
+
+    Examples
+    --------
+    >>> config = PhotometricOffsetsConfig(
+    ...     min_bands_used=5,
+    ...     n_bootstrap=500,
+    ...     random_seed=42
+    ... )
+    >>> offsets, errors, n_used = photometric_offsets(
+    ...     phot, err, mask, models, idxs, avs, rvs, dists,
+    ...     config=config
+    ... )
     """
 
     def __init__(
@@ -342,18 +450,42 @@ def photometric_offsets(
     ... )
     >>> print(f"Computed offsets: {offsets}")
 
+    See Also
+    --------
+    PhotometricOffsetsConfig : Configuration options
+    brutus.core.sed_utils.get_seds : Model SED generation
+    brutus.utils.photometry.phot_loglike : Likelihood computation
+    brutus.analysis.individual.BruteForce : Source of fitted parameters
+
     Notes
     -----
     The photometric offset for each band is computed as:
 
-    1. Generate model SEDs for all fitted objects
-    2. Scale by distance: flux_model ∝ 1/distance^2
-    3. Compute model/data flux ratios
-    4. Reweight by excluding current band (if used in fit)
-    5. Bootstrap sample ratios and take median +/- uncertainty
-    6. Apply priors if provided
+    1. **Generate model SEDs** for all fitted objects and posterior samples
+    2. **Scale by distance**: :math:`F_{\\rm model} = F_0 / d^2`
+    3. **Compute flux ratios**: :math:`r = F_{\\rm model} / F_{\\rm obs}`
+    4. **Reweight samples**: For bands used in fitting, recompute
+       :math:`P(M|D_{-i})` excluding band i to avoid circularity
+    5. **Bootstrap**: Resample objects and models with weights, compute median
+    6. **Uncertainty**: From bootstrap distribution (IQR or std)
+    7. **Apply priors** (optional): Bayesian combination with prior
 
-    The offsets should be applied as: corrected_data = observed_data * offsets
+    The reweighting in step 4 is critical: if a band was used in the original
+    fit, including it in offset computation would create a circular dependency.
+    Instead, we recompute posteriors excluding that band.
+
+    The offsets should be applied as:
+
+    .. math::
+        F_{\\rm corrected} = F_{\\rm observed} \\times {\\rm offset}
+
+    For iterative refinement, provide old_offsets from previous iteration.
+
+    References
+    ----------
+    The bootstrap methodology follows standard non-parametric uncertainty
+    estimation. The likelihood reweighting approach ensures unbiased
+    estimates for bands included in the original fit.
     """
 
     # Handle configuration

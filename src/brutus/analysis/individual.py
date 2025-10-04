@@ -9,6 +9,11 @@ distances, and extinction using pre-computed model grids. It performs
 brute-force Bayesian inference over the entire grid to derive posterior
 distributions for stellar properties.
 
+The fitting procedure uses gradient-based optimization to find the maximum
+likelihood extinction and distance for each grid point, then computes
+Bayesian posteriors incorporating priors on stellar parameters, Galactic
+structure, dust maps, and astrometry.
+
 Classes
 -------
 BruteForce : Grid-based stellar parameter estimation
@@ -16,6 +21,47 @@ BruteForce : Grid-based stellar parameter estimation
     to estimate stellar parameters, distances, and extinction for
     individual stars. Provides methods for computing log-likelihoods
     and log-posteriors over the grid.
+
+Functions
+---------
+_optimize_fit_mag : Optimize extinction in magnitude space
+_optimize_fit_flux : Optimize extinction in flux space
+_get_sed_mle : Compute maximum likelihood SED parameters
+
+See Also
+--------
+brutus.core.StarGrid : Pre-computed stellar model grids
+brutus.priors : Prior probability functions
+brutus.utils.photometry : Photometry utilities
+
+Notes
+-----
+The module uses numba JIT compilation for performance-critical functions.
+The fitting algorithm alternates between optimizing in magnitude and flux
+space for numerical stability.
+
+Examples
+--------
+Basic usage with grid-based fitting:
+
+>>> from brutus.data import load_models
+>>> from brutus.core import StarGrid
+>>> from brutus.analysis import BruteForce
+>>>
+>>> # Load pre-computed grid
+>>> models, labels, params = load_models('grid_mist_v9.h5')
+>>> grid = StarGrid(models, labels, params)
+>>>
+>>> # Initialize fitter
+>>> fitter = BruteForce(grid)
+>>>
+>>> # Fit photometry with parallax
+>>> results = fitter.fit(
+...     phot_data, phot_err, phot_mask,
+...     data_labels, save_file='results.h5',
+...     parallax=parallax, parallax_err=parallax_err,
+...     data_coords=coords
+... )
 """
 
 import warnings
@@ -151,20 +197,39 @@ def _optimize_fit_mag(
         Differential reddening vectors at a given Av and Rv for all models.
 
     scale : `~numpy.ndarray` of shape `(Nmodel)`
-        Scale-factors.
+        Scale-factors (related to distance as s = 1/d^2).
 
     av : `~numpy.ndarray` of shape `(Nmodel)`
-        A(V) values.
+        Optimized A(V) values.
 
     rv : `~numpy.ndarray` of shape `(Nmodel)`
-        R(V) values.
+        Optimized R(V) values.
 
     icov_sar : `~numpy.ndarray` of shape `(Nmodel, 3, 3)`
-        Inverse covariance over `(scale, av, rv)`.
+        Inverse covariance matrices over `(scale, av, rv)`.
 
     resid : `~numpy.ndarray` of shape `(Nmodel, Nfilt)`
-        Final residuals.
+        Final residuals between data and optimized models.
 
+    See Also
+    --------
+    _optimize_fit_flux : Flux-space optimization (single iteration)
+    _get_sed_mle : MLE computation for SED parameters
+
+    Notes
+    -----
+    This function performs iterative optimization in magnitude space by
+    solving a linear system for (scale, Av, Rv) at each iteration. The
+    magnitude-space formulation is numerically stable but requires
+    multiple iterations to converge.
+
+    Convergence is determined by monitoring the fractional change in
+    Av and Rv for all well-fitting models (within init_thresh of the
+    best fit).
+
+    The optimization alternately solves for Av (at fixed Rv) and Rv
+    (at fixed Av) to incorporate priors and bounds on each parameter
+    independently.
     """
 
     Nmodel, Nfilt = models.shape
@@ -401,6 +466,20 @@ def _optimize_fit_flux(
     resid : `~numpy.ndarray` of shape `(Nmodel, Nfilt)`
         Residuals between the data and models.
 
+    See Also
+    --------
+    _optimize_fit_mag : Magnitude-space optimization (iterative)
+    _get_sed_mle : MLE computation for SED parameters
+
+    Notes
+    -----
+    This function performs a single update step in flux space using
+    gradient descent. It is called iteratively by the main fitting
+    routine until convergence.
+
+    Unlike magnitude-space fitting, flux-space optimization uses a
+    Taylor expansion which can be less numerically stable for large
+    extinctions but is faster per iteration.
     """
 
     Nmodel, Nfilt = models.shape
@@ -638,6 +717,32 @@ class BruteForce:
     nfilters : int
         Number of filters.
 
+    See Also
+    --------
+    brutus.core.StarGrid : Stellar model grid infrastructure
+    brutus.data.load_models : Load pre-computed grids
+    loglike_grid : Compute log-likelihoods
+    logpost_grid : Compute log-posteriors
+
+    Notes
+    -----
+    The BruteForce fitter uses a two-stage approach:
+
+    1. **Likelihood computation** (`loglike_grid`): Optimizes distance
+       and extinction for each grid point to find maximum likelihood
+
+    2. **Posterior computation** (`logpost_grid`): Integrates over
+       distance and extinction uncertainty using Monte Carlo, applying
+       priors for Galactic structure, dust maps, and astrometry
+
+    The fitter automatically handles:
+    - Grid parameter vs. prediction distinction
+    - Age weighting for proper sampling
+    - Grid spacing corrections
+    - Parallax constraints
+    - Galactic structure priors
+    - Dust map priors
+
     Examples
     --------
     Basic usage with a pre-loaded grid:
@@ -704,7 +809,23 @@ class BruteForce:
         """
         Generate labels mask from StarGrid structure.
 
-        Returns dict where True = grid parameter, False = prediction.
+        Creates a dictionary mapping label names to boolean values indicating
+        whether each label is a grid parameter (True) or a derived prediction
+        (False). Grid parameters are the dimensions used to construct the grid,
+        while predictions are stellar properties interpolated from the grid.
+
+        Returns
+        -------
+        labels_mask : dict
+            Dictionary where keys are label names and values are True for
+            grid parameters (e.g., mini, eep, feh) or False for predictions
+            (e.g., loga, logt, logg).
+
+        Notes
+        -----
+        This distinction is important for applying grid spacing corrections
+        (only to grid parameters) and for understanding which parameters
+        define the grid structure vs. which are interpolated outputs.
         """
         labels_mask = {}
 
@@ -749,8 +870,26 @@ class BruteForce:
             Reddening vectors.
 
         drvecs : numpy.ndarray of shape (Nmodels, Nbands)
-            Differential reddening vectors.
+            Differential reddening vectors with respect to Rv.
 
+        See Also
+        --------
+        brutus.core.sed_utils._get_seds : Underlying SED computation
+        StarGrid.get_seds : Single star SED generation
+
+        Notes
+        -----
+        This method performs batch SED computation for multiple grid
+        points simultaneously, which is more efficient than calling
+        `StarGrid.get_seds()` repeatedly.
+
+        The scale factor relates to distance as :math:`s = 1/d^2` where
+        d is distance in parsecs. The reddening is applied as:
+
+        .. math::
+            m(\\lambda) = m_0(\\lambda) + A_V \\cdot [r_0(\\lambda) + R_V \\cdot dr(\\lambda)]
+
+        where :math:`r_0` and :math:`dr` are the reddening vector components.
         """
         if indices is not None:
             mag_coeffs = self.models[indices]
@@ -802,9 +941,42 @@ class BruteForce:
         rstate=None,
     ):
         """
-        Pre-process data and perform safety checks.
+        Pre-process data and initialize priors for fitting.
 
-        This method prepares the data for fitting and initializes priors.
+        This internal method prepares photometric data for fitting by
+        applying quality cuts, photometric offsets, and initializing
+        appropriate prior distributions.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Photometric flux densities
+        data_err : numpy.ndarray
+            Photometric errors
+        data_mask : numpy.ndarray
+            Initial data quality mask
+        apply_agewt : bool
+            Whether to apply age weighting to priors
+        apply_grad : bool
+            Whether to apply grid spacing corrections
+        Other parameters
+            See fit() method for full parameter descriptions
+
+        Returns
+        -------
+        tuple
+            Processed (data, data_err, data_mask, lnprior, lngalprior, lndustprior)
+
+        Notes
+        -----
+        This method performs several important setup tasks:
+
+        1. Applies photometric offsets if provided
+        2. Filters data based on magnitude and error limits
+        3. Initializes stellar priors (IMF or luminosity function)
+        4. Applies age gradient weighting for proper sampling
+        5. Applies grid spacing corrections
+        6. Sets up Galactic structure and dust priors
         """
 
         # Apply photometric offsets if provided
@@ -906,11 +1078,59 @@ class BruteForce:
         indices : array-like, optional
             Subset of model indices to use. If None, uses all models.
 
-        Other parameters are passed to loglike_grid.
+        avlim : tuple, optional
+            (min, max) bounds on A(V). Default is (0.0, 20.0).
+
+        av_gauss : tuple, optional
+            (mean, std) for Gaussian prior on A(V). Default is (0.0, 1e6).
+
+        rvlim : tuple, optional
+            (min, max) bounds on R(V). Default is (1.0, 8.0).
+
+        rv_gauss : tuple, optional
+            (mean, std) for Gaussian prior on R(V). Default is (3.32, 0.18).
+
+        parallax : float, optional
+            Parallax measurement in mas.
+
+        parallax_err : float, optional
+            Parallax error in mas.
+
+        return_vals : bool, optional
+            If True, return full results including covariances. Default is False.
+
+        Other parameters
+            Passed to optimization functions.
 
         Returns
         -------
-        Results from loglike_grid.
+        If return_vals=False:
+            lnl : numpy.ndarray
+                Log-likelihoods for each grid point
+            Ndim : int
+                Number of dimensions (filters)
+            chi2 : numpy.ndarray
+                Chi-squared values
+
+        If return_vals=True:
+            Also includes scale, av, rv, icov_sar arrays
+
+        See Also
+        --------
+        logpost_grid : Compute log-posteriors from likelihoods
+        _optimize_fit_mag : Magnitude-space optimization
+        _optimize_fit_flux : Flux-space optimization
+
+        Notes
+        -----
+        This method optimizes (distance, Av, Rv) for each grid point by:
+
+        1. Initial magnitude-space fit for numerical stability
+        2. Iterative flux-space refinement until convergence
+        3. Optional parallax constraint during optimization
+
+        The optimization uses priors on Av and Rv but not on distance/scale
+        (distance priors are applied in logpost_grid).
         """
 
         # Select models

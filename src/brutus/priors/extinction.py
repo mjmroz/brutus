@@ -5,7 +5,42 @@
 Extinction priors for Bayesian stellar parameter estimation.
 
 This module provides log-prior functions for dust extinction modeling
-using Bayestar dust maps and systematic corrections.
+using Bayestar 3D dust maps. These priors incorporate spatial dust
+distribution information to constrain extinction in stellar fitting.
+
+Functions
+---------
+logp_extinction : Dust map extinction prior
+    Gaussian prior from Bayestar dust maps
+
+See Also
+--------
+brutus.dust.maps : 3D dust map utilities
+brutus.priors.galactic : Galactic structure priors
+brutus.analysis.individual.BruteForce : Uses extinction priors for fitting
+
+Notes
+-----
+The extinction prior uses the Bayestar 3D dust maps (Green et al. 2015,
+2018) which provide distance-dependent extinction estimates across the sky.
+
+The prior is Gaussian when dust map data is available, and uniform when
+coverage is unavailable. This gracefully handles regions outside the
+mapped volume.
+
+Examples
+--------
+>>> from brutus.priors.extinction import logp_extinction
+>>> from astropy.coordinates import SkyCoord
+>>> import numpy as np
+>>>
+>>> # Coordinates and dust map (assume loaded)
+>>> coords = SkyCoord(ra=180, dec=30, unit='deg', frame='icrs')
+>>> # dustmap = load_dustmap()  # hypothetical
+>>>
+>>> # Evaluate extinction prior
+>>> av_values = np.linspace(0, 2, 100)
+>>> # log_prior = logp_extinction(av_values, dustmap, coords)
 """
 
 import numpy as np

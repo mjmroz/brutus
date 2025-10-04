@@ -6,6 +6,75 @@ Photometric utility functions for brutus.
 
 This module contains functions for converting between magnitudes and fluxes,
 handling asinh magnitudes ("luptitudes"), and computing photometric likelihoods.
+These utilities are fundamental for all photometric analysis in brutus.
+
+Functions
+---------
+magnitude : Convert flux to magnitudes
+    AB magnitude system conversion
+inv_magnitude : Convert magnitudes to flux
+    Inverse of magnitude conversion
+luptitude : Convert flux to asinh magnitudes
+    Asinh magnitude system (Lupton et al. 1999)
+inv_luptitude : Convert asinh magnitudes to flux
+    Inverse of luptitude conversion
+add_mag : Combine magnitudes
+    Add fluxes in magnitude space
+phot_loglike : Photometric log-likelihood
+    Core likelihood function for stellar fitting
+chisquare_outlier_loglike : Chi-square outlier model
+    Outlier likelihood for mixture models
+uniform_outlier_loglike : Uniform outlier model
+    Alternative outlier likelihood
+
+See Also
+--------
+brutus.analysis.individual.BruteForce : Uses phot_loglike for fitting
+brutus.analysis.populations : Uses outlier models for mixture fitting
+brutus.core.sed_utils : SED generation functions
+
+Notes
+-----
+The photometric likelihood function `phot_loglike` is the core of brutus's
+Bayesian inference machinery. It supports:
+
+- Multi-filter photometry with flexible masking
+- Optional dimensionality prior (chi-square distribution)
+- Degrees of freedom reduction for fitted parameters
+
+The asinh magnitude system (luptitudes) provides better behavior than
+standard magnitudes for faint sources with high noise, preventing
+negative flux issues.
+
+Examples
+--------
+Basic magnitude conversion:
+
+>>> import numpy as np
+>>> from brutus.utils.photometry import magnitude, inv_magnitude
+>>>
+>>> # Convert flux to magnitude
+>>> flux = np.array([[100, 200]])  # arbitrary flux units
+>>> flux_err = np.array([[10, 20]])
+>>> mags, mag_errs = magnitude(flux, flux_err)
+>>>
+>>> # Convert back
+>>> flux_recovered, flux_err_recovered = inv_magnitude(mags, mag_errs)
+
+Photometric likelihood:
+
+>>> from brutus.utils.photometry import phot_loglike
+>>>
+>>> # Observed photometry
+>>> obs_flux = np.array([[1.0, 2.0, 3.0]])  # 1 object, 3 filters
+>>> obs_err = np.array([[0.1, 0.2, 0.3]])
+>>>
+>>> # Model predictions for 10 models
+>>> model_flux = np.random.uniform(0.5, 4.0, (1, 10, 3))
+>>>
+>>> # Compute likelihoods
+>>> lnl = phot_loglike(obs_flux, obs_err, model_flux)
+>>> # lnl.shape is (1, 10) - likelihood for each model
 """
 
 import numpy as np
@@ -255,6 +324,25 @@ def phot_loglike(flux, err, mfluxes, mask=None, dim_prior=False, dof_reduction=0
     lnl : `~numpy.ndarray` with shape (Nobj, Nmod)
         Log-likelihood values.
 
+    See Also
+    --------
+    chisquare_outlier_loglike : Outlier model for dim_prior=True
+    uniform_outlier_loglike : Outlier model for dim_prior=False
+    brutus.analysis.individual.BruteForce.loglike_grid : Uses this function
+
+    Notes
+    -----
+    The log-likelihood without dimensionality prior is:
+
+    .. math::
+        \\ln L = -\\frac{1}{2} \\left[ \\chi^2 + N \\ln(2\\pi) + \\ln|\\Sigma| \\right]
+
+    where :math:`\\chi^2 = \\sum_i (f_i - m_i)^2/\\sigma_i^2` and
+    :math:`|\\Sigma|` is the determinant of the covariance matrix.
+
+    With dimensionality prior (dim_prior=True), this becomes the log-PDF
+    of a chi-square distribution, which weights models by goodness-of-fit
+    relative to the number of degrees of freedom.
     """
     # Initialize values.
     Nobj, Nfilt = flux.shape[:2]

@@ -2,21 +2,100 @@
 # -*- coding: utf-8 -*-
 
 """
-Line-of-sight dust extinction analysis for brutus.
+Line-of-sight dust extinction analysis for 3D dust mapping.
 
 This module provides functionality for modeling 3D dust distribution along
 lines-of-sight using stellar posterior samples from individual star fitting.
-Implements multi-cloud extinction models with various smoothing kernels.
+The implementation uses multi-cloud extinction models with various smoothing
+kernels and is designed for use with nested sampling codes like dynesty.
 
-The core approach models extinction along a line-of-sight using n discrete
-"clouds" at different distances, each contributing some amount of extinction.
-The model includes:
-- n cloud pairs (distance, extinction)
-- 1 foreground extinction parameter
-- 2 smoothing parameters (foreground + background)
-- 1 outlier fraction parameter
+The core approach models cumulative extinction along a line-of-sight as a
+series of discrete "clouds" at different distances, each contributing
+extinction. This allows reconstruction of 3D dust maps from stellar photometry.
 
-Total parameters: 2 * n + 4 per line-of-sight.
+Model Components
+----------------
+For n clouds, the model has 2n + 4 parameters per line-of-sight:
+
+- **Outlier fraction** (P_b): Fraction of stars that don't follow the model
+- **Foreground smoothing** (s_fore): Smoothing scale for nearest cloud
+- **Background smoothing** (s_back): Smoothing scale for distant clouds
+- **Foreground extinction** (A_V,fore): Extinction before first cloud
+- **n cloud pairs**: (distance_i, extinction_i) for each cloud
+
+The cumulative extinction at distance d is computed by summing contributions
+from all clouds closer than d, smoothed by a kernel (Gaussian, Lorentzian,
+or top-hat).
+
+Functions
+---------
+los_clouds_priortransform : Prior transformation
+    Transform unit cube to physical parameters for nested sampling
+los_clouds_loglike_samples : Likelihood function
+    Compute log-likelihood given stellar distance/extinction samples
+kernel_tophat : Top-hat kernel
+    Sharp cloud edges
+kernel_gauss : Gaussian kernel
+    Smooth cloud transitions
+kernel_lorentz : Lorentzian kernel
+    Heavy-tailed cloud transitions
+
+See Also
+--------
+brutus.analysis.individual.BruteForce : Provides stellar posterior samples
+brutus.priors.extinction : Extinction priors
+brutus.dust.maps : 3D dust map utilities
+
+Notes
+-----
+The likelihood computation accounts for:
+
+1. **Cloud contributions**: Each cloud adds extinction for stars behind it
+2. **Smoothing**: Kernel function smooths cloud boundaries
+3. **Outlier model**: Uniform distribution in (distance, extinction)
+4. **Foreground component**: Extinction before first cloud
+
+The model is fit using nested sampling (e.g., dynesty) which requires:
+- Prior transform: los_clouds_priortransform
+- Log-likelihood: los_clouds_loglike_samples
+
+Typical workflow:
+1. Fit individual stars to get (distance, extinction) posteriors
+2. For each sightline, run nested sampling with n-cloud model
+3. Compare evidences for different n to select best model
+4. Reconstruct 3D dust map from cloud parameters
+
+Examples
+--------
+Setting up nested sampling for 2-cloud model:
+
+>>> import numpy as np
+>>> from dynesty import NestedSampler
+>>> from brutus.analysis.los_dust import (
+...     los_clouds_priortransform,
+...     los_clouds_loglike_samples
+... )
+>>>
+>>> # Stellar posteriors: distance (DM) and extinction (A_V)
+>>> # dsamps shape: (n_stars, n_samples)
+>>> # rsamps shape: (n_stars, n_samples)
+>>>
+>>> # For 2 clouds: pb, s0, s, fred, d1, r1, d2, r2 (8 params)
+>>> ndim = 8
+>>>
+>>> def prior_transform(u):
+...     return los_clouds_priortransform(
+...         u, rlims=(0, 6), dlims=(4, 19)
+...     )
+>>>
+>>> def loglike(theta):
+...     return los_clouds_loglike_samples(
+...         theta, dsamps, rsamps, kernel='gauss'
+...     )
+>>>
+>>> sampler = NestedSampler(loglike, prior_transform, ndim)
+>>> sampler.run_nested()
+>>> results = sampler.results
 """
 
 import warnings
@@ -101,7 +180,31 @@ def los_clouds_priortransform(
     Returns
     -------
     x : ndarray, shape (Nparams,)
-        The transformed parameters.
+        The transformed physical parameters in order:
+        [pb, s_fore, s_back, A_V_fore, d1, A_V1, d2, A_V2, ...]
+        where di are sorted in increasing order.
+
+    See Also
+    --------
+    los_clouds_loglike_samples : Likelihood function for these parameters
+    kernel_gauss : Gaussian smoothing kernel
+    kernel_lorentz : Lorentzian smoothing kernel
+
+    Notes
+    -----
+    The prior distributions are:
+
+    - **Outlier fraction** (P_b): Truncated log-normal with median ~0.05
+    - **Smoothing** (s_fore, s_back): Truncated log-normal with median ~0.05
+    - **Foreground extinction**: Uniform over rlims
+    - **Cloud distances**: Uniform over dlims, sorted in increasing order
+    - **Cloud extinctions**: Uniform over rlims, ordered by distance
+
+    The sorting ensures clouds are ordered by increasing distance, which
+    is required for the cumulative extinction calculation.
+
+    The log-normal priors on outlier fraction and smoothing concentrate
+    probability near zero while allowing occasional larger values.
 
     Examples
     --------

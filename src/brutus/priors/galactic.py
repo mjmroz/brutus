@@ -6,7 +6,73 @@ Galactic structure priors for Bayesian stellar parameter estimation.
 
 This module provides log-prior functions for Galactic structure modeling
 including disk and halo number densities, metallicity distributions,
-and age-metallicity relations.
+and age-metallicity relations. These priors encode our knowledge of the
+Milky Way's stellar populations and are essential for distance estimation.
+
+Functions
+---------
+logn_disk : Disk number density
+    Exponential disk model
+logn_halo : Halo number density
+    Flattened power-law halo
+logp_feh : Metallicity distribution
+    Gaussian metallicity distribution
+logp_age_from_feh : Age-metallicity relation
+    Age distribution conditional on metallicity
+logp_galactic_structure : Combined prior
+    Full Galactic structure prior combining disk and halo
+
+See Also
+--------
+brutus.analysis.individual.BruteForce : Uses Galactic priors for distance fitting
+brutus.priors.stellar : Stellar population priors
+brutus.priors.astrometric : Parallax and proper motion priors
+
+Notes
+-----
+These priors provide critical constraints on stellar distances by
+incorporating knowledge of Galactic structure:
+
+- **Number density priors** (disk and halo) weight distance based on
+  expected stellar distributions in the Galaxy
+
+- **Metallicity priors** provide realistic [Fe/H] distributions for
+  disk and halo populations
+
+- **Age-metallicity relations** link stellar age and composition
+
+The combined prior `logp_galactic_structure` integrates disk and halo
+models with appropriate mixing fractions.
+
+The priors use Galactocentric coordinates, which requires coordinate
+transformations from equatorial coordinates and distances.
+
+Examples
+--------
+Evaluate disk number density:
+
+>>> import numpy as np
+>>> from brutus.priors.galactic import logn_disk
+>>>
+>>> # Position in Galactic disk
+>>> R = np.array([8.0])  # kpc from Galactic center
+>>> Z = np.array([0.1])  # kpc above midplane
+>>> log_density = logn_disk(R, Z)
+>>> print(f"Log-density: {log_density[0]:.3f}")
+
+Combined Galactic structure prior:
+
+>>> from astropy.coordinates import SkyCoord
+>>> from brutus.priors.galactic import logp_galactic_structure
+>>>
+>>> # Sky position
+>>> coords = SkyCoord(ra=180, dec=30, unit='deg', frame='icrs')
+>>> distances = np.array([1.0, 2.0, 5.0])  # kpc
+>>>
+>>> # Evaluate prior
+>>> log_prior = logp_galactic_structure(
+...     coords, distances, feh=0.0, disk_frac=0.9
+... )
 """
 
 import numpy as np
@@ -60,6 +126,11 @@ def logn_disk(R, Z, R_solar=8.2, Z_solar=0.025, R_scale=2.6, Z_scale=0.3, R_smoo
     -------
     logn : array_like
         Normalized log-number density relative to Solar neighborhood.
+
+    See Also
+    --------
+    logn_halo : Halo number density
+    logp_galactic_structure : Combined disk+halo model
 
     Notes
     -----
@@ -130,6 +201,11 @@ def logn_halo(
     -------
     logn : array_like
         Normalized log-number density relative to Solar neighborhood.
+
+    See Also
+    --------
+    logn_disk : Disk number density
+    logp_galactic_structure : Combined disk+halo model
 
     Notes
     -----
