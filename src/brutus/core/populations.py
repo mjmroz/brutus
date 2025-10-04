@@ -220,7 +220,6 @@ class Isochrone(object):
         If alpha enhancement has only one value, the grid is padded with
         duplicate values to enable scipy interpolation.
         """
-
         # Set up coordinate grids
         self.feh_u = np.unique(self.feh_grid)
         self.afe_u = np.unique(self.afe_grid)
@@ -345,7 +344,6 @@ class Isochrone(object):
         >>> masses = params[:, 0]  # Initial masses
         >>> temps = 10**params[:, 3]  # Effective temperatures
         """
-
         # Set default EEP grid
         if eep is None:
             eep = self.eep_u
@@ -669,7 +667,6 @@ class StellarPop(object):
         ...     av=0.2, dist=2000.0
         ... )
         """
-
         if self.predictor is None:
             raise RuntimeError("Neural network predictor not available")
 
@@ -767,7 +764,6 @@ class StellarPop(object):
         corr_params,
     ):
         """Add binary star components to the population synthesis."""
-
         # Calculate secondary masses and EEPs
         mini = params["mini"]
         mini2 = mini * binary_fraction

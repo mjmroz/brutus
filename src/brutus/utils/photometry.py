@@ -162,7 +162,8 @@ def inv_magnitude(mag, err, zeropoints=1.0):
 
 def luptitude(phot, err, skynoise=1.0, zeropoints=1.0):
     """
-    Convert photometry to asinh magnitudes (i.e. "Luptitudes"). See Lupton et
+    Convert photometry to asinh magnitudes (i.e. "Luptitudes"). See Lupton et.
+
     al. (1999) for more details.
 
     Parameters
@@ -206,8 +207,9 @@ def luptitude(phot, err, skynoise=1.0, zeropoints=1.0):
 
 def inv_luptitude(lupt, err, skynoise=1.0, zeropoints=1.0):
     """
-    Convert asinh magnitudes (i.e. "Luptitudes") to photometry. See Lupton et
-    al. (1999) for more details.
+    Convert asinh magnitudes (Luptitudes) to photometry.
+
+    See Lupton et al. (1999) for more details.
 
     Parameters
     ----------
@@ -286,7 +288,7 @@ def add_mag(mag1, mag2):
 
 
 def phot_loglike(flux, err, mfluxes, mask=None, dim_prior=False, dof_reduction=0):
-    """
+    r"""
     Compute the log-likelihood between observed and model fluxes.
 
     Parameters

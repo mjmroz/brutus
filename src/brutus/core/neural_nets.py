@@ -58,7 +58,8 @@ __all__ = ["FastNN", "FastNNPredictor"]
 
 class FastNN(object):
     """
-    Object that wraps the underlying neural networks used to interpolate
+    Object that wraps the underlying neural networks used to interpolate.
+
     between grid points on the bolometric correction tables.
 
     This class provides the core neural network functionality for predicting
@@ -158,7 +159,6 @@ class FastNN(object):
         - /{filter}/b1, b2, b3 : bias vectors for layers 1, 2, 3
         - /{filter}/xmin, xmax : input parameter scaling bounds
         """
-
         with h5py.File(nnfile, "r") as f:
             # Store weights and bias for each layer and filter
             self.w1 = np.array([f[fltr]["w1"] for fltr in filters])
@@ -206,7 +206,6 @@ class FastNN(object):
         The scaling is applied as: x_scaled = (x - xmin) / (xmax - xmin)
         where xmin and xmax are the bounds from the training data.
         """
-
         try:
             # Handle 1D input case
             xp = (np.atleast_2d(x) - self.xmin[None, :]) / self.xspan[None, :]
@@ -237,7 +236,6 @@ class FastNN(object):
         The sigmoid function maps any real number to the range (0, 1),
         providing smooth activation for the neural network hidden layers.
         """
-
         return 1.0 / (1.0 + np.exp(-a))
 
     def nneval(self, x):
@@ -265,7 +263,6 @@ class FastNN(object):
         - Hidden layer 2: with sigmoid activation
         - Output layer: linear activation (bolometric corrections)
         """
-
         # Forward propagation through the network
         a1 = self.sigmoid(np.matmul(self.w1, self.encode(x)) + self.b1)
         a2 = self.sigmoid(np.matmul(self.w2, a1) + self.b2)
@@ -276,8 +273,7 @@ class FastNN(object):
 
 class FastNNPredictor(FastNN):
     """
-    Object that generates SED predictions for a provided set of filters
-    using neural networks trained on bolometric correction tables.
+    Object that generates SED predictions for a provided set of filters using neural networks.
 
     This class extends FastNN to provide a complete interface for stellar
     SED prediction, including automatic distance modulus calculation and
@@ -447,7 +443,6 @@ class FastNNPredictor(FastNN):
         >>> extinction = sed_dusty - sed_clean
         >>> print(f"V-band extinction: {extinction[0]:.2f} mag")
         """
-
         # Compute distance modulus
         mu = 5.0 * np.log10(dist) - 5.0
 

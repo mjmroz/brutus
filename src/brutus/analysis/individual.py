@@ -123,7 +123,8 @@ def _optimize_fit_mag(
     init_thresh=5e-3,
 ):
     """
-    Optimize the distance and reddening between the models and the data using
+    Optimize the distance and reddening between the models and the data using.
+
     the gradient in **magnitudes**. This executes multiple `(Av, Rv)` updates.
 
     Parameters
@@ -231,7 +232,6 @@ def _optimize_fit_mag(
     (at fixed Av) to incorporate priors and bounds on each parameter
     independently.
     """
-
     Nmodel, Nfilt = models.shape
 
     avmin, avmax = avlim
@@ -383,9 +383,10 @@ def _optimize_fit_flux(
     rv_gauss=(3.32, 0.18),
 ):
     """
-    Optimize the distance and reddening between the models and the data using
-    the gradient in **flux densities**. This executes **only one**
-    `(Av, Rv)` update.
+    Optimize distance and reddening using flux densities gradient (single update).
+
+    This executes **only one** `(Av, Rv)` update using the gradient
+    in **flux densities**.
 
     Parameters
     ----------
@@ -481,7 +482,6 @@ def _optimize_fit_flux(
     Taylor expansion which can be less numerically stable for large
     extinctions but is faster per iteration.
     """
-
     Nmodel, Nfilt = models.shape
 
     avmin, avmax = avlim
@@ -552,7 +552,8 @@ def _get_sed_mle(
     data, tot_var, resid, mag_coeffs, av, rv, av_gauss=(0.0, 1e6), rv_gauss=(3.32, 0.18)
 ):
     """
-    Optimize the distance and reddening between the models and the data using
+    Optimize the distance and reddening between the models and the data using.
+
     the gradient in **flux densities**. This executes **only one**
     `(Av, Rv)` update.
 
@@ -610,7 +611,6 @@ def _get_sed_mle(
         Residuals between the data and models.
 
     """
-
     Av_mean, Av_std = av_gauss
     Rv_mean, Rv_std = rv_gauss
 
@@ -770,7 +770,6 @@ class BruteForce:
 
     def __init__(self, star_grid, verbose=True):
         """Initialize BruteForce with a StarGrid instance."""
-
         if not isinstance(star_grid, StarGrid):
             raise TypeError("star_grid must be a StarGrid instance")
 
@@ -841,7 +840,7 @@ class BruteForce:
         return labels_mask
 
     def get_sed_grid(self, indices=None, av=None, rv=None, return_flux=False):
-        """
+        r"""
         Compute SEDs for multiple grid points simultaneously.
 
         This is the grid-based batch computation method, distinct from
@@ -978,7 +977,6 @@ class BruteForce:
         5. Applies grid spacing corrections
         6. Sets up Galactic structure and dust priors
         """
-
         # Apply photometric offsets if provided
         if phot_offsets is not None:
             data = data * phot_offsets
@@ -1099,7 +1097,9 @@ class BruteForce:
         return_vals : bool, optional
             If True, return full results including covariances. Default is False.
 
-        Other parameters
+        Other Parameters
+        ----------------
+        **kwargs
             Passed to optimization functions.
 
         Returns
@@ -1132,7 +1132,6 @@ class BruteForce:
         The optimization uses priors on Av and Rv but not on distance/scale
         (distance priors are applied in logpost_grid).
         """
-
         # Select models
         if indices is not None:
             mag_coeffs = self.models[indices]
@@ -1326,7 +1325,6 @@ class BruteForce:
         -------
         Results from logpost_grid.
         """
-
         # Use instance's labels if not provided
         if dlabels is None:
             dlabels = self.models_labels
@@ -1510,7 +1508,6 @@ class BruteForce:
 
         Parameters match the original BruteForce.fit() interface.
         """
-
         # Setup data and priors
         setup_results = self._setup(
             data,
@@ -1625,10 +1622,7 @@ class BruteForce:
         mem_lim=8000.0,
         rstate=None,
     ):
-        """
-        Internal fitting method for a single object.
-        """
-
+        """Perform internal fitting for a single object."""
         # Compute grid likelihoods
         loglike_results = self.loglike_grid(
             data,
@@ -1670,7 +1664,7 @@ class BruteForce:
         return logpost_results
 
     def __repr__(self):
-        """String representation of BruteForce object."""
+        """Return string representation of BruteForce object."""
         return (
             f"BruteForce(nmodels={self.nmodels:,}, "
             f"nfilters={self.nfilters}, "

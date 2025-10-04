@@ -45,6 +45,55 @@ This document defines the official docstring standards for the brutus project. A
 - [ ] Mathematical notation properly formatted
 - [ ] References cited when based on literature
 
+### Style Compliance (pydocstyle --convention=numpy)
+
+**Critical Rules**:
+1. **D301**: Use `r"""` for docstrings with backslashes (LaTeX math):
+   ```python
+   def func():
+       r"""  # Note the 'r' prefix
+       Compute value using:
+
+       .. math::
+           y = \\alpha \\cdot x
+       """
+   ```
+
+2. **D202**: No blank lines after closing docstring:
+   ```python
+   def func():
+       """Summary."""
+       # Code starts immediately (no blank line)
+       x = 1
+   ```
+
+3. **D205/D400**: Summary must be one line with period:
+   ```python
+   def func():
+       """Compute stellar parameters from input labels."""  # Good: one line, period
+
+   def func():
+       """Compute stellar parameters from  # Bad: split across lines
+       input labels"""
+   ```
+
+4. **D401**: Use imperative mood:
+   ```python
+   def func():
+       """Compute distance."""  # Good: imperative
+
+   def func():
+       """Computes distance."""  # Bad: indicative
+   ```
+
+5. **D405/D407**: "Other Parameters" requires capitalization and underline:
+   ```python
+   Other Parameters
+   ----------------
+   **kwargs
+       Additional arguments
+   ```
+
 ---
 
 ## Format Standard

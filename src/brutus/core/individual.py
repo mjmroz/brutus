@@ -352,7 +352,6 @@ class EEPTracks(object):
         This method handles the case where alpha enhancement data ([α/Fe])
         is not available in the file by setting it to zero.
         """
-
         if verbose:
             sys.stderr.write("  Constructing track library...\n")
 
@@ -427,7 +426,6 @@ class EEPTracks(object):
         - X: array of grid indices for each library point
         - mini_bound: minimum initial mass in the grid
         """
-
         # Get unique grid points in each dimension
         self.gridpoints = {}
         self.binwidths = {}
@@ -471,7 +469,6 @@ class EEPTracks(object):
         The gradient is computed as d(age)/d(EEP) where age is in linear
         (not logarithmic) units, even though ages are stored as log(age).
         """
-
         if verbose:
             sys.stderr.write("  Computing age weights...\n")
 
@@ -543,7 +540,6 @@ class EEPTracks(object):
         The interpolator maps from (mini, eep, feh, afe) input coordinates
         to all predicted stellar parameters simultaneously.
         """
-
         # Set up grid dimensions
         self.grid_dims = np.append(
             [len(self.gridpoints[p]) for p in self.labels], self.output.shape[-1]
@@ -625,7 +621,6 @@ class EEPTracks(object):
         >>> labels = np.array([[0.8, 350, -0.5, 0.2], [1.2, 454, 0.0, 0.0]])
         >>> params = tracks.get_predictions(labels)
         """
-
         labels = np.array(labels)
         ndim = labels.ndim
 
@@ -654,7 +649,7 @@ class EEPTracks(object):
         return preds
 
     def get_corrections(self, labels, corr_params=None):
-        """
+        r"""
         Compute empirical corrections to stellar parameters.
 
         Applies empirical corrections to effective temperature and radius
@@ -702,7 +697,6 @@ class EEPTracks(object):
 
         Corrections are set to zero for stars with :math:`M_{\\rm ini} \\geq 1.0 M_\\odot`.
         """
-
         labels = np.array(labels)
         ndim = labels.ndim
 
@@ -874,7 +868,7 @@ class StarEvolTrack(object):
         tol=1e-6,
         **kwargs,
     ):
-        """
+        r"""
         Generate synthetic SED for an individual star.
 
         Parameters
@@ -978,7 +972,6 @@ class StarEvolTrack(object):
         ...     mini=1.2, eep=400, feh=-0.2, afe=0.1, smf=0.7
         ... )
         """
-
         if self.predictor is None:
             raise RuntimeError("Neural network predictor not available")
 
@@ -1069,7 +1062,7 @@ class StarEvolTrack(object):
             return sed, params, params2
 
     def _get_eep_for_secondary(self, loga, mini, eep, feh, afe, smf, tol):
-        """
+        r"""
         Calculate EEP for secondary component that matches the age of the primary.
 
         This method solves the inverse problem: given a target age (from the primary),
@@ -1113,7 +1106,6 @@ class StarEvolTrack(object):
 
         where :math:`M_2 = M_1 \\times smf` is the secondary mass.
         """
-
         # Get age index from tracks
         aidx = self.tracks.predictions.index("loga")
 
@@ -1235,7 +1227,6 @@ class StarGrid(object):
         self, models, models_labels, models_params=None, filters=None, verbose=True
     ):
         """Initialize the StarGrid with model data."""
-
         # Handle different input formats
         if isinstance(models, dict):
             # Dictionary input (e.g., from h5py file)
@@ -1329,7 +1320,6 @@ class StarGrid(object):
 
     def _build_grid_indices(self):
         """Build indices for efficient grid lookup and interpolation."""
-
         # Create unique value arrays for each label dimension
         self.grid_axes = {}
         self.grid_shape = []
@@ -1348,6 +1338,7 @@ class StarGrid(object):
     def _build_kdtree(self, **kwargs):
         """
         Build KD-tree for efficient nearest neighbor queries.
+
         Only built on first use to avoid overhead if only using via BruteForce.
         """
         if self.kdtree is not None:
@@ -1661,7 +1652,6 @@ class StarGrid(object):
         >>> print(f"log(age) = {preds['loga']:.2f}")
         >>> print(f"log(L) = {preds['logl']:.2f}")
         """
-
         # Find neighboring grid points
         if use_multilinear:
             indices, weights = self._find_neighbors_multilinear(
@@ -1714,7 +1704,7 @@ class StarGrid(object):
         use_multilinear=True,
         **kwargs,
     ):
-        """
+        r"""
         Generate synthetic SED from the grid.
 
         Interpolates grid models and applies extinction to generate
@@ -1804,7 +1794,6 @@ class StarGrid(object):
         ... )
         >>> print(f"G magnitude: {sed[0]:.2f}")
         """
-
         # Warning for binary support limitations
         if smf is not None and smf > 0:
             import warnings
@@ -1900,7 +1889,7 @@ class StarGrid(object):
         return sed, params, params2
 
     def __repr__(self):
-        """String representation of the StarGrid object."""
+        """Return string representation of the StarGrid object."""
         rep = f"StarGrid(nmodels={self.nmodels:,}, nfilters={self.nfilters}"
         if self.label_names:
             rep += f", labels={self.label_names}"

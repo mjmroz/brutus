@@ -110,7 +110,7 @@ def generate_isochrone_population_grid(
     eep_binary_max=480.0,
     corr_params=None,
 ):
-    """
+    r"""
     Generate isochrone population grid over (mass, SMF) parameter space.
 
     Parameters
@@ -302,7 +302,7 @@ def compute_isochrone_cluster_loglike(
     dim_prior=True,
     mask=None,
 ):
-    """
+    r"""
     Compute cluster membership likelihood using existing photometry infrastructure.
 
     Parameters
@@ -528,7 +528,7 @@ def compute_isochrone_outlier_loglike(
 def apply_isochrone_mixture_model(
     lnl_cluster, lnl_outlier, cluster_prob, field_fraction
 ):
-    """
+    r"""
     Apply mixture model at each grid point: mixture before marginalization.
 
     For each (grid_point, object) pair:
@@ -606,7 +606,7 @@ def apply_isochrone_mixture_model(
 
 
 def marginalize_isochrone_grid(lnl_mixture, mass_jacobians, smf_jacobians):
-    """
+    r"""
     Marginalize mixed likelihoods over (mass, SMF) grid with geometric jacobians.
 
     Performs: P(data|population_params) = ∫∫ P(data|mass,SMF) dm d(SMF)
@@ -695,7 +695,7 @@ def isochrone_population_loglike(
     mask=None,
     **outlier_kwargs,
 ):
-    """
+    r"""
     Compute log-likelihood for coeval stellar population using isochrone fitting.
 
     Uses the mathematically correct mixture-before-marginalization approach:

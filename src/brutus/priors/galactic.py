@@ -99,7 +99,7 @@ __all__ = [
 
 
 def logn_disk(R, Z, R_solar=8.2, Z_solar=0.025, R_scale=2.6, Z_scale=0.3, R_smooth=2.0):
-    """
+    r"""
     Log-number density for the Galactic disk stellar population.
 
     Implements an exponential disk model with separate radial and vertical
@@ -170,7 +170,7 @@ def logn_halo(
     q_inf=0.8,
     r_q=6.0,
 ):
-    """
+    r"""
     Log-number density for the Galactic halo stellar population.
 
     Implements a flattened power-law halo model with radius-dependent
@@ -254,7 +254,7 @@ def logn_halo(
 
 
 def logp_feh(feh, feh_mean=-0.2, feh_sigma=0.3):
-    """
+    r"""
     Log-prior for stellar metallicity in Galactic components.
 
     Implements a Gaussian metallicity distribution appropriate for
@@ -311,7 +311,7 @@ def logp_age_from_feh(
     max_sigma=4.0,
     min_sigma=1.0,
 ):
-    """
+    r"""
     Log-prior for stellar age based on metallicity-age relation.
 
     Implements the age-metallicity relation observed in the Galactic disk,

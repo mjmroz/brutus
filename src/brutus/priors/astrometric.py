@@ -52,7 +52,7 @@ __all__ = ["logp_parallax", "logp_parallax_scale", "convert_parallax_to_scale"]
 
 
 def logp_parallax(parallaxes, p_meas, p_err):
-    """
+    r"""
     Log-prior for parallax measurements assuming Gaussian errors.
 
     Implements a Gaussian log-prior based on observed parallax and
@@ -101,7 +101,7 @@ def logp_parallax(parallaxes, p_meas, p_err):
 
 
 def logp_parallax_scale(scales, scale_errs, p_meas, p_err, snr_lim=4.0):
-    """
+    r"""
     Log-prior for flux scale factors derived from parallax measurements.
 
     Applies parallax constraints to flux density scale factors where
@@ -168,7 +168,7 @@ def logp_parallax_scale(scales, scale_errs, p_meas, p_err, snr_lim=4.0):
 
 
 def convert_parallax_to_scale(p_meas, p_err, snr_lim=4.0):
-    """
+    r"""
     Convert parallax measurement to flux density scale factor statistics.
 
     Transforms parallax measurements and uncertainties to scale factor

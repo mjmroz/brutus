@@ -68,7 +68,7 @@ __all__ = ["logp_imf", "logp_ps1_luminosity_function"]
 
 
 def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None):
-    """
+    r"""
     Log-prior for a Kroupa-like broken initial mass function.
 
     Implements a broken power-law IMF with separate slopes for low and high

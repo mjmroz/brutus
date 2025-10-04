@@ -238,7 +238,6 @@ def _validate_inputs(
     dists: np.ndarray,
 ) -> None:
     """Validate input arrays for photometric_offsets."""
-
     # Check basic types
     arrays = [phot, err, mask, models, idxs, reds, dreds, dists]
     names = ["phot", "err", "mask", "models", "idxs", "reds", "dreds", "dists"]
@@ -346,7 +345,7 @@ def photometric_offsets(
     config: Optional[PhotometricOffsetsConfig] = None,
     rng: Optional[np.random.Generator] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
+    r"""
     Compute multiplicative photometric offsets between data and models.
 
     This function computes photometric offsets that account for systematic
@@ -487,7 +486,6 @@ def photometric_offsets(
     estimation. The likelihood reweighting approach ensures unbiased
     estimates for bands included in the original fit.
     """
-
     # Handle configuration
     if config is None:
         config = PhotometricOffsetsConfig()

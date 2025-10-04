@@ -72,7 +72,8 @@ __all__ = [
 
 class _function_wrapper(object):
     """
-    A hack to make functions pickleable when `args` or `kwargs` are
+    A hack to make functions pickleable when `args` or `kwargs` are.
+
     also included. Based on the implementation in
     `emcee <http://dan.iel.fm/emcee/>`_.
 
@@ -95,6 +96,7 @@ class _function_wrapper(object):
         self.name = name
 
     def __call__(self, x):
+        """Call the wrapped function with stored arguments."""
         try:
             return self.func(x, *self.args, **self.kwargs)
         except:

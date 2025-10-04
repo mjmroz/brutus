@@ -147,7 +147,8 @@ def draw_sar(
     rstate=None,
 ):
     """
-    Generate random draws from the joint scale-A_V-R_V posterior for a
+    Generate random draws from the joint scale-A_V-R_V posterior for a.
+
     given object.
 
     This function generates Monte Carlo samples from the joint posterior

@@ -49,7 +49,7 @@ __all__ = ["logp_extinction"]
 
 
 def logp_extinction(avs, dustmap, coord, return_components=False):
-    """
+    r"""
     Log-prior for dust extinction using Bayestar dust maps.
 
     Implements Gaussian extinction priors based on the Bayestar dust maps
