@@ -1834,9 +1834,11 @@ class StarGrid(object):
         )
         mags = seds_array[0]  # Extract the single model result
 
-        # Apply distance modulus (default 1 kpc = 1000 pc for parallax = 1 mas)
-        if dist is not None and dist != 10.0:  # 10 pc is absolute magnitude reference
-            dist_mod = 5.0 * np.log10(dist / 10.0)
+        # Apply distance modulus (grid magnitudes stored at 1 kpc = 1000 pc reference)
+        # Note: Grid files are generated at 1 kpc distance for consistency with
+        # Gaia parallax measurements (1 mas = 1 kpc)
+        if dist is not None and dist != 1000.0:  # Grid reference is 1 kpc
+            dist_mod = 5.0 * np.log10(dist / 1000.0)
             mags += dist_mod
 
         # Convert to flux if requested
