@@ -132,6 +132,9 @@ filterwarnings = [
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
 ]
+# Note: Set NUMBA_DISABLE_JIT=1 environment variable for accurate coverage
+# of @jit/@njit decorated functions. Without this, numba-compiled functions
+# will show 0% coverage even if executed by tests.
 
 [tool.coverage.run]
 source = ["src/brutus"]

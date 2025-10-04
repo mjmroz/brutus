@@ -114,16 +114,12 @@ class TestCoreImportErrorHandling:
             # Force reload to trigger the ImportError
             if "brutus.core" in sys.modules:
                 del sys.modules["brutus.core"]
+            if "brutus" in sys.modules:
+                del sys.modules["brutus"]
 
-            import brutus.core
-
-            # When import fails, the variables should be None
-            assert getattr(brutus.core, "_get_seds", "not_found") in [None, "not_found"]
-            assert getattr(brutus.core, "get_seds", "not_found") in [None, "not_found"]
-
-            # These should not be in __all__
-            assert "_get_seds" not in brutus.core.__all__
-            assert "get_seds" not in brutus.core.__all__
+            # Should raise ImportWarning during transition period
+            with pytest.warns(ImportWarning):
+                import brutus
 
     def test_neural_nets_import_failure(self):
         """Test behavior when neural_nets import fails."""
@@ -132,19 +128,12 @@ class TestCoreImportErrorHandling:
             # Force reload to trigger the ImportError
             if "brutus.core" in sys.modules:
                 del sys.modules["brutus.core"]
+            if "brutus" in sys.modules:
+                del sys.modules["brutus"]
 
-            import brutus.core
-
-            # When import fails, the variables should be None
-            assert getattr(brutus.core, "FastNN", "not_found") in [None, "not_found"]
-            assert getattr(brutus.core, "FastNNPredictor", "not_found") in [
-                None,
-                "not_found",
-            ]
-
-            # These should not be in __all__
-            assert "FastNN" not in brutus.core.__all__
-            assert "FastNNPredictor" not in brutus.core.__all__
+            # Should raise ImportWarning during transition period
+            with pytest.warns(ImportWarning):
+                import brutus
 
     def test_individual_import_failure(self):
         """Test behavior when individual import fails."""
@@ -153,14 +142,12 @@ class TestCoreImportErrorHandling:
             # Force reload to trigger the ImportError
             if "brutus.core" in sys.modules:
                 del sys.modules["brutus.core"]
+            if "brutus" in sys.modules:
+                del sys.modules["brutus"]
 
-            import brutus.core
-
-            # When import fails, the variable should be None
-            assert getattr(brutus.core, "EEPTracks", "not_found") in [None, "not_found"]
-
-            # This should not be in __all__
-            assert "EEPTracks" not in brutus.core.__all__
+            # Should raise ImportWarning during transition period
+            with pytest.warns(ImportWarning):
+                import brutus
 
     def test_populations_import_failure(self):
         """Test behavior when populations import fails."""
@@ -169,14 +156,12 @@ class TestCoreImportErrorHandling:
             # Force reload to trigger the ImportError
             if "brutus.core" in sys.modules:
                 del sys.modules["brutus.core"]
+            if "brutus" in sys.modules:
+                del sys.modules["brutus"]
 
-            import brutus.core
-
-            # When import fails, the variable should be None
-            assert getattr(brutus.core, "Isochrone", "not_found") in [None, "not_found"]
-
-            # This should not be in __all__
-            assert "Isochrone" not in brutus.core.__all__
+            # Should raise ImportWarning during transition period
+            with pytest.warns(ImportWarning):
+                import brutus
 
 
 class TestCoreIntegration:

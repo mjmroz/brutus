@@ -13,6 +13,7 @@ This test suite covers:
 """
 
 import pytest
+from conftest import find_brutus_data_file
 import numpy as np
 import numpy.testing as npt
 from unittest.mock import patch, MagicMock, call
@@ -36,11 +37,11 @@ class TestEEPTracksInitialization:
         """Test EEPTracks with real cached v1.2 data (should be very fast)."""
         import os
 
-        v12_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/MIST_1.2_EEPtrk.h5"
-        if not os.path.exists(v12_file):
+        v12_file = find_brutus_data_file("MIST_1.2_EEPtrk.h5")
+        if v12_file is None or not os.path.exists(v12_file):
             import pytest
 
-            pytest.skip(f"v1.2 EEP track file not found at {v12_file}")
+            pytest.skip("v1.2 EEP track file not found in any standard location")
 
         try:
             # Should load from cache instantly

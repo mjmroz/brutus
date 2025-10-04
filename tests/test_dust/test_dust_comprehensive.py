@@ -22,10 +22,10 @@ import astropy.units as u
 
 # Import what we're testing
 from brutus.dust import lb2pix, DustMap, Bayestar
+from conftest import find_brutus_data_file
 
 # Path to real Bayestar data
-DATAFILES_DIR = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES"
-BAYESTAR_FILE = os.path.join(DATAFILES_DIR, "bayestar2019_v1.h5")
+BAYESTAR_FILE = find_brutus_data_file("bayestar2019_v1.h5")
 
 
 class TestCoordinateUtils:
@@ -191,8 +191,8 @@ class TestDustMapBase:
 @pytest.fixture(scope="module")
 def bayestar_map():
     """Load real Bayestar map once for all tests."""
-    if not os.path.exists(BAYESTAR_FILE):
-        pytest.skip(f"Bayestar data file not found: {BAYESTAR_FILE}")
+    if BAYESTAR_FILE is None:
+        pytest.skip("Bayestar data file not found in any standard location")
 
     return Bayestar(dustfile=BAYESTAR_FILE)
 

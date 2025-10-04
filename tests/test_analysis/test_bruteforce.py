@@ -19,10 +19,10 @@ except ImportError:
     HAS_H5PY = False
 
 # Import classes to test
-from src.brutus.core.individual import StarGrid
-from src.brutus.analysis.individual import BruteForce
-from src.brutus.data import load_models
-from src.brutus.data.filters import ps
+from brutus.core.individual import StarGrid
+from brutus.analysis.individual import BruteForce
+from brutus.data import load_models
+from brutus.data.filters import ps
 
 
 # ============================================================================
@@ -586,8 +586,8 @@ class TestBruteForceRealGrid:
         assert fitter.labels_mask["eep"] == True
         assert fitter.labels_mask["feh"] == True
 
-        # Test properties
-        assert fitter.nmodels == 27
+        # Test properties (should match above assertions)
+        assert fitter.nmodels == 31  # Test subset
         assert fitter.nfilters == 5
 
     def test_get_sed_grid_real_data(self, test_bruteforce):
@@ -971,8 +971,8 @@ class TestBruteForceEdgeCases:
         assert bruteforce_fitter.nmodels == 31
         assert bruteforce_fitter.nfilters == 5
 
-        # Properties should match legacy attributes
-        assert bruteforce_fitter.nmodels == 27
+        # Properties should be consistent
+        assert bruteforce_fitter.nmodels == 31  # Test subset
         assert bruteforce_fitter.nfilters == 5
 
 

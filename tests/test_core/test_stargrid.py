@@ -8,12 +8,13 @@ Tests the StarGrid class for stellar model grid management and SED generation.
 """
 
 import pytest
+from conftest import find_brutus_data_file
 import numpy as np
 import warnings
 
 # Import the class to test
-from src.brutus.core.individual import StarGrid
-from src.brutus.data import load_models
+from brutus.core.individual import StarGrid
+from brutus.data import load_models
 
 
 # ============================================================================
@@ -28,13 +29,13 @@ def mist_grid():
 
     # Try different paths for the MIST grid file
     grid_paths = [
-        "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5",
+        find_brutus_data_file("grid_mist_v9.h5"),
         "./data/DATAFILES/grid_mist_v9.h5",
         "data/DATAFILES/grid_mist_v9.h5",
     ]
 
     for path in grid_paths:
-        if os.path.exists(path):
+        if path and os.path.exists(path):
             try:
                 models, combined_labels, label_mask = load_models(path)
 
@@ -339,6 +340,94 @@ class TestStarGridEdgeCases:
 
         sed, params, _ = grid.get_seds(mini=0.5, eep=200, feh=-0.5)
         assert sed.shape == (1,)
+
+    def test_models_as_dict(self):
+        """Test StarGrid initialization with models as a dict."""
+        # Create mock model data as a dict
+        nmodels = 5
+        nfilters = 3
+        mag_coeffs = np.random.randn(nmodels, nfilters, 3)
+        labels = np.zeros(nmodels, dtype=[("mini", "f4"), ("eep", "f4"), ("feh", "f4")])
+        params = np.zeros(nmodels, dtype=[("mass", "f4"), ("Teff", "f4")])
+
+        for i in range(nmodels):
+            labels[i] = (0.8 + 0.2 * i, 300 + 10 * i, -0.5 + 0.1 * i)
+            params[i] = (0.8 + 0.2 * i, 5000 + 100 * i)
+
+        models_dict = {
+            "mag_coeffs": mag_coeffs,
+            "labels": labels,
+            "parameters": params
+        }
+
+        # Initialize with dict (labels extracted from dict)
+        grid = StarGrid(models_dict, None, verbose=False)
+
+        assert grid.nmodels == nmodels
+        assert grid.nfilters == nfilters
+        assert np.array_equal(grid.labels, labels)
+        assert np.array_equal(grid.params, params)
+
+    def test_models_2d_reshape(self):
+        """Test StarGrid with 2D models array that needs reshaping."""
+        nmodels = 5
+        nfilters = 4
+        # Create 2D array (Nmodels, Nfilters * 3)
+        models_2d = np.random.randn(nmodels, nfilters * 3)
+        labels = np.zeros(nmodels, dtype=[("mini", "f4"), ("eep", "f4"), ("feh", "f4")])
+
+        for i in range(nmodels):
+            labels[i] = (1.0 + 0.1 * i, 300, 0.0)
+
+        grid = StarGrid(models_2d, labels)
+
+        assert grid.nmodels == nmodels
+        assert grid.nfilters == nfilters
+        assert grid.models.shape == (nmodels, nfilters, 3)
+
+    def test_models_wrong_coefficients(self):
+        """Test StarGrid raises error with wrong number of coefficients."""
+        nmodels = 5
+        nfilters = 3
+        # Create models with 4 coefficients instead of 3
+        models_bad = np.random.randn(nmodels, nfilters, 4)
+        labels = np.zeros(nmodels, dtype=[("mini", "f4"), ("eep", "f4"), ("feh", "f4")])
+
+        with pytest.raises(ValueError, match="Expected 3 coefficients"):
+            grid = StarGrid(models_bad, labels)
+
+    def test_models_dict_missing_mag_coeffs(self):
+        """Test StarGrid raises error when dict is missing mag_coeffs."""
+        models_dict = {
+            "labels": np.zeros(5, dtype=[("mini", "f4")])
+        }
+
+        with pytest.raises(ValueError, match="must contain 'mag_coeffs'"):
+            grid = StarGrid(models_dict, None, verbose=False)
+
+    def test_models_structured_array_with_filter_selection(self):
+        """Test StarGrid with structured array and filter selection."""
+        nmodels = 5
+        # Create structured array with named filter columns
+        dtype = [("PS_g", "3f4"), ("PS_r", "3f4"), ("PS_i", "3f4")]
+        models_structured = np.zeros(nmodels, dtype=dtype)
+
+        for i in range(nmodels):
+            models_structured[i]["PS_g"] = [15.0 + i, 0.5, 0.1]
+            models_structured[i]["PS_r"] = [14.5 + i, 0.6, 0.12]
+            models_structured[i]["PS_i"] = [14.0 + i, 0.7, 0.15]
+
+        labels = np.zeros(nmodels, dtype=[("mini", "f4"), ("eep", "f4"), ("feh", "f4")])
+        for i in range(nmodels):
+            labels[i] = (1.0 + 0.1 * i, 300, 0.0)
+
+        # Select only PS_g and PS_i
+        grid = StarGrid(models_structured, labels, filters=["PS_g", "PS_i"])
+
+        assert grid.nmodels == nmodels
+        assert grid.nfilters == 2
+        assert list(grid.filters) == ["PS_g", "PS_i"]
+        assert grid.models.shape == (nmodels, 2, 3)
 
 
 class TestStarGridWithRealData:

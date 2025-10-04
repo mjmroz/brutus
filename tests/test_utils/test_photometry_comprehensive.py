@@ -479,18 +479,77 @@ class TestPhotometryIntegration:
         ), "Log-likelihood with dim prior should be finite"
 
         # Test with insufficient degrees of freedom (should handle gracefully)
-        small_fluxes = fluxes[:, :2]  # Only 2 filters, dof = 2-3 = -1
+        small_fluxes = fluxes[:, :2]  # Only 2 filters
         small_errors = flux_errors[:, :2]
         small_models = model_fluxes[:, :, :2]
 
+        # With dof_reduction=3, dof = 2 - 3 = -1 (should give -inf)
         lnl_small = phot_loglike(
-            small_fluxes, small_errors, small_models, dim_prior=True
+            small_fluxes, small_errors, small_models, dim_prior=True, dof_reduction=3
         )
         assert lnl_small.shape == (nobjs, nmods)
         # Should be -inf when dof <= 0
         assert np.all(
             lnl_small == -np.inf
         ), "Should be -inf when degrees of freedom <= 0"
+
+
+class TestOutlierModels:
+    """Test outlier likelihood functions."""
+
+    def test_chisquare_outlier_basic(self):
+        """Test chi-square outlier model."""
+        from brutus.utils.photometry import chisquare_outlier_loglike
+
+        # Create test data
+        flux = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+        err = np.array([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]])
+
+        lnl = chisquare_outlier_loglike(flux, err)
+
+        assert lnl.shape == (2,)
+        assert np.all(np.isfinite(lnl))
+        assert np.all(lnl < 0)  # Log-probabilities should be negative
+
+    def test_chisquare_outlier_with_parallax(self):
+        """Test chi-square outlier model with parallax."""
+        from brutus.utils.photometry import chisquare_outlier_loglike
+
+        flux = np.array([[1.0, 2.0], [3.0, 4.0]])
+        err = np.array([[0.1, 0.2], [0.3, 0.4]])
+        parallax = np.array([10.0, 20.0])
+        parallax_err = np.array([1.0, 2.0])
+
+        lnl = chisquare_outlier_loglike(flux, err, parallax=parallax, parallax_err=parallax_err)
+
+        assert lnl.shape == (2,)
+        assert np.all(np.isfinite(lnl))
+
+    def test_uniform_outlier_basic(self):
+        """Test uniform outlier model."""
+        from brutus.utils.photometry import uniform_outlier_loglike
+
+        flux = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+        err = np.array([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]])
+
+        lnl = uniform_outlier_loglike(flux, err)
+
+        assert lnl.shape == (2,)
+        assert np.all(np.isfinite(lnl))
+
+    def test_uniform_outlier_with_parallax(self):
+        """Test uniform outlier model with parallax."""
+        from brutus.utils.photometry import uniform_outlier_loglike
+
+        flux = np.array([[1.0, 2.0], [3.0, 4.0]])
+        err = np.array([[0.1, 0.2], [0.3, 0.4]])
+        parallax = np.array([10.0, 20.0])
+        parallax_err = np.array([1.0, 2.0])
+
+        lnl = uniform_outlier_loglike(flux, err, parallax=parallax, parallax_err=parallax_err)
+
+        assert lnl.shape == (2,)
+        assert np.all(np.isfinite(lnl))
 
 
 if __name__ == "__main__":

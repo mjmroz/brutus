@@ -78,8 +78,9 @@ class TestAnalysisPackageInit:
 
     def test_import_error_fallback(self):
         """Test behavior when imports fail."""
-        # Create a test that simulates the ImportError condition
-        # by temporarily making the offsets module unavailable
+        # The analysis module does NOT have graceful error handling like core
+        # It will fail hard if a submodule is missing
+        # This test verifies that behavior
 
         # First, check if we can import normally
         try:
@@ -89,22 +90,17 @@ class TestAnalysisPackageInit:
         except ImportError:
             offsets_available = False
 
-        # If offsets is normally available, test the fallback
+        # If offsets is normally available, test that import fails when submodule is None
         if offsets_available:
             # Mock the specific submodule import to fail
             with patch.dict("sys.modules", {"brutus.analysis.offsets": None}):
-                # We need to reload the module to trigger the ImportError
-                import importlib
-
+                # Clear the analysis module to force re-import
                 if "brutus.analysis" in sys.modules:
-                    # Reload to trigger the import logic again
-                    importlib.reload(sys.modules["brutus.analysis"])
+                    del sys.modules["brutus.analysis"]
 
-        # In any case, ensure the module still works
-        import brutus.analysis
-
-        assert hasattr(brutus.analysis, "__all__")
-        assert isinstance(brutus.analysis.__all__, list)
+                # Should raise ModuleNotFoundError when trying to import
+                with pytest.raises(ModuleNotFoundError):
+                    import brutus.analysis
 
 
 class TestAnalysisIntegration:

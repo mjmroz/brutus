@@ -197,14 +197,13 @@ class TestDataLoaderFunctions:
     def test_load_models_comprehensive_real_data(self):
         """Comprehensive test of load_models with real MIST v9 data (single load for efficiency)."""
         from brutus.data.loader import load_models
-        import os
+        from conftest import find_brutus_data_file
+        import pytest
 
         # Check if the MIST v9 grid file exists
-        data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
-        if not os.path.exists(data_file):
-            import pytest
-
-            pytest.skip(f"MIST v9 grid file not found at {data_file}")
+        data_file = find_brutus_data_file("grid_mist_v9.h5")
+        if data_file is None:
+            pytest.skip("MIST v9 grid file not found in any standard location")
 
         # Single load with reasonable filter set - this covers most functionality
         test_filters = [
@@ -246,11 +245,12 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_models
         import os
 
-        data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
-        if not os.path.exists(data_file):
+        from conftest import find_brutus_data_file
+        data_file = find_brutus_data_file("grid_mist_v9.h5")
+        if data_file is None:
             import pytest
 
-            pytest.skip(f"MIST v9 grid file not found at {data_file}")
+            pytest.skip("MIST v9 grid file not found in any standard location")
 
         # Get baseline with fast filter set
         fast_filters = ["SDSS_g", "SDSS_r"]  # Just 2 filters for speed
@@ -282,11 +282,12 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_models
         import os
 
-        data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
-        if not os.path.exists(data_file):
+        from conftest import find_brutus_data_file
+        data_file = find_brutus_data_file("grid_mist_v9.h5")
+        if data_file is None:
             import pytest
 
-            pytest.skip(f"MIST v9 grid file not found at {data_file}")
+            pytest.skip("MIST v9 grid file not found in any standard location")
 
         # Test with small and large filter sets (just validate shapes, not timing)
         models_small, _, _ = load_models(
@@ -310,11 +311,12 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_models
         import os
 
-        data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
-        if not os.path.exists(data_file):
+        from conftest import find_brutus_data_file
+        data_file = find_brutus_data_file("grid_mist_v9.h5")
+        if data_file is None:
             import pytest
 
-            pytest.skip(f"MIST v9 grid file not found at {data_file}")
+            pytest.skip("MIST v9 grid file not found in any standard location")
 
         # Test with specific labels (minimal filters for speed)
         custom_labels = ["mini", "feh", "eep", "loga"]
@@ -338,11 +340,12 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_models
         import os
 
-        data_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5"
-        if not os.path.exists(data_file):
+        from conftest import find_brutus_data_file
+        data_file = find_brutus_data_file("grid_mist_v9.h5")
+        if data_file is None:
             import pytest
 
-            pytest.skip(f"MIST v9 grid file not found at {data_file}")
+            pytest.skip("MIST v9 grid file not found in any standard location")
 
         # Test invalid include_ms/include_postms combination
         import pytest
@@ -361,11 +364,12 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_offsets
         import os
 
-        offset_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/offsets_mist_v9.txt"
-        if not os.path.exists(offset_file):
+        from conftest import find_brutus_data_file
+        offset_file = find_brutus_data_file("offsets_mist_v9.txt")
+        if offset_file is None:
             import pytest
 
-            pytest.skip(f"MIST v9 offset file not found at {offset_file}")
+            pytest.skip("MIST v9 offset file not found in any standard location")
 
         # Test loading all offsets
         offsets = load_offsets(offset_file, verbose=False)

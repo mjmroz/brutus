@@ -108,6 +108,39 @@ def temp_data_dir():
         yield Path(tmpdir)
 
 
+def find_brutus_data_file(filename):
+    """
+    Find a brutus data file across multiple possible locations.
+
+    Checks common paths where brutus data files might be located:
+    - /mnt/c/Users/joshs/Dropbox/GitHub/brutus/data/DATAFILES/ (WSL work laptop)
+    - /mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/ (WSL home desktop)
+    - C:\\Users\\joshs\\Dropbox\\GitHub\\brutus\\data\\DATAFILES\\ (Windows)
+
+    Parameters
+    ----------
+    filename : str
+        Name of the data file to find (e.g., 'MIST_1.2_iso_vvcrit0.0.h5')
+
+    Returns
+    -------
+    path : str or None
+        Full path to the file if found, None otherwise
+    """
+    possible_paths = [
+        f"/mnt/c/Users/joshs/Dropbox/GitHub/brutus/data/DATAFILES/{filename}",
+        f"/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/{filename}",
+        f"C:\\Users\\joshs\\Dropbox\\GitHub\\brutus\\data\\DATAFILES\\{filename}",
+        f"data/DATAFILES/{filename}",  # Relative path
+    ]
+
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+
+    return None
+
+
 @pytest.fixture
 def mock_stellar_parameters():
     """

@@ -26,7 +26,6 @@ from brutus.priors import (
     logp_feh,
     logp_age_from_feh,
     logp_extinction,
-    bin_distance_reddening_pdfs,
 )
 
 
@@ -419,16 +418,6 @@ class TestExtinctionPriors:
 class TestUtilities:
     """Test utility functions."""
 
-    def test_bin_distance_reddening_pdfs_not_implemented(self):
-        """Test that complex binning utility is properly deferred."""
-        data = (
-            np.random.random((10, 100)),
-            np.random.random((10, 100)),
-            np.random.random((10, 100)),
-        )
-
-        with pytest.raises(NotImplementedError, match="bin_distance_reddening_pdfs"):
-            bin_distance_reddening_pdfs(data)
 
 
 class TestNumericalStability:
@@ -436,10 +425,14 @@ class TestNumericalStability:
 
     def test_priors_with_extreme_values(self):
         """Test prior functions with extreme input values."""
-        # Very large masses (shouldn't overflow)
+        # Very large masses beyond default mass_max=100 should return -inf
         large_masses = np.array([1e6, 1e10])
         logp_imf_large = logp_imf(large_masses)
-        assert np.all(np.isfinite(logp_imf_large))
+        assert np.all(logp_imf_large == -np.inf)
+
+        # Large masses within custom mass_max should be finite
+        logp_imf_custom = logp_imf(large_masses, mass_max=1e11)
+        assert np.all(np.isfinite(logp_imf_custom))
 
         # Very small parallaxes
         small_parallax = np.array([1e-10, 1e-8])

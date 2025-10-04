@@ -31,13 +31,15 @@ from brutus.analysis.populations import (
 @pytest.fixture(scope="module")
 def real_stellarpop():
     """Load real MIST StellarPop with neural network once for module tests."""
-    iso_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/MIST_1.2_iso_vvcrit0.0.h5"
-    nn_file = "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/nnMIST_BC.h5"
+    from conftest import find_brutus_data_file
 
-    if not os.path.exists(iso_file):
-        pytest.skip(f"MIST isochrone file not found at {iso_file}")
-    if not os.path.exists(nn_file):
-        pytest.skip(f"Neural network file not found at {nn_file}")
+    iso_file = find_brutus_data_file("MIST_1.2_iso_vvcrit0.0.h5")
+    nn_file = find_brutus_data_file("nnMIST_BC.h5")
+
+    if iso_file is None:
+        pytest.skip("MIST isochrone file not found in any standard location")
+    if nn_file is None:
+        pytest.skip("Neural network file not found in any standard location")
 
     try:
         # Create the isochrone object

@@ -8,16 +8,17 @@ Tests the complete workflow from grid creation to stellar parameter estimation.
 """
 
 import pytest
+from conftest import find_brutus_data_file
 import numpy as np
 import warnings
 import tempfile
 import os
 
 # Import the classes to test
-from src.brutus.core.individual import StarGrid
-from src.brutus.analysis.individual import BruteForce
-from src.brutus.data import load_models
-from src.brutus.data.filters import ps
+from brutus.core.individual import StarGrid
+from brutus.analysis.individual import BruteForce
+from brutus.data import load_models
+from brutus.data.filters import ps
 
 
 # ============================================================================
@@ -32,13 +33,13 @@ def mist_grid():
 
     # Try different paths for the MIST grid file
     grid_paths = [
-        "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5",
+        find_brutus_data_file("grid_mist_v9.h5"),
         "./data/DATAFILES/grid_mist_v9.h5",
         "data/DATAFILES/grid_mist_v9.h5",
     ]
 
     for path in grid_paths:
-        if os.path.exists(path):
+        if path and os.path.exists(path):
             try:
                 models, combined_labels, label_mask = load_models(path)
 
