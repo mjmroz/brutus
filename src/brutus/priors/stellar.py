@@ -67,7 +67,8 @@ import numpy as np
 __all__ = ["logp_imf", "logp_ps1_luminosity_function"]
 
 
-def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None):
+def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None,
+             mass_min=0.08, mass_max=100.0):
     r"""
     Log-prior for a Kroupa-like broken initial mass function.
 
@@ -91,12 +92,17 @@ def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None):
     mgrid2 : array_like, optional
         Grid of secondary stellar masses for binary systems in solar units.
         If provided, computes joint prior for binary system.
+    mass_min : float, optional
+        Minimum mass for normalization (hydrogen burning limit).
+        Default is 0.08 solar masses.
+    mass_max : float, optional
+        Maximum mass for normalization. Default is 100.0 solar masses.
 
     Returns
     -------
     logp : array_like
         Normalized log-prior probability density for the input mass grid(s).
-        Returns -inf for masses below hydrogen burning limit (0.08 solar masses).
+        Returns -inf for masses below mass_min or above mass_max.
 
     See Also
     --------
@@ -124,8 +130,8 @@ def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None):
     # Initialize log-prior with -inf for invalid masses
     logp = np.full_like(mgrid, -np.inf, dtype=float)
 
-    # Hydrogen burning limit
-    valid_mass = mgrid > 0.08
+    # Valid mass range
+    valid_mass = (mgrid >= mass_min) & (mgrid <= mass_max)
 
     # Low-mass regime: M ≤ mass_break
     low_mass = valid_mass & (mgrid <= mass_break)
@@ -137,14 +143,25 @@ def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None):
         alpha_high - alpha_low
     ) * np.log(mass_break)
 
-    # Compute normalization factor
-    # Low-mass regime: 0.08 to mass_break with alpha_low
-    norm_low = (mass_break ** (1.0 - alpha_low) - 0.08 ** (1.0 - alpha_low)) / (
-        1.0 - alpha_low
-    )
-    # High-mass regime: mass_break to infinity with alpha_high
-    norm_high = mass_break ** (1.0 - alpha_high) / (alpha_high - 1.0)
-    norm = norm_low + norm_high
+    # Compute normalization factor over [mass_min, mass_max]
+    # Low-mass regime: mass_min to min(mass_break, mass_max)
+    if mass_max >= mass_break:
+        # Both regimes present
+        norm_low = (mass_break ** (1.0 - alpha_low) - mass_min ** (1.0 - alpha_low)) / (
+            1.0 - alpha_low
+        )
+        # High-mass regime: mass_break to mass_max
+        # The high-mass PDF includes continuity factor: mass_break^(alpha_high - alpha_low)
+        continuity_factor = mass_break ** (alpha_high - alpha_low)
+        norm_high = continuity_factor * (
+            mass_max ** (1.0 - alpha_high) - mass_break ** (1.0 - alpha_high)
+        ) / (1.0 - alpha_high)
+        norm = norm_low + norm_high
+    else:
+        # Only low-mass regime present
+        norm = (mass_max ** (1.0 - alpha_low) - mass_min ** (1.0 - alpha_low)) / (
+            1.0 - alpha_low
+        )
 
     # Handle binary component if provided
     if mgrid2 is not None:
@@ -153,7 +170,7 @@ def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None):
         # Compute prior for secondary
         logp2 = np.full_like(mgrid2, -np.inf, dtype=float)
 
-        valid_mass2 = mgrid2 > 0.08
+        valid_mass2 = (mgrid2 >= mass_min) & (mgrid2 <= mass_max)
         low_mass2 = valid_mass2 & (mgrid2 <= mass_break)
         high_mass2 = valid_mass2 & (mgrid2 > mass_break)
 
