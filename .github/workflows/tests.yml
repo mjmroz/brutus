@@ -44,6 +44,8 @@ jobs:
         flake8 src/brutus --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
 
     - name: Test with pytest
+      env:
+        NUMBA_DISABLE_JIT: 1
       run: |
         pytest tests/ -v --cov=brutus --cov-report=xml
 

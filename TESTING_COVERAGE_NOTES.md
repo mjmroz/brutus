@@ -1,5 +1,16 @@
 # Testing and Coverage Measurement Notes
 
+## GitHub Actions vs Local Testing
+
+**IMPORTANT**: GitHub Actions CI runs tests **without large data files** (MIST grids ~8GB, Bayestar maps ~1GB are not in the repository). This means:
+
+- Many tests will **skip** in CI (those requiring MIST grids, Bayestar maps, neural networks)
+- **CI coverage will be lower** than local coverage (~40-60% vs 80-90%)
+- Tests still **pass** in CI - they gracefully skip when data files are unavailable
+- **Local testing with data files** is required for accurate coverage measurement
+
+**For accurate coverage metrics**: Run tests locally with data files present (see below).
+
 ## Coverage Measurement Problems and Solutions
 
 ### Problem 1: Misleading Total Coverage (37% vs 84.5%)
