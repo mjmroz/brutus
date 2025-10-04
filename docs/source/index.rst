@@ -11,11 +11,30 @@ brutus Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: User Guide
+   :caption: Getting Started
 
    installation
    quickstart
    tutorials
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Scientific Background
+
+   scientific_background
+   stellar_models
+   grid_generation
+   priors
+   cluster_modeling
+   photometric_offsets
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+
+   understanding_results
+   choosing_options
+   faq
 
 .. toctree::
    :maxdepth: 2
