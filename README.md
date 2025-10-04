@@ -208,9 +208,6 @@ pip install -e ".[dev]"
 # Basic tests
 pytest
 
-# Include slow tests
-RUN_SLOW_TESTS=1 pytest
-
 # With coverage
 pytest --cov=brutus
 ```
