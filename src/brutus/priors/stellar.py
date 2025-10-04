@@ -138,10 +138,12 @@ def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None):
     ) * np.log(mass_break)
 
     # Compute normalization factor
-    norm_low = mass_break ** (1.0 - alpha_low) / (alpha_high - 1.0)
-    norm_high = (0.08 ** (1.0 - alpha_low) - mass_break ** (1.0 - alpha_low)) / (
-        alpha_low - 1.0
+    # Low-mass regime: 0.08 to mass_break with alpha_low
+    norm_low = (mass_break ** (1.0 - alpha_low) - 0.08 ** (1.0 - alpha_low)) / (
+        1.0 - alpha_low
     )
+    # High-mass regime: mass_break to infinity with alpha_high
+    norm_high = mass_break ** (1.0 - alpha_high) / (alpha_high - 1.0)
     norm = norm_low + norm_high
 
     # Handle binary component if provided
