@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ master, main ]
 
 jobs:
   test:
@@ -33,6 +33,35 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e ".[test]"
+
+    - name: Cache test data files
+      uses: actions/cache@v3
+      id: cache-data
+      with:
+        path: ~/.astro-brutus/
+        key: brutus-data-v1-${{ runner.os }}
+        restore-keys: |
+          brutus-data-v1-
+
+    - name: Download test data files
+      if: steps.cache-data.outputs.cache-hit != 'true'
+      run: |
+        # Download essential data files for testing
+        # GitHub Actions cache limit: 10 GB per repo
+        # MIST grids: ~2-4 GB, Isochrones: ~100 MB
+        python -c "
+        try:
+            from brutus.data import fetch_grids, fetch_isos
+            print('Downloading MIST grids for testing...')
+            fetch_grids(grid='mist_v9')  # Default grid, ~2-3 GB
+            print('Downloading isochrones...')
+            fetch_isos()  # ~100 MB
+            print('Data files downloaded and cached')
+        except Exception as e:
+            print(f'Warning: Could not download data files: {e}')
+            print('Tests requiring data will be skipped')
+        "
+      continue-on-error: true
 
     - name: Lint with flake8
       run: |

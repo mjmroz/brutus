@@ -11,7 +11,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/astro-brutus.svg)](https://pypi.org/project/astro-brutus/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Note on CI/CD Coverage**: GitHub Actions tests run without large data files (MIST grids, Bayestar maps), so many tests are skipped in CI. For full coverage metrics (80-90%+ across all modules), tests must be run locally with data files present. See [TESTING_COVERAGE_NOTES.md](TESTING_COVERAGE_NOTES.md) for details.
+> **Note on CI/CD**: GitHub Actions tests download and cache essential data files (MIST grids ~2-3 GB, isochrones ~100 MB) for comprehensive testing. First-time CI runs take longer due to data downloads (~10-15 minutes), but subsequent runs use cached data. Tests requiring very large optional files (Bayestar maps ~1 GB) may skip in CI. See [TESTING_COVERAGE_NOTES.md](TESTING_COVERAGE_NOTES.md) for details.
 
 `brutus` is a Pure Python package for **"brute force" Bayesian inference** to derive distances, reddenings, and stellar properties from photometry. The package is designed to be highly modular and user-friendly, with comprehensive support for modeling individual stars, star clusters, and 3-D dust mapping.
 
