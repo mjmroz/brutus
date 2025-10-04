@@ -587,7 +587,8 @@ class GridGenerator:
             f.attrs['creation_date'] = datetime.now().isoformat()
             f.attrs['n_models_total'] = len(self.grid_labels)
             f.attrs['n_models_valid'] = self.grid_sel.sum()
-            f.attrs['filters'] = list(self.filters)
+            # Convert filters to ASCII strings for HDF5 compatibility
+            f.attrs['filters'] = [filt.encode('ascii') for filt in self.filters]
 
         if verbose:
             file_size_mb = output_path.stat().st_size / 1024**2
