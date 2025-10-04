@@ -39,6 +39,14 @@ Neural Networks
    :undoc-members:
    :show-inheritance:
 
+Grid Generation
+---------------
+
+.. autoclass:: GridGenerator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 SED Utilities
 -------------
 
@@ -70,6 +78,12 @@ For advanced users who need access to internal implementations:
    :no-index:
 
 .. automodule:: brutus.core.sed_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :no-index:
+
+.. automodule:: brutus.core.grid_generation
    :members:
    :undoc-members:
    :show-inheritance:
