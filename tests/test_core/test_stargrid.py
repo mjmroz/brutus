@@ -354,11 +354,7 @@ class TestStarGridEdgeCases:
             labels[i] = (0.8 + 0.2 * i, 300 + 10 * i, -0.5 + 0.1 * i)
             params[i] = (0.8 + 0.2 * i, 5000 + 100 * i)
 
-        models_dict = {
-            "mag_coeffs": mag_coeffs,
-            "labels": labels,
-            "parameters": params
-        }
+        models_dict = {"mag_coeffs": mag_coeffs, "labels": labels, "parameters": params}
 
         # Initialize with dict (labels extracted from dict)
         grid = StarGrid(models_dict, None, verbose=False)
@@ -398,9 +394,7 @@ class TestStarGridEdgeCases:
 
     def test_models_dict_missing_mag_coeffs(self):
         """Test StarGrid raises error when dict is missing mag_coeffs."""
-        models_dict = {
-            "labels": np.zeros(5, dtype=[("mini", "f4")])
-        }
+        models_dict = {"labels": np.zeros(5, dtype=[("mini", "f4")])}
 
         with pytest.raises(ValueError, match="must contain 'mag_coeffs'"):
             grid = StarGrid(models_dict, None, verbose=False)

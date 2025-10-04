@@ -246,6 +246,7 @@ class TestDataLoaderFunctions:
         import os
 
         from conftest import find_brutus_data_file
+
         data_file = find_brutus_data_file("grid_mist_v9.h5")
         if data_file is None:
             import pytest
@@ -283,6 +284,7 @@ class TestDataLoaderFunctions:
         import os
 
         from conftest import find_brutus_data_file
+
         data_file = find_brutus_data_file("grid_mist_v9.h5")
         if data_file is None:
             import pytest
@@ -312,6 +314,7 @@ class TestDataLoaderFunctions:
         import os
 
         from conftest import find_brutus_data_file
+
         data_file = find_brutus_data_file("grid_mist_v9.h5")
         if data_file is None:
             import pytest
@@ -341,6 +344,7 @@ class TestDataLoaderFunctions:
         import os
 
         from conftest import find_brutus_data_file
+
         data_file = find_brutus_data_file("grid_mist_v9.h5")
         if data_file is None:
             import pytest
@@ -365,6 +369,7 @@ class TestDataLoaderFunctions:
         import os
 
         from conftest import find_brutus_data_file
+
         offset_file = find_brutus_data_file("offsets_mist_v9.txt")
         if offset_file is None:
             import pytest

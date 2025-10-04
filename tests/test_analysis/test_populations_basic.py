@@ -201,7 +201,9 @@ class TestOutlierModels:
 
         # Should handle invalid data gracefully - expect warnings
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)  # Ignore expected NaN warnings
+            warnings.simplefilter(
+                "ignore", RuntimeWarning
+            )  # Ignore expected NaN warnings
             lnl_outlier = uniform_outlier_loglike(flux, err)
 
         assert len(lnl_outlier) == 2
@@ -621,107 +623,125 @@ class TestPhotometryUtilityFunctions:
     def test_magnitude_conversion(self):
         """Test magnitude and inverse magnitude conversion functions."""
         from brutus.utils.photometry import magnitude, inv_magnitude
-        
+
         # Test data
         phot = np.array([[1.0, 2.0, 3.0], [0.5, 1.5, 2.5]])
         err = np.array([[0.1, 0.2, 0.3], [0.05, 0.15, 0.25]])
         zeropoints = np.array([1.0, 1.0, 1.0])
-        
+
         # Test magnitude conversion
         mag, mag_err = magnitude(phot, err, zeropoints=zeropoints)
-        
+
         assert mag.shape == phot.shape
         assert mag_err.shape == err.shape
         assert np.all(np.isfinite(mag))
         assert np.all(np.isfinite(mag_err))
         assert np.all(mag_err > 0)  # Errors should be positive
-        
+
         # Test inverse conversion
-        phot_recovered, err_recovered = inv_magnitude(mag, mag_err, zeropoints=zeropoints)
-        
+        phot_recovered, err_recovered = inv_magnitude(
+            mag, mag_err, zeropoints=zeropoints
+        )
+
         # Should recover original photometry (within numerical precision)
         assert np.allclose(phot, phot_recovered, rtol=1e-10)
         assert np.allclose(err, err_recovered, rtol=1e-10)
-        
+
     def test_luptitude_conversion(self):
         """Test luptitude and inverse luptitude conversion functions."""
         from brutus.utils.photometry import luptitude, inv_luptitude
-        
+
         # Test data
         phot = np.array([[1.0, 2.0, 0.1], [0.5, 1.5, 0.05]])  # Include faint source
         err = np.array([[0.1, 0.2, 0.05], [0.05, 0.15, 0.02]])
         skynoise = np.array([0.1, 0.1, 0.1])
         zeropoints = np.array([1.0, 1.0, 1.0])
-        
+
         # Test luptitude conversion
         lupt, lupt_err = luptitude(phot, err, skynoise=skynoise, zeropoints=zeropoints)
-        
+
         assert lupt.shape == phot.shape
         assert lupt_err.shape == err.shape
         assert np.all(np.isfinite(lupt))
         assert np.all(np.isfinite(lupt_err))
         assert np.all(lupt_err > 0)  # Errors should be positive
-        
+
         # Test inverse conversion
-        phot_recovered, err_recovered = inv_luptitude(lupt, lupt_err, skynoise=skynoise, zeropoints=zeropoints)
-        
+        phot_recovered, err_recovered = inv_luptitude(
+            lupt, lupt_err, skynoise=skynoise, zeropoints=zeropoints
+        )
+
         # Should recover original photometry (within numerical precision)
         assert np.allclose(phot, phot_recovered, rtol=1e-10)
         assert np.allclose(err, err_recovered, rtol=1e-10)
-        
+
     def test_add_mag_function(self):
         """Test magnitude addition function."""
         from brutus.utils.photometry import add_mag
-        
+
         # Test simple case: adding equal magnitudes should brighten by 2.5*log10(2) ≈ 0.75 mag
         mag1 = 10.0
         mag2 = 10.0
         mag_combined = add_mag(mag1, mag2)
-        
+
         expected = mag1 - 2.5 * np.log10(2)  # Should be brighter
         assert np.isclose(mag_combined, expected, rtol=1e-10)
-        
+
         # Test with arrays
         mag1_arr = np.array([10.0, 15.0, 20.0])
         mag2_arr = np.array([10.0, 15.0, 20.0])
         mag_combined_arr = add_mag(mag1_arr, mag2_arr)
-        
+
         expected_arr = mag1_arr - 2.5 * np.log10(2)
         assert np.allclose(mag_combined_arr, expected_arr, rtol=1e-10)
-        
+
     def test_phot_loglike_with_dof_reduction(self):
         """Test phot_loglike function with dof_reduction parameter."""
         from brutus.utils.photometry import phot_loglike
-        
+
         # Test data
         flux = np.array([[1.0, 0.8, 0.6], [1.2, 1.0, 0.8]])  # 2 objects, 3 filters
         err = np.array([[0.1, 0.08, 0.06], [0.12, 0.1, 0.08]])
-        mfluxes = np.array([[[0.9, 0.75, 0.55], [1.1, 0.85, 0.65]],  # 2 objects, 2 models, 3 filters
-                           [[1.15, 0.95, 0.75], [1.25, 1.05, 0.85]]])
-        
+        mfluxes = np.array(
+            [
+                [
+                    [0.9, 0.75, 0.55],
+                    [1.1, 0.85, 0.65],
+                ],  # 2 objects, 2 models, 3 filters
+                [[1.15, 0.95, 0.75], [1.25, 1.05, 0.85]],
+            ]
+        )
+
         # Test without dof_reduction
         lnl_no_dof = phot_loglike(flux, err, mfluxes, dim_prior=True, dof_reduction=0)
-        
+
         # Test with dof_reduction
         lnl_with_dof = phot_loglike(flux, err, mfluxes, dim_prior=True, dof_reduction=1)
-        
+
         assert lnl_no_dof.shape == (2, 2)  # (n_obj, n_models)
         assert lnl_with_dof.shape == (2, 2)
         assert np.all(np.isfinite(lnl_no_dof))
         assert np.all(np.isfinite(lnl_with_dof))
         # Different dof_reduction should give different results
         assert not np.allclose(lnl_no_dof, lnl_with_dof)
-        
+
     def test_phot_loglike_dimension_mismatch(self):
         """Test phot_loglike function with mismatched dimensions."""
         from brutus.utils.photometry import phot_loglike
-        
+
         # Test data with mismatched dimensions
         flux = np.array([[1.0, 0.8, 0.6], [1.2, 1.0, 0.8]])  # 2 objects, 3 filters
         err = np.array([[0.1, 0.08, 0.06], [0.12, 0.1, 0.08]])
-        mfluxes = np.array([[[0.9, 0.75], [1.1, 0.85]],  # WRONG: 2 objects, 2 models, 2 filters (should be 3)
-                           [[1.15, 0.95], [1.25, 1.05]]])
-        
+        mfluxes = np.array(
+            [
+                [
+                    [0.9, 0.75],
+                    [1.1, 0.85],
+                ],  # WRONG: 2 objects, 2 models, 2 filters (should be 3)
+                [[1.15, 0.95], [1.25, 1.05]],
+            ]
+        )
+
         # Should raise ValueError for dimension mismatch
         with pytest.raises(ValueError, match="Inconsistent dimensions"):
             phot_loglike(flux, err, mfluxes)

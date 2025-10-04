@@ -25,11 +25,13 @@ class TestGridGenerator:
     def test_init(self):
         """Test GridGenerator initialization."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g', 'SDSS_r', 'SDSS_i'], verbose=False)
+        gen = GridGenerator(
+            tracks, filters=["SDSS_g", "SDSS_r", "SDSS_i"], verbose=False
+        )
 
         assert gen.tracks is tracks
         assert len(gen.filters) == 3
-        assert all(f in ['SDSS_g', 'SDSS_r', 'SDSS_i'] for f in gen.filters)
+        assert all(f in ["SDSS_g", "SDSS_r", "SDSS_i"] for f in gen.filters)
         assert isinstance(gen.star_track, StarEvolTrack)
 
     def test_init_default_filters(self):
@@ -43,7 +45,7 @@ class TestGridGenerator:
     def test_make_grid_minimal(self):
         """Test grid generation with minimal parameters."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g', 'SDSS_r'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g", "SDSS_r"], verbose=False)
 
         # Create very small grid for testing
         mini_grid = np.array([1.0])
@@ -58,14 +60,14 @@ class TestGridGenerator:
             feh_grid=feh_grid,
             afe_grid=afe_grid,
             smf_grid=smf_grid,
-            verbose=False
+            verbose=False,
         )
 
         # Check outputs
-        assert hasattr(gen, 'grid_labels')
-        assert hasattr(gen, 'grid_seds')
-        assert hasattr(gen, 'grid_params')
-        assert hasattr(gen, 'grid_sel')
+        assert hasattr(gen, "grid_labels")
+        assert hasattr(gen, "grid_seds")
+        assert hasattr(gen, "grid_params")
+        assert hasattr(gen, "grid_sel")
 
         # Should have 1 model
         assert len(gen.grid_labels) == 1
@@ -75,7 +77,9 @@ class TestGridGenerator:
     def test_grid_structure(self):
         """Test structure of generated grid."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g', 'SDSS_r', 'SDSS_i'], verbose=False)
+        gen = GridGenerator(
+            tracks, filters=["SDSS_g", "SDSS_r", "SDSS_i"], verbose=False
+        )
 
         # Create small grid
         mini_grid = np.array([0.8, 1.0, 1.2])
@@ -90,29 +94,29 @@ class TestGridGenerator:
             feh_grid=feh_grid,
             afe_grid=afe_grid,
             smf_grid=smf_grid,
-            verbose=False
+            verbose=False,
         )
 
         # Should have 3*2*1*1*1 = 6 models
         assert len(gen.grid_labels) == 6
 
         # Check labels structure
-        assert 'mini' in gen.grid_labels.dtype.names
-        assert 'eep' in gen.grid_labels.dtype.names
-        assert 'feh' in gen.grid_labels.dtype.names
+        assert "mini" in gen.grid_labels.dtype.names
+        assert "eep" in gen.grid_labels.dtype.names
+        assert "feh" in gen.grid_labels.dtype.names
 
         # Check SEDs structure (structured array with filter names)
-        assert 'SDSS_g' in gen.grid_seds.dtype.names
-        assert 'SDSS_r' in gen.grid_seds.dtype.names
-        assert 'SDSS_i' in gen.grid_seds.dtype.names
+        assert "SDSS_g" in gen.grid_seds.dtype.names
+        assert "SDSS_r" in gen.grid_seds.dtype.names
+        assert "SDSS_i" in gen.grid_seds.dtype.names
 
         # Each filter should have 3 coefficients
-        assert gen.grid_seds['SDSS_g'].shape == (6, 3)
+        assert gen.grid_seds["SDSS_g"].shape == (6, 3)
 
     def test_reference_distance(self):
         """Test that grid is generated at 1 kpc reference distance."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=False)
 
         gen.make_grid(
             mini_grid=np.array([1.0]),
@@ -121,25 +125,33 @@ class TestGridGenerator:
             afe_grid=np.array([0.0]),
             smf_grid=np.array([0.0]),
             dist=1000.0,  # Explicitly set to 1 kpc
-            verbose=False
+            verbose=False,
         )
 
         # The base magnitude (first coefficient) should correspond to 1 kpc
         # We can verify this by comparing to direct StarEvolTrack call
-        star_track = StarEvolTrack(tracks, filters=['SDSS_g'], verbose=False)
+        star_track = StarEvolTrack(tracks, filters=["SDSS_g"], verbose=False)
         sed_direct, _, _ = star_track.get_seds(
-            mini=1.0, eep=350.0, feh=0.0, afe=0.0, av=0.0, rv=3.3,
-            dist=1000.0, return_dict=False
+            mini=1.0,
+            eep=350.0,
+            feh=0.0,
+            afe=0.0,
+            av=0.0,
+            rv=3.3,
+            dist=1000.0,
+            return_dict=False,
         )
 
         # Base coefficient should match direct evaluation
-        base_mag = gen.grid_seds['SDSS_g'][0, 0]
+        base_mag = gen.grid_seds["SDSS_g"][0, 0]
         np.testing.assert_allclose(base_mag, sed_direct[0], rtol=1e-3)
 
     def test_reddening_coefficients(self):
         """Test that reddening coefficients are plausible."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g', 'SDSS_r', 'SDSS_i'], verbose=False)
+        gen = GridGenerator(
+            tracks, filters=["SDSS_g", "SDSS_r", "SDSS_i"], verbose=False
+        )
 
         gen.make_grid(
             mini_grid=np.array([1.0]),
@@ -147,11 +159,11 @@ class TestGridGenerator:
             feh_grid=np.array([0.0]),
             afe_grid=np.array([0.0]),
             smf_grid=np.array([0.0]),
-            verbose=False
+            verbose=False,
         )
 
         # Check that we have 3 coefficients per filter
-        for filt in ['SDSS_g', 'SDSS_r', 'SDSS_i']:
+        for filt in ["SDSS_g", "SDSS_r", "SDSS_i"]:
             coeffs = gen.grid_seds[filt][0]
             assert len(coeffs) == 3
 
@@ -167,7 +179,7 @@ class TestGridGenerator:
     def test_invalid_models_flagged(self):
         """Test that invalid models are properly flagged."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=False)
 
         # Include some parameters that should produce invalid models
         mini_grid = np.array([0.1, 1.0])  # 0.1 Msun too low
@@ -181,7 +193,7 @@ class TestGridGenerator:
             afe_grid=np.array([0.0]),
             smf_grid=np.array([0.0]),
             mini_bound=0.5,  # Should exclude 0.1 Msun
-            verbose=False
+            verbose=False,
         )
 
         # Should have flagged some models as invalid
@@ -190,7 +202,9 @@ class TestGridGenerator:
     def test_save_and_load(self):
         """Test saving grid to HDF5 and loading it back."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g', 'SDSS_r', 'SDSS_i'], verbose=False)
+        gen = GridGenerator(
+            tracks, filters=["SDSS_g", "SDSS_r", "SDSS_i"], verbose=False
+        )
 
         # Generate small test grid
         mini_grid = np.array([0.9, 1.0, 1.1])
@@ -198,7 +212,7 @@ class TestGridGenerator:
         feh_grid = np.array([0.0])
 
         # Use temporary file
-        with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as tmp:
             tmp_path = tmp.name
 
         try:
@@ -210,26 +224,26 @@ class TestGridGenerator:
                 afe_grid=np.array([0.0]),
                 smf_grid=np.array([0.0]),
                 output_file=tmp_path,
-                verbose=False
+                verbose=False,
             )
 
             # Load with h5py to check structure
-            with h5py.File(tmp_path, 'r') as f:
-                assert 'mag_coeffs' in f
-                assert 'labels' in f
-                assert 'parameters' in f
+            with h5py.File(tmp_path, "r") as f:
+                assert "mag_coeffs" in f
+                assert "labels" in f
+                assert "parameters" in f
 
                 # Check attributes
-                assert 'reference_distance_pc' in f.attrs
-                assert f.attrs['reference_distance_pc'] == 1000.0
+                assert "reference_distance_pc" in f.attrs
+                assert f.attrs["reference_distance_pc"] == 1000.0
 
                 # Check dimensions
-                assert f['mag_coeffs'].shape[0] == 6  # 3*2*1*1*1
-                assert f['labels'].shape[0] == 6
+                assert f["mag_coeffs"].shape[0] == 6  # 3*2*1*1*1
+                assert f["labels"].shape[0] == 6
 
             # Load with load_models
             models, labels, label_mask = load_models(
-                tmp_path, filters=['SDSS_g', 'SDSS_r', 'SDSS_i'], verbose=False
+                tmp_path, filters=["SDSS_g", "SDSS_r", "SDSS_i"], verbose=False
             )
 
             assert len(models) > 0
@@ -243,10 +257,10 @@ class TestGridGenerator:
     def test_grid_compatible_with_stargrid(self):
         """Test that generated grid can be loaded by StarGrid."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g', 'SDSS_r'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g", "SDSS_r"], verbose=False)
 
         # Use temporary file
-        with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as tmp:
             tmp_path = tmp.name
 
         try:
@@ -258,16 +272,16 @@ class TestGridGenerator:
                 afe_grid=np.array([0.0]),
                 smf_grid=np.array([0.0]),
                 output_file=tmp_path,
-                verbose=False
+                verbose=False,
             )
 
             # Load with load_models
             models, labels, label_mask = load_models(
-                tmp_path, filters=['SDSS_g', 'SDSS_r'], verbose=False
+                tmp_path, filters=["SDSS_g", "SDSS_r"], verbose=False
             )
 
             # Create StarGrid instance
-            grid = StarGrid(models, labels, filters=['SDSS_g', 'SDSS_r'], verbose=False)
+            grid = StarGrid(models, labels, filters=["SDSS_g", "SDSS_r"], verbose=False)
 
             # Test that we can get predictions
             preds = grid.get_predictions(mini=1.0, eep=375.0, feh=0.0)
@@ -282,9 +296,9 @@ class TestGridGenerator:
     def test_different_dist_warning(self):
         """Test that using non-standard distance is preserved."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=False)
 
-        with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as tmp:
             tmp_path = tmp.name
 
         try:
@@ -297,12 +311,12 @@ class TestGridGenerator:
                 smf_grid=np.array([0.0]),
                 dist=500.0,  # Non-standard!
                 output_file=tmp_path,
-                verbose=False
+                verbose=False,
             )
 
             # Check that distance is recorded
-            with h5py.File(tmp_path, 'r') as f:
-                assert f.attrs['reference_distance_pc'] == 500.0
+            with h5py.File(tmp_path, "r") as f:
+                assert f.attrs["reference_distance_pc"] == 500.0
 
         finally:
             Path(tmp_path).unlink(missing_ok=True)
@@ -310,7 +324,7 @@ class TestGridGenerator:
     def test_grid_params_structure(self):
         """Test that grid parameters match track predictions."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=False)
 
         gen.make_grid(
             mini_grid=np.array([1.0]),
@@ -318,7 +332,7 @@ class TestGridGenerator:
             feh_grid=np.array([0.0]),
             afe_grid=np.array([0.0]),
             smf_grid=np.array([0.0]),
-            verbose=False
+            verbose=False,
         )
 
         # Check parameter names match tracks
@@ -331,7 +345,7 @@ class TestGridGenerator:
     def test_binary_handling(self):
         """Test grid generation with binary stars."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=False)
 
         # Generate grid with and without binaries
         gen.make_grid(
@@ -340,15 +354,15 @@ class TestGridGenerator:
             feh_grid=np.array([0.0]),
             afe_grid=np.array([0.0]),
             smf_grid=np.array([0.0, 0.5]),  # Single + binary
-            verbose=False
+            verbose=False,
         )
 
         # Should have 2 models
         assert len(gen.grid_labels) == 2
 
         # Binary should be brighter (smaller magnitude)
-        mag_single = gen.grid_seds['SDSS_g'][0, 0]
-        mag_binary = gen.grid_seds['SDSS_g'][1, 0]
+        mag_single = gen.grid_seds["SDSS_g"][0, 0]
+        mag_binary = gen.grid_seds["SDSS_g"][1, 0]
 
         # Binary should be brighter (if both valid)
         if np.isfinite(mag_single) and np.isfinite(mag_binary):
@@ -368,7 +382,7 @@ class TestGridGeneratorEdgeCases:
         import time
 
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=False)
 
         # Patch make_grid to terminate after a few successful models
         original_get_seds = gen.star_track.get_seds
@@ -389,11 +403,11 @@ class TestGridGeneratorEdgeCases:
             # but will be interrupted after 5 successful model generations
             gen.make_grid(
                 mini_grid=None,  # Use default
-                eep_grid=None,   # Use default
-                feh_grid=None,   # Use default
-                afe_grid=None,   # Use default
-                smf_grid=None,   # Use default
-                verbose=False
+                eep_grid=None,  # Use default
+                feh_grid=None,  # Use default
+                afe_grid=None,  # Use default
+                smf_grid=None,  # Use default
+                verbose=False,
             )
         except KeyboardInterrupt:
             # Expected - we interrupted after verifying defaults work
@@ -416,7 +430,7 @@ class TestGridGeneratorEdgeCases:
     def test_single_point_grid(self):
         """Test grid with single point in each dimension."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=False)
 
         gen.make_grid(
             mini_grid=np.array([1.0]),
@@ -424,7 +438,7 @@ class TestGridGeneratorEdgeCases:
             feh_grid=np.array([0.0]),
             afe_grid=np.array([0.0]),
             smf_grid=np.array([0.0]),
-            verbose=False
+            verbose=False,
         )
 
         assert len(gen.grid_labels) == 1
@@ -432,7 +446,7 @@ class TestGridGeneratorEdgeCases:
     def test_grid_without_save(self):
         """Test generating grid without saving to file."""
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=False)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=False)
 
         # Generate without output_file
         gen.make_grid(
@@ -442,11 +456,11 @@ class TestGridGeneratorEdgeCases:
             afe_grid=np.array([0.0]),
             smf_grid=np.array([0.0]),
             output_file=None,  # Don't save
-            verbose=False
+            verbose=False,
         )
 
         # Should still have results in memory
-        assert hasattr(gen, 'grid_seds')
+        assert hasattr(gen, "grid_seds")
         assert len(gen.grid_seds) == 1
 
     def test_verbose_output(self):
@@ -455,7 +469,7 @@ class TestGridGeneratorEdgeCases:
         import sys
 
         tracks = EEPTracks(verbose=False)
-        gen = GridGenerator(tracks, filters=['SDSS_g'], verbose=True)
+        gen = GridGenerator(tracks, filters=["SDSS_g"], verbose=True)
 
         # Capture stderr
         old_stderr = sys.stderr
@@ -469,15 +483,15 @@ class TestGridGeneratorEdgeCases:
                 feh_grid=np.array([0.0]),
                 afe_grid=np.array([0.0]),
                 smf_grid=np.array([0.0]),
-                verbose=True
+                verbose=True,
             )
 
             # Check that some output was produced
             output = sys.stderr.getvalue()
-            assert 'Generating grid' in output or 'Grid generation' in output
+            assert "Generating grid" in output or "Grid generation" in output
         finally:
             sys.stderr = old_stderr
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

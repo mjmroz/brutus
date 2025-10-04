@@ -520,7 +520,9 @@ class TestOutlierModels:
         parallax = np.array([10.0, 20.0])
         parallax_err = np.array([1.0, 2.0])
 
-        lnl = chisquare_outlier_loglike(flux, err, parallax=parallax, parallax_err=parallax_err)
+        lnl = chisquare_outlier_loglike(
+            flux, err, parallax=parallax, parallax_err=parallax_err
+        )
 
         assert lnl.shape == (2,)
         assert np.all(np.isfinite(lnl))
@@ -546,7 +548,9 @@ class TestOutlierModels:
         parallax = np.array([10.0, 20.0])
         parallax_err = np.array([1.0, 2.0])
 
-        lnl = uniform_outlier_loglike(flux, err, parallax=parallax, parallax_err=parallax_err)
+        lnl = uniform_outlier_loglike(
+            flux, err, parallax=parallax, parallax_err=parallax_err
+        )
 
         assert lnl.shape == (2,)
         assert np.all(np.isfinite(lnl))

@@ -69,7 +69,9 @@ def simple_mocks():
         else:
             return np.random.uniform(14, 20, (n_requested, n_filt))
 
-    def mock_phot_loglike(flux, err, mfluxes, mask=None, dim_prior=True, dof_reduction=0):
+    def mock_phot_loglike(
+        flux, err, mfluxes, mask=None, dim_prior=True, dof_reduction=0
+    ):
         nobj, nfilt = flux.shape
         nmod = mfluxes.shape[1] if len(mfluxes.shape) > 1 else 1
         return np.random.normal(-5, 2, (nobj, nmod))
@@ -581,7 +583,9 @@ class TestParameterRecovery:
             dists[i] = np.clip(dists[i], 0.6, 1.5)
 
         # Mock only the likelihood functions
-        def mock_phot_loglike(flux, err_in, mfluxes, mask=None, dim_prior=True, dof_reduction=0):
+        def mock_phot_loglike(
+            flux, err_in, mfluxes, mask=None, dim_prior=True, dof_reduction=0
+        ):
             nobj = flux.shape[0]
             nmod = mfluxes.shape[1] if len(mfluxes.shape) > 1 else 1
             return np.zeros((nobj, nmod))
@@ -696,7 +700,9 @@ class TestParameterRecovery:
             dists[i] = np.clip(dists[i], 0.7, 1.3)
 
         # Mock likelihood functions
-        def mock_phot_loglike(flux, err_in, mfluxes, mask=None, dim_prior=True, dof_reduction=0):
+        def mock_phot_loglike(
+            flux, err_in, mfluxes, mask=None, dim_prior=True, dof_reduction=0
+        ):
             nobj = flux.shape[0]
             nmod = mfluxes.shape[1] if len(mfluxes.shape) > 1 else 1
             return np.zeros((nobj, nmod))

@@ -419,7 +419,6 @@ class TestUtilities:
     """Test utility functions."""
 
 
-
 class TestNumericalStability:
     """Test numerical stability and edge cases."""
 

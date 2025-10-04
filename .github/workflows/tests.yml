@@ -31,7 +31,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
+        # Install numpy and scipy first to prevent binary incompatibility
+        pip install "numpy>=1.19,<2.0" "scipy>=1.6.0"
+        # Install healpy (which requires numpy to be pre-installed)
+        pip install "healpy>=1.14.0"
+        # Now install package with remaining dependencies
         pip install -e ".[test]"
 
     - name: Cache test data files

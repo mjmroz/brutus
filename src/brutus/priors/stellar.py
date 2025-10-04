@@ -67,8 +67,15 @@ import numpy as np
 __all__ = ["logp_imf", "logp_ps1_luminosity_function"]
 
 
-def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None,
-             mass_min=0.08, mass_max=100.0):
+def logp_imf(
+    mgrid,
+    alpha_low=1.3,
+    alpha_high=2.3,
+    mass_break=0.5,
+    mgrid2=None,
+    mass_min=0.08,
+    mass_max=100.0,
+):
     r"""
     Log-prior for a Kroupa-like broken initial mass function.
 
@@ -153,9 +160,11 @@ def logp_imf(mgrid, alpha_low=1.3, alpha_high=2.3, mass_break=0.5, mgrid2=None,
         # High-mass regime: mass_break to mass_max
         # The high-mass PDF includes continuity factor: mass_break^(alpha_high - alpha_low)
         continuity_factor = mass_break ** (alpha_high - alpha_low)
-        norm_high = continuity_factor * (
-            mass_max ** (1.0 - alpha_high) - mass_break ** (1.0 - alpha_high)
-        ) / (1.0 - alpha_high)
+        norm_high = (
+            continuity_factor
+            * (mass_max ** (1.0 - alpha_high) - mass_break ** (1.0 - alpha_high))
+            / (1.0 - alpha_high)
+        )
         norm = norm_low + norm_high
     else:
         # Only low-mass regime present

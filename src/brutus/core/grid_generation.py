@@ -94,6 +94,7 @@ import h5py
 
 try:
     from numpy.polynomial import Polynomial
+
     _use_new_polyfit = True
 except ImportError:
     _use_new_polyfit = False
@@ -199,37 +200,36 @@ class GridGenerator:
         self.filters = np.array(filters)
 
         if verbose:
-            sys.stderr.write(f'Grid filters: {list(self.filters)}\n')
+            sys.stderr.write(f"Grid filters: {list(self.filters)}\n")
 
         # Create StarEvolTrack for SED generation
         self.star_track = StarEvolTrack(
-            tracks=tracks,
-            filters=filters,
-            nnfile=nnfile,
-            verbose=verbose
+            tracks=tracks, filters=filters, nnfile=nnfile, verbose=verbose
         )
 
         # Store neural network predictor
         self.predictor = self.star_track.predictor
 
-    def make_grid(self,
-                  mini_grid=None,
-                  eep_grid=None,
-                  feh_grid=None,
-                  afe_grid=None,
-                  smf_grid=None,
-                  av_grid=None,
-                  av_wt=None,
-                  rv_grid=None,
-                  rv_wt=None,
-                  dist=1000.0,
-                  loga_max=10.14,
-                  eep_binary_max=480.0,
-                  mini_bound=0.5,
-                  apply_corr=True,
-                  corr_params=None,
-                  output_file=None,
-                  verbose=True):
+    def make_grid(
+        self,
+        mini_grid=None,
+        eep_grid=None,
+        feh_grid=None,
+        afe_grid=None,
+        smf_grid=None,
+        av_grid=None,
+        av_wt=None,
+        rv_grid=None,
+        rv_wt=None,
+        dist=1000.0,
+        loga_max=10.14,
+        eep_binary_max=480.0,
+        mini_bound=0.5,
+        apply_corr=True,
+        corr_params=None,
+        output_file=None,
+        verbose=True,
+    ):
         """
         Generate model grid with reddening coefficients.
 
@@ -352,23 +352,21 @@ class GridGenerator:
         if mini_grid is None:
             mini_grid = np.arange(0.5, 2.0 + 1e-5, 0.025)
         if eep_grid is None:
-            eep_grid = np.concatenate([
-                np.arange(202., 454., 6.),
-                np.arange(454., 808. + 1e-5, 2.)
-            ])
+            eep_grid = np.concatenate(
+                [np.arange(202.0, 454.0, 6.0), np.arange(454.0, 808.0 + 1e-5, 2.0)]
+            )
         if feh_grid is None:
-            feh_grid = np.concatenate([
-                np.arange(-3., -2., 0.1),
-                np.arange(-2., 0.5 + 1e-5, 0.05)
-            ])
+            feh_grid = np.concatenate(
+                [np.arange(-3.0, -2.0, 0.1), np.arange(-2.0, 0.5 + 1e-5, 0.05)]
+            )
         if afe_grid is None:
             afe_grid = np.arange(-0.2, 0.6 + 1e-5, 0.2)
         if smf_grid is None:
-            smf_grid = np.array([0.])
+            smf_grid = np.array([0.0])
 
         # Initialize reddening grids and weights
         if av_grid is None:
-            av_grid = np.arange(0., 1.5 + 1e-5, 0.3)
+            av_grid = np.arange(0.0, 1.5 + 1e-5, 0.3)
             av_grid[-1] -= 1e-5  # Ensure we don't exceed 1.5
         if av_wt is None:
             # Inverse weighting favoring A_V=0
@@ -380,34 +378,46 @@ class GridGenerator:
             rv_wt = np.exp(-np.abs(rv_grid - 3.3) / 0.5)
 
         # Create grid labels
-        label_names = ['mini', 'eep', 'feh', 'afe', 'smf']
-        ltype = np.dtype([(n, 'f8') for n in label_names])
+        label_names = ["mini", "eep", "feh", "afe", "smf"]
+        ltype = np.dtype([(n, "f8") for n in label_names])
         self.grid_labels = np.array(
             list(product(mini_grid, eep_grid, feh_grid, afe_grid, smf_grid)),
-            dtype=ltype
+            dtype=ltype,
         )
         Ngrid = len(self.grid_labels)
 
         if verbose:
-            sys.stderr.write(f'\nGenerating grid with {Ngrid:,} models\n')
-            sys.stderr.write(f'  mini: {len(mini_grid)} points '
-                           f'[{mini_grid.min():.2f}, {mini_grid.max():.2f}]\n')
-            sys.stderr.write(f'  eep:  {len(eep_grid)} points '
-                           f'[{eep_grid.min():.0f}, {eep_grid.max():.0f}]\n')
-            sys.stderr.write(f'  feh:  {len(feh_grid)} points '
-                           f'[{feh_grid.min():.2f}, {feh_grid.max():.2f}]\n')
-            sys.stderr.write(f'  afe:  {len(afe_grid)} points '
-                           f'[{afe_grid.min():.2f}, {afe_grid.max():.2f}]\n')
-            sys.stderr.write(f'  smf:  {len(smf_grid)} points '
-                           f'[{smf_grid.min():.2f}, {smf_grid.max():.2f}]\n')
-            sys.stderr.write(f'\nReddening grid: {len(av_grid)} A_V × '
-                           f'{len(rv_grid)} R_V = '
-                           f'{len(av_grid)*len(rv_grid)} evaluations per model\n\n')
+            sys.stderr.write(f"\nGenerating grid with {Ngrid:,} models\n")
+            sys.stderr.write(
+                f"  mini: {len(mini_grid)} points "
+                f"[{mini_grid.min():.2f}, {mini_grid.max():.2f}]\n"
+            )
+            sys.stderr.write(
+                f"  eep:  {len(eep_grid)} points "
+                f"[{eep_grid.min():.0f}, {eep_grid.max():.0f}]\n"
+            )
+            sys.stderr.write(
+                f"  feh:  {len(feh_grid)} points "
+                f"[{feh_grid.min():.2f}, {feh_grid.max():.2f}]\n"
+            )
+            sys.stderr.write(
+                f"  afe:  {len(afe_grid)} points "
+                f"[{afe_grid.min():.2f}, {afe_grid.max():.2f}]\n"
+            )
+            sys.stderr.write(
+                f"  smf:  {len(smf_grid)} points "
+                f"[{smf_grid.min():.2f}, {smf_grid.max():.2f}]\n"
+            )
+            sys.stderr.write(
+                f"\nReddening grid: {len(av_grid)} A_V × "
+                f"{len(rv_grid)} R_V = "
+                f"{len(av_grid)*len(rv_grid)} evaluations per model\n\n"
+            )
 
         # Initialize storage arrays
         param_names = self.tracks.predictions
-        ptype = np.dtype([(n, 'f8') for n in param_names])
-        stype = np.dtype([(filt, 'f4', 3) for filt in self.filters])
+        ptype = np.dtype([(n, "f8") for n in param_names])
+        stype = np.dtype([(filt, "f4", 3) for filt in self.filters])
 
         self.grid_seds = np.full(Ngrid, np.nan, dtype=stype)
         self.grid_params = np.full(Ngrid, np.nan, dtype=ptype)
@@ -415,21 +425,26 @@ class GridGenerator:
 
         # Generate models
         percentage = -99
-        ttot, t1 = 0., time.time()
+        ttot, t1 = 0.0, time.time()
 
         for i, (mini, eep, feh, afe, smf) in enumerate(self.grid_labels):
             # Compute model and parameters at base reddening
-            (sed, params, params2,
-             eep2) = self.star_track.get_seds(
-                mini=mini, eep=eep, feh=feh, afe=afe,
-                smf=smf, av=0., rv=3.3, dist=dist,
+            (sed, params, params2, eep2) = self.star_track.get_seds(
+                mini=mini,
+                eep=eep,
+                feh=feh,
+                afe=afe,
+                smf=smf,
+                av=0.0,
+                rv=3.3,
+                dist=dist,
                 loga_max=loga_max,
                 eep_binary_max=eep_binary_max,
                 mini_bound=mini_bound,
                 apply_corr=apply_corr,
                 corr_params=corr_params,
                 return_dict=False,
-                return_eep2=True
+                return_eep2=True,
             )
 
             # Save parameters for primary
@@ -439,21 +454,27 @@ class GridGenerator:
             if np.any(np.isnan(sed)) or np.any(np.isnan(params)):
                 # Flag as invalid and fill with NaNs
                 self.grid_sel[i] = False
-                self.grid_seds[i] = tuple(
-                    np.full((len(self.filters), 3), np.nan)
-                )
+                self.grid_seds[i] = tuple(np.full((len(self.filters), 3), np.nan))
             else:
                 # Fit reddening coefficients
                 coeffs = self._fit_reddening_coefficients(
-                    mini=mini, eep=eep, feh=feh, afe=afe, smf=smf,
-                    eep2=eep2, sed_base=sed,
-                    av_grid=av_grid, av_wt=av_wt,
-                    rv_grid=rv_grid, rv_wt=rv_wt,
-                    dist=dist, loga_max=loga_max,
+                    mini=mini,
+                    eep=eep,
+                    feh=feh,
+                    afe=afe,
+                    smf=smf,
+                    eep2=eep2,
+                    sed_base=sed,
+                    av_grid=av_grid,
+                    av_wt=av_wt,
+                    rv_grid=rv_grid,
+                    rv_wt=rv_wt,
+                    dist=dist,
+                    loga_max=loga_max,
                     eep_binary_max=eep_binary_max,
                     mini_bound=mini_bound,
                     apply_corr=apply_corr,
-                    corr_params=corr_params
+                    corr_params=corr_params,
                 )
                 self.grid_seds[i] = tuple(coeffs)
 
@@ -470,30 +491,48 @@ class GridGenerator:
             if verbose and new_percentage != percentage:
                 percentage = new_percentage
                 sys.stderr.write(
-                    f'\rConstructing grid {percentage/1e3:6.3f}% '
-                    f'({i+1:,}/{Ngrid:,}) '
-                    f'[mini={mini:6.3f}, eep={eep:6.1f}, feh={feh:6.2f}, '
-                    f'afe={afe:5.2f}, smf={smf:4.2f}] '
-                    f'(t/obj: {tavg*1e3:5.2f} ms, '
-                    f'est. remaining: {test:8.1f} s)          '
+                    f"\rConstructing grid {percentage/1e3:6.3f}% "
+                    f"({i+1:,}/{Ngrid:,}) "
+                    f"[mini={mini:6.3f}, eep={eep:6.1f}, feh={feh:6.2f}, "
+                    f"afe={afe:5.2f}, smf={smf:4.2f}] "
+                    f"(t/obj: {tavg*1e3:5.2f} ms, "
+                    f"est. remaining: {test:8.1f} s)          "
                 )
                 sys.stderr.flush()
 
         if verbose:
-            sys.stderr.write('\n\n')
+            sys.stderr.write("\n\n")
             valid_models = self.grid_sel.sum()
-            sys.stderr.write(f'Grid generation complete: '
-                           f'{valid_models:,}/{Ngrid:,} valid models '
-                           f'({100*valid_models/Ngrid:.1f}%)\n')
+            sys.stderr.write(
+                f"Grid generation complete: "
+                f"{valid_models:,}/{Ngrid:,} valid models "
+                f"({100*valid_models/Ngrid:.1f}%)\n"
+            )
 
         # Save to file if requested
         if output_file is not None:
             self._save_grid(output_file, dist, verbose=verbose)
 
-    def _fit_reddening_coefficients(self, mini, eep, feh, afe, smf, eep2,
-                                     sed_base, av_grid, av_wt, rv_grid, rv_wt,
-                                     dist, loga_max, eep_binary_max,
-                                     mini_bound, apply_corr, corr_params):
+    def _fit_reddening_coefficients(
+        self,
+        mini,
+        eep,
+        feh,
+        afe,
+        smf,
+        eep2,
+        sed_base,
+        av_grid,
+        av_wt,
+        rv_grid,
+        rv_wt,
+        dist,
+        loga_max,
+        eep_binary_max,
+        mini_bound,
+        apply_corr,
+        corr_params,
+    ):
         """
         Fit polynomial coefficients for reddening dependence.
 
@@ -514,23 +553,37 @@ class GridGenerator:
             Coefficients [m_0, a, b] for each filter
         """
         # Compute SEDs across reddening grid
-        seds = np.array([
-            [self.star_track.get_seds(
-                mini=mini, eep=eep, feh=feh, afe=afe, smf=smf,
-                eep2=eep2, av=av, rv=rv, dist=dist,
-                loga_max=loga_max, eep_binary_max=eep_binary_max,
-                mini_bound=mini_bound, apply_corr=apply_corr,
-                corr_params=corr_params, return_dict=False
-            )[0] for av in av_grid]
-            for rv in rv_grid
-        ])  # Shape: (Nrv, Nav, Nfilt)
+        seds = np.array(
+            [
+                [
+                    self.star_track.get_seds(
+                        mini=mini,
+                        eep=eep,
+                        feh=feh,
+                        afe=afe,
+                        smf=smf,
+                        eep2=eep2,
+                        av=av,
+                        rv=rv,
+                        dist=dist,
+                        loga_max=loga_max,
+                        eep_binary_max=eep_binary_max,
+                        mini_bound=mini_bound,
+                        apply_corr=apply_corr,
+                        corr_params=corr_params,
+                        return_dict=False,
+                    )[0]
+                    for av in av_grid
+                ]
+                for rv in rv_grid
+            ]
+        )  # Shape: (Nrv, Nav, Nfilt)
 
         # Fit A_V dependence at each R_V
         # For each (rv, filter): fit m vs A_V
-        sfits = np.array([
-            scipy_polyfit(av_grid, s, 1, w=av_wt).T
-            for s in seds
-        ])  # Shape: (Nrv, Nfilt, 2) where [..., 0] = slope, [..., 1] = intercept
+        sfits = np.array(
+            [scipy_polyfit(av_grid, s, 1, w=av_wt).T for s in seds]
+        )  # Shape: (Nrv, Nfilt, 2) where [..., 0] = slope, [..., 1] = intercept
 
         # Fit R_V dependence of the A_V slope
         # For each filter: fit A_V_slope vs R_V
@@ -559,38 +612,47 @@ class GridGenerator:
         output_path = Path(output_file)
 
         if verbose:
-            sys.stderr.write(f'Saving grid to {output_path}...\n')
+            sys.stderr.write(f"Saving grid to {output_path}...\n")
 
-        with h5py.File(output_path, 'w') as f:
+        with h5py.File(output_path, "w") as f:
             # Save magnitude coefficients
-            f.create_dataset('mag_coeffs', data=self.grid_seds,
-                           compression='gzip', compression_opts=4)
+            f.create_dataset(
+                "mag_coeffs",
+                data=self.grid_seds,
+                compression="gzip",
+                compression_opts=4,
+            )
 
             # Save labels (inputs)
-            f.create_dataset('labels', data=self.grid_labels,
-                           compression='gzip', compression_opts=4)
+            f.create_dataset(
+                "labels", data=self.grid_labels, compression="gzip", compression_opts=4
+            )
 
             # Save parameters (predictions)
-            f.create_dataset('parameters', data=self.grid_params,
-                           compression='gzip', compression_opts=4)
+            f.create_dataset(
+                "parameters",
+                data=self.grid_params,
+                compression="gzip",
+                compression_opts=4,
+            )
 
             # Save metadata
-            f.attrs['reference_distance_pc'] = dist
-            f.attrs['reference_distance_note'] = (
-                'All magnitudes computed at this distance (default 1 kpc = 1000 pc)'
+            f.attrs["reference_distance_pc"] = dist
+            f.attrs["reference_distance_note"] = (
+                "All magnitudes computed at this distance (default 1 kpc = 1000 pc)"
             )
             try:
                 import brutus
-                f.attrs['brutus_version'] = brutus.__version__
+
+                f.attrs["brutus_version"] = brutus.__version__
             except:
-                f.attrs['brutus_version'] = 'unknown'
-            f.attrs['creation_date'] = datetime.now().isoformat()
-            f.attrs['n_models_total'] = len(self.grid_labels)
-            f.attrs['n_models_valid'] = self.grid_sel.sum()
+                f.attrs["brutus_version"] = "unknown"
+            f.attrs["creation_date"] = datetime.now().isoformat()
+            f.attrs["n_models_total"] = len(self.grid_labels)
+            f.attrs["n_models_valid"] = self.grid_sel.sum()
             # Convert filters to ASCII strings for HDF5 compatibility
-            f.attrs['filters'] = [filt.encode('ascii') for filt in self.filters]
+            f.attrs["filters"] = [filt.encode("ascii") for filt in self.filters]
 
         if verbose:
             file_size_mb = output_path.stat().st_size / 1024**2
-            sys.stderr.write(f'Grid saved successfully '
-                           f'({file_size_mb:.1f} MB)\n')
+            sys.stderr.write(f"Grid saved successfully " f"({file_size_mb:.1f} MB)\n")
