@@ -19,12 +19,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10", 
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows :: Windows Subsystem for Linux",
     "Topic :: Scientific/Engineering :: Astronomy",
     "Intended Audience :: Science/Research",
 ]
@@ -33,7 +34,7 @@ keywords = [
     "cluster", "isochrone", "dust", "reddening",
     "parallax", "distance", "template fitting"
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.19",
     "scipy>=1.6.0", 
@@ -88,7 +89,7 @@ where = ["src"]
 # Development tools configuration
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+target-version = ['py39', 'py310', 'py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -159,7 +160,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false  # Start lenient, tighten later

@@ -53,7 +53,7 @@ pip install astro-brutus
 
 ### Requirements
 
-- **Python**: 3.8 or higher
+- **Python**: 3.9 or higher (Python 3.8 reached EOL in October 2024)
 - **Operating System**: Linux, macOS, or Windows with WSL (see Windows note below)
 
 ### Quick Install

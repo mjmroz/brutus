@@ -43,6 +43,9 @@ __version__ = "1.0.0"
 
 # Core functionality imports
 try:
+    # Import submodules to make them accessible as brutus.plotting, etc.
+    from . import analysis, core, data, dust, plotting, priors, utils
+
     # Core stellar evolution models (refactored)
     # Analysis and fitting
     from .analysis import BruteForce
@@ -56,10 +59,18 @@ try:
 
     # Dust mapping (not yet refactored)
     # from .dust import Bayestar
-    # Make key classes easily accessible
+    # Make key classes and submodules easily accessible
     __all__ = [
         # Version
         "__version__",
+        # Submodules
+        "core",
+        "analysis",
+        "data",
+        "utils",
+        "priors",
+        "plotting",
+        "dust",
         # Core classes
         "Isochrone",
         "EEPTracks",
@@ -74,10 +85,6 @@ try:
         # Photometry utilities (refactored)
         "magnitude",
         "inv_magnitude",
-        # Analysis classes (not yet refactored)
-        # 'BruteForce', 'isochrone_loglike',
-        # Dust mapping (not yet refactored)
-        # 'Bayestar',
     ]
 
 except ImportError as e:
