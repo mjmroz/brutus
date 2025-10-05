@@ -44,7 +44,7 @@ Generate stellar parameters for stellar populations:
    # Generate stellar parameters for an isochrone
    params = iso.get_predictions(
        feh=0.0,        # Solar metallicity [Fe/H]
-       afe=0.0,        # Solar alpha enhancement [alpha/Fe] 
+       afe=0.0,        # Solar alpha enhancement [alpha/Fe]
        loga=9.0        # 1 Gyr age (log10(age/yr))
    )
 
@@ -57,7 +57,7 @@ Download and manage stellar evolution data:
 
    from brutus import fetch_grids, fetch_isos, fetch_dustmaps
 
-   # Download stellar evolution grids  
+   # Download stellar evolution grids
    fetch_grids()
 
    # Download isochrone data
@@ -75,7 +75,7 @@ Brutus provides comprehensive posterior distributions for all fitted parameters:
 
    # Access posterior samples
    distances = results['dist_samples']
-   extinctions = results['av_samples'] 
+   extinctions = results['av_samples']
    stellar_params = results['stellar_params']
 
    # Plot results

@@ -135,7 +135,7 @@ def bin_pdfs_distred(
         try:
             # Attempt to use intel-specific version.
             rstate = np.random_intel
-        except:
+        except AttributeError:
             # Fall back to default if not present.
             rstate = np.random
     if lndistprior is None:
@@ -155,7 +155,7 @@ def bin_pdfs_distred(
         avlims, dlims = span
     try:
         xbin, ybin = bins
-    except:
+    except (TypeError, ValueError):
         xbin = ybin = bins
     if ebv:
         ylims = avlims  # default Rv goes from [1., 8.] -> min(Rv) = 1.
@@ -184,7 +184,7 @@ def bin_pdfs_distred(
             ysmooth = smooth[1] * yspan
         else:
             ysmooth = smooth[1] * dy
-    except:
+    except (TypeError, IndexError):
         if smooth < 1:
             xsmooth, ysmooth = smooth * xspan, smooth * yspan
         else:
@@ -219,7 +219,7 @@ def bin_pdfs_distred(
                 sys.stderr.write("\rBinning object {0}/{1}".format(i + 1, nobjs))
             H, xedges, yedges = np.histogram2d(xs, ys, bins=(xbins, ybins))
             binned_vals[i] = H / nsamps
-    except:
+    except (AttributeError, KeyError):
         # Regenerate distance and reddening samples from inputs.
         scales, avs, rvs, covs_sar = copy.deepcopy(data)
 
@@ -311,7 +311,7 @@ def bin_pdfs_distred(
             xsmooth_t = xsmooth
         try:
             xsmooth_t = xsmooth_t[0]  # catch possible list
-        except:
+        except (TypeError, IndexError):
             pass
         # Smooth 2-D PDF.
         binned_vals[i] = norm_kde(H, (xsmooth_t / dx, ysmooth / dy))

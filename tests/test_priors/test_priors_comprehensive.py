@@ -13,7 +13,6 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord
-from scipy import stats
 
 from brutus.priors import (
     convert_parallax_to_scale,
@@ -28,6 +27,8 @@ from brutus.priors import (
     logp_parallax_scale,
     logp_ps1_luminosity_function,
 )
+
+# scipy.stats tested elsewhere
 
 
 class TestStellarPriors:

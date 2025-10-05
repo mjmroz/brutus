@@ -75,3 +75,21 @@ htmlcov/
 .coverage
 *.cover
 .pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+virtualenv/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Linting/type checking cache
+.mypy_cache/
+.ruff_cache/

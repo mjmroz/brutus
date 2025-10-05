@@ -239,13 +239,13 @@ class Bayestar(DustMap):
 
             start_idx = end_idx
 
-    def _find_data_idx(self, l, b):
+    def _find_data_idx(self, gal_l, b):
         """
         Find data indices corresponding to Galactic coordinates.
 
         Parameters
         ----------
-        l : array_like
+        gal_l : array_like
             Galactic longitude(s) in degrees.
         b : array_like
             Galactic latitude(s) in degrees.
@@ -256,14 +256,14 @@ class Bayestar(DustMap):
             Data indices for each coordinate. Invalid coordinates return -1.
         """
         # Ensure arrays and get shape
-        l_arr = np.asarray(l)
+        l_arr = np.asarray(gal_l)
         b_arr = np.asarray(b)
         pix_idx = np.full(l_arr.shape, -1, dtype="i8")
 
         # Search at each nside level (coarse to fine resolution)
         for k, nside in enumerate(self._nside_levels):
             # Convert coordinates to HEALPix pixel indices
-            ipix = lb2pix(nside, l, b, nest=True)
+            ipix = lb2pix(nside, l_arr, b_arr, nest=True)
 
             # Find insertion points in the sorted pixel list
             idx = np.searchsorted(self._hp_idx_sorted[k], ipix, side="left")

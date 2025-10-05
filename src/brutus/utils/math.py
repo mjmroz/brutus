@@ -100,7 +100,7 @@ class _function_wrapper(object):
         """Call the wrapped function with stored arguments."""
         try:
             return self.func(x, *self.args, **self.kwargs)
-        except:
+        except Exception:
             import traceback
 
             print("Exception while calling {0} function:".format(self.name))

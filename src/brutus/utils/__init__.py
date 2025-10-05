@@ -30,11 +30,7 @@ from .photometry import (
 )
 
 # Sampling utilities
-from .sampling import (
-    draw_sar,
-    quantile,
-    sample_multivariate_normal,
-)
+from .sampling import draw_sar, quantile, sample_multivariate_normal
 
 __all__ = [
     # Photometry functions

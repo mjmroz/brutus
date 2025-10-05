@@ -14,7 +14,7 @@ import numpy as np
 __all__ = ["lb2pix"]
 
 
-def lb2pix(nside, l, b, nest=True):
+def lb2pix(nside, gal_l, b, nest=True):
     """
     Convert Galactic (l, b) coordinates to HEALPix pixel indices.
 
@@ -22,7 +22,7 @@ def lb2pix(nside, l, b, nest=True):
     ----------
     nside : int
         The HEALPix nside parameter. Must be a power of 2.
-    l : float or array_like
+    gal_l : float or array_like
         Galactic longitude in degrees.
     b : float or array_like
         Galactic latitude in degrees.
@@ -39,28 +39,28 @@ def lb2pix(nside, l, b, nest=True):
     Examples
     --------
     >>> # Single coordinate
-    >>> pix = lb2pix(nside=64, l=0.0, b=0.0)
+    >>> pix = lb2pix(nside=64, gal_l=0.0, b=0.0)
     >>> isinstance(pix, int)
     True
 
     >>> # Multiple coordinates
     >>> l_arr = np.array([0.0, 90.0, 180.0])
     >>> b_arr = np.array([0.0, 30.0, -30.0])
-    >>> pix_arr = lb2pix(nside=64, l=l_arr, b=b_arr)
+    >>> pix_arr = lb2pix(nside=64, gal_l=l_arr, b=b_arr)
     >>> len(pix_arr) == 3
     True
 
     >>> # Invalid coordinate
-    >>> invalid_pix = lb2pix(nside=64, l=0.0, b=95.0)
+    >>> invalid_pix = lb2pix(nside=64, gal_l=0.0, b=95.0)
     >>> invalid_pix == -1
     True
     """
     # Convert angles to spherical coordinates
     theta = np.radians(90.0 - b)
-    phi = np.radians(l)
+    phi = np.radians(gal_l)
 
     # Handle scalar inputs
-    if not hasattr(l, "__len__"):
+    if not hasattr(gal_l, "__len__"):
         # Check for valid coordinate
         if (b < -90.0) or (b > 90.0):
             return -1
@@ -70,7 +70,7 @@ def lb2pix(nside, l, b, nest=True):
         return int(pix_idx)
 
     # Handle array inputs - use broadcasting
-    l_arr = np.asarray(l)
+    l_arr = np.asarray(gal_l)
     b_arr = np.asarray(b)
 
     # Use numpy broadcasting to handle different shapes

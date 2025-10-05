@@ -9,7 +9,8 @@ to achieve better test coverage.
 """
 
 import numpy as np
-import pytest
+
+# pytest used by test framework
 from astropy.coordinates import SkyCoord
 
 from brutus.priors.galactic import logp_age_from_feh, logp_galactic_structure

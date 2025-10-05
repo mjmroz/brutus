@@ -211,7 +211,7 @@ class FastNN(object):
             # Handle 1D input case
             xp = (np.atleast_2d(x) - self.xmin[None, :]) / self.xspan[None, :]
             return xp.T
-        except:
+        except (ValueError, IndexError):
             # Handle 2D input case (multiple evaluations)
             xp = (np.atleast_2d(x) - self.xmin[:, None]) / self.xspan[:, None]
             return xp

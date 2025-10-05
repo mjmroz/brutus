@@ -10,7 +10,7 @@ to achieve >80% test coverage.
 
 import sys
 import warnings
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -96,18 +96,19 @@ def test_import_error_fallback():
 
     # Create a mock scenario where imports fail
     with patch("brutus.core", side_effect=ImportError("Mock import error")):
-        with patch("warnings.warn") as mock_warn:
+        with patch("warnings.warn"):
             # Force re-evaluation of the import block by removing from sys.modules
             if "brutus" in sys.modules:
                 del sys.modules["brutus"]
 
-            # This approach is complex for __init__.py, so let's test the warning directly
+            # This approach is complex for __init__.py, so let's test warning directly
             # Let's just verify the warning functionality works
-            warnings.warn(
-                f"Some brutus modules are not yet available during reorganization: Mock error. "
-                "Please use the original module imports temporarily.",
-                ImportWarning,
+            msg = (
+                "Some brutus modules are not yet available during "
+                "reorganization: Mock error. Please use the original "
+                "module imports temporarily."
             )
+            warnings.warn(msg, ImportWarning)
 
             # The fallback should still provide __version__
             import brutus

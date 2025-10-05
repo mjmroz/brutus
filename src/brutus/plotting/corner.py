@@ -278,7 +278,7 @@ def cornerplot(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # ignore bad values
         samples = params[idxs]
-        samples = np.array([samples[l] for l in labels]).T
+        samples = np.array([samples[lbl] for lbl in labels]).T
     samples = np.atleast_1d(samples)
     if len(samples.shape) == 1:
         samples = np.atleast_2d(samples)
@@ -293,7 +293,7 @@ def cornerplot(
         # Grab distance and reddening samples.
         ddraws, adraws, rdraws = copy.deepcopy(data)
         pdraws = 1.0 / ddraws
-    except:
+    except (ValueError, TypeError):
         # Regenerate distance and reddening samples from inputs.
         scales, avs, rvs, covs_sar = copy.deepcopy(data)
 
@@ -351,7 +351,7 @@ def cornerplot(
     for i, _ in enumerate(span):
         try:
             xmin, xmax = span[i]
-        except:
+        except (TypeError, ValueError):
             q = [0.5 - 0.5 * span[i], 0.5 + 0.5 * span[i]]
             span[i] = quantile(samples[i], q, weights=weights)
 
@@ -382,7 +382,7 @@ def cornerplot(
         try:
             fig, axes = fig
             axes = np.array(axes).reshape((ndim, ndim))
-        except:
+        except (ValueError, TypeError):
             raise ValueError("Mismatch between axes and dimension.")
 
     # Format figure.
@@ -415,11 +415,11 @@ def cornerplot(
         if i < ndim - 1:
             if top_ticks:
                 ax.xaxis.set_ticks_position("top")
-                [l.set_rotation(45) for l in ax.get_xticklabels()]
+                [tick.set_rotation(45) for tick in ax.get_xticklabels()]
             else:
                 ax.set_xticklabels([])
         else:
-            [l.set_rotation(45) for l in ax.get_xticklabels()]
+            [tick.set_rotation(45) for tick in ax.get_xticklabels()]
             ax.set_xlabel(labels[i], **label_kwargs)
             ax.xaxis.set_label_coords(0.5, -0.3)
         # Generate distribution.
@@ -464,7 +464,7 @@ def cornerplot(
         if truths is not None and truths[i] is not None:
             try:
                 [ax.axvline(t, color=truth_color, **truth_kwargs) for t in truths[i]]
-            except:
+            except TypeError:
                 ax.axvline(truths[i], color=truth_color, **truth_kwargs)
         # Set titles.
         if show_titles:
@@ -514,13 +514,13 @@ def cornerplot(
             if i < ndim - 1:
                 ax.set_xticklabels([])
             else:
-                [l.set_rotation(45) for l in ax.get_xticklabels()]
+                [tick.set_rotation(45) for tick in ax.get_xticklabels()]
                 ax.set_xlabel(labels[j], **label_kwargs)
                 ax.xaxis.set_label_coords(0.5, -0.3)
             if j > 0:
                 ax.set_yticklabels([])
             else:
-                [l.set_rotation(45) for l in ax.get_yticklabels()]
+                [tick.set_rotation(45) for tick in ax.get_yticklabels()]
                 ax.set_ylabel(labels[i], **label_kwargs)
                 ax.yaxis.set_label_coords(-0.3, 0.5)
             # Generate distribution.
@@ -558,7 +558,7 @@ def cornerplot(
                             ax.axvline(t, color=truth_color, **truth_kwargs)
                             for t in truths[j]
                         ]
-                    except:
+                    except TypeError:
                         ax.axvline(truths[j], color=truth_color, **truth_kwargs)
                 if truths[i] is not None:
                     try:
@@ -566,7 +566,7 @@ def cornerplot(
                             ax.axhline(t, color=truth_color, **truth_kwargs)
                             for t in truths[i]
                         ]
-                    except:
+                    except TypeError:
                         ax.axhline(truths[i], color=truth_color, **truth_kwargs)
 
     return (fig, axes)

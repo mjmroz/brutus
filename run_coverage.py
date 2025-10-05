@@ -19,10 +19,10 @@ Usage:
     python run_coverage.py --help       # Show help
 """
 
+import argparse
+import os
 import subprocess
 import sys
-import os
-import argparse
 from pathlib import Path
 
 

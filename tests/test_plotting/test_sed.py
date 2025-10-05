@@ -167,9 +167,10 @@ class TestPosteriorPredictive:
 
         mock_seds = np.random.uniform(15, 20, (len(sample_indices), nfilt))
 
-        with patch("brutus.plotting.sed.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.sed.magnitude"
-        ) as mock_magnitude:
+        with (
+            patch("brutus.plotting.sed.get_seds", return_value=mock_seds),
+            patch("brutus.plotting.sed.magnitude") as mock_magnitude,
+        ):
             # Mock magnitude function return
             mock_magnitude.return_value = (
                 np.random.uniform(15, 20, nfilt - 1),
@@ -234,9 +235,10 @@ class TestPosteriorPredictive:
 
         mock_seds = np.random.uniform(15, 20, (len(sample_indices), nfilt))
 
-        with patch("brutus.plotting.sed.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.sed.magnitude"
-        ) as mock_magnitude:
+        with (
+            patch("brutus.plotting.sed.get_seds", return_value=mock_seds),
+            patch("brutus.plotting.sed.magnitude") as mock_magnitude,
+        ):
             mock_magnitude.return_value = (
                 np.random.uniform(15, 20, nfilt),
                 np.random.uniform(0.01, 0.1, nfilt),
@@ -411,9 +413,10 @@ class TestPosteriorPredictive:
 
         mock_seds = np.random.uniform(15, 20, (len(sample_indices), nfilt))
 
-        with patch("brutus.plotting.sed.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.sed.magnitude"
-        ) as mock_magnitude:
+        with (
+            patch("brutus.plotting.sed.get_seds", return_value=mock_seds),
+            patch("brutus.plotting.sed.magnitude") as mock_magnitude,
+        ):
             mock_magnitude.return_value = (
                 np.random.uniform(15, 20, nfilt),
                 np.random.uniform(0.01, 0.1, nfilt),
@@ -549,9 +552,10 @@ class TestPosteriorPredictiveIntegration:
 
         mock_seds = np.random.uniform(15, 19, (n_samples, nfilt))
 
-        with patch("brutus.plotting.sed.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.sed.magnitude"
-        ) as mock_magnitude:
+        with (
+            patch("brutus.plotting.sed.get_seds", return_value=mock_seds),
+            patch("brutus.plotting.sed.magnitude") as mock_magnitude,
+        ):
             # Mock realistic magnitude conversion
             masked_data = data[data_mask]
             masked_err = data_err[data_mask]

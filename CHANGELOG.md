@@ -65,14 +65,14 @@ This release represents a major refactoring of brutus to improve usability, main
 #### 📁 Modular Architecture
 
 - **Organized modules**: Split functionality into logical modules:
-  - `brutus.core` - Individual stellar models, isochrones, neural networks, and SED utilities  
+  - `brutus.core` - Individual stellar models, isochrones, neural networks, and SED utilities
   - `brutus.analysis` - BruteForce fitting, population analysis, photometric offsets, and line-of-sight dust
   - `brutus.plotting` - Visualization utilities (corner plots, SEDs, distance-reddening, photometric offsets)
   - `brutus.dust` - 3D dust mapping and extinction models
   - `brutus.utils` - Mathematical, photometric, and sampling utilities (split from monolithic utils.py)
-  - `brutus.data` - Data downloading and loading utilities  
+  - `brutus.data` - Data downloading and loading utilities
   - `brutus.priors` - Stellar, astrometric, galactic, and extinction priors
-- **Refactored major components**: 
+- **Refactored major components**:
   - Core stellar evolution models (EEPTracks, StarGrid, Isochrone)
   - Analysis workflows (BruteForce, population modeling)
   - Plotting utilities (moved from monolithic plotting.py into organized submodules)
@@ -88,7 +88,7 @@ This release represents a major refactoring of brutus to improve usability, main
 #### ⚡ Performance Improvements
 
 - **Numba optimization**: Added JIT compilation for critical mathematical functions in utils.math
-- **Vectorized operations**: Optimized MISTtracks with numba and vectorization (commit a70f6d9)  
+- **Vectorized operations**: Optimized MISTtracks with numba and vectorization (commit a70f6d9)
 - **EEPTrack caching**: Improved caching mechanisms for evolutionary track interpolation
 - **Memory efficiency**: Optimized memory usage in grid-based computations
 - **Batch processing**: Improved batch processing capabilities for stellar parameter estimation
@@ -108,7 +108,7 @@ This release represents a major refactoring of brutus to improve usability, main
   - `brutus.utils.photometry` - Magnitude/flux conversions, photometric likelihoods
   - `brutus.utils.sampling` - Monte Carlo sampling and quantile functions
 - **Plotting module refactor**: Reorganized monolithic `plotting.py` into focused submodules:
-  - `brutus.plotting.corner` - Corner plots and posterior visualization  
+  - `brutus.plotting.corner` - Corner plots and posterior visualization
   - `brutus.plotting.sed` - SED visualization and posterior predictive plots
   - `brutus.plotting.distance` - Distance vs reddening plots
   - `brutus.plotting.offsets` - Photometric offset visualization
@@ -126,7 +126,7 @@ This release represents a major refactoring of brutus to improve usability, main
 
 ### Fixed
 
-#### 🐛 Platform Compatibility  
+#### 🐛 Platform Compatibility
 
 - **Windows installation**: Added clear documentation about healpy/Windows issues
 - **WSL support**: Provided guidance for Windows users to use WSL
@@ -155,7 +155,7 @@ This release represents a major refactoring of brutus to improve usability, main
 ```python
 # OLD (no longer available)
 from brutus.seds import Isochrone
-from brutus.fitting import BruteForce  
+from brutus.fitting import BruteForce
 from brutus.utils import magnitude
 
 # NEW (current structure)
@@ -180,7 +180,7 @@ from brutus.utils import magnitude
 # OLD
 python setup.py install
 
-# NEW  
+# NEW
 pip install -e ".[dev]"
 pytest  # instead of custom test runners
 ```
@@ -188,7 +188,7 @@ pytest  # instead of custom test runners
 ### Backward Compatibility
 
 - ✅ **All scientific algorithms preserved**: No changes to core Bayesian inference
-- ✅ **Existing import patterns work**: Old imports show warnings but function correctly  
+- ✅ **Existing import patterns work**: Old imports show warnings but function correctly
 - ✅ **Same file formats**: No changes to data file formats or model grids
 - ✅ **API compatibility**: Core function signatures unchanged
 
@@ -222,7 +222,7 @@ This was the final release using the old project structure and Python 2 compatib
 
 - ✅ Modern packaging and build system
 - ✅ Testing infrastructure
-- ✅ CI/CD pipeline  
+- ✅ CI/CD pipeline
 - ✅ Modular directory structure
 
 ### 🎯 Coming Next (Phase 2)
@@ -232,7 +232,7 @@ This was the final release using the old project structure and Python 2 compatib
 - Sampling integration (MCMC, nested sampling)
 - Progress bars for long computations
 
-### 🚀 Future Phases  
+### 🚀 Future Phases
 
 - Publication-ready visualization utilities
 - Interactive plotting capabilities

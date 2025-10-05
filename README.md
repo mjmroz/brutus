@@ -97,7 +97,7 @@ conda install -c conda-forge astro-brutus
 Core dependencies that will be automatically installed:
 
 - `numpy` (≥1.19) - Numerical computing
-- `scipy` (≥1.6) - Scientific computing  
+- `scipy` (≥1.6) - Scientific computing
 - `matplotlib` (≥3.3) - Plotting
 - `h5py` (≥3.0) - HDF5 file support
 - `healpy` (≥1.14) - HEALPix utilities for incorporating dust maps
@@ -140,7 +140,7 @@ iso = Isochrone()
 # Generate stellar parameters for an isochrone
 params = iso.get_predictions(
     feh=0.0,        # Solar metallicity [Fe/H]
-    afe=0.0,        # Solar alpha enhancement [alpha/Fe] 
+    afe=0.0,        # Solar alpha enhancement [alpha/Fe]
     loga=9.0        # 1 Gyr age (log10(age/yr))
 )
 ```
@@ -213,7 +213,7 @@ from brutus import fetch_grids, fetch_isos, fetch_dustmaps
 # Download MIST stellar evolution grids
 fetch_grids()
 
-# Download MIST isochrones  
+# Download MIST isochrones
 fetch_isos()
 
 # Download 3D dust maps

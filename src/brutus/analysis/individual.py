@@ -79,10 +79,7 @@ except ImportError:
 # Import StarGrid and SED utilities
 from ..core import StarGrid
 from ..core.sed_utils import _get_seds
-from ..priors.astrometric import (
-    logp_parallax,
-    logp_parallax_scale,
-)
+from ..priors.astrometric import logp_parallax, logp_parallax_scale
 from ..priors.extinction import logp_extinction
 from ..priors.galactic import logp_galactic_structure
 
@@ -784,8 +781,8 @@ class BruteForce:
         if verbose:
             n_grid = sum(1 for m in self.labels_mask.values() if m)
             n_pred = sum(1 for m in self.labels_mask.values() if not m)
-            grid_params = [l for l, m in self.labels_mask.items() if m]
-            pred_params = [l for l, m in self.labels_mask.items() if not m]
+            grid_params = [lbl for lbl, m in self.labels_mask.items() if m]
+            pred_params = [lbl for lbl, m in self.labels_mask.items() if not m]
 
             print(f"BruteForce initialized with {self.nmodels:,} models")
             print(f"  Grid parameters ({n_grid}): {', '.join(grid_params)}")
@@ -1007,14 +1004,14 @@ class BruteForce:
         if apply_agewt:
             try:
                 lnprior += np.log(np.abs(self.models_labels["agewt"]))
-            except:
+            except KeyError:
                 pass
 
         # Reweight based on grid spacing
         if apply_grad:
-            for l in self.models_labels.dtype.names:
-                label = self.models_labels[l]
-                if self.labels_mask[l]:  # Only for grid parameters
+            for lbl in self.models_labels.dtype.names:
+                label = self.models_labels[lbl]
+                if self.labels_mask[lbl]:  # Only for grid parameters
                     ulabel = np.unique(label)
                     if len(ulabel) > 1:
                         # Compute and add gradient
@@ -1557,7 +1554,7 @@ class BruteForce:
                 print(f"Fitting object {i+1}/{Ndata}...")
 
             # Fit individual object
-            results = self._fit(
+            _ = self._fit(  # Results stored in self.results, not needed here
                 data_proc[i],
                 data_err_proc[i],
                 data_mask_proc[i],

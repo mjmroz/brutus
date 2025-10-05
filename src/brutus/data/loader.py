@@ -124,9 +124,8 @@ def load_models(
     # Read in models.
     try:
         f = h5py.File(filepath, "r", libver="latest", swmr=True)
-    except:
+    except (OSError, ValueError):
         f = h5py.File(filepath, "r")
-        pass
     mag_coeffs_dataset = f["mag_coeffs"]
 
     # Find which requested filters actually exist in the file
@@ -153,7 +152,7 @@ def load_models(
     for i, filt in enumerate(valid_filters):
         try:
             models[:, i] = mag_coeffs[filt]  # Extract from memory, not H5!
-        except:
+        except KeyError:
             pass
 
     # Update filters list to only include the ones we actually loaded
@@ -171,7 +170,7 @@ def load_models(
             if n in labels:
                 combined_labels[n] = flabels[n]
                 label_mask[n] = True
-    except:
+    except KeyError:
         pass
     try:
         # Grab "parameters" (predictions from labels).
@@ -179,7 +178,7 @@ def load_models(
         for n in fparams.dtype.names:
             if n in labels:
                 combined_labels[n] = fparams[n]
-    except:
+    except KeyError:
         pass
 
     # Remove extraneous/undefined labels.
@@ -197,12 +196,12 @@ def load_models(
     elif include_postms:
         try:
             sel = combined_labels["eep"] > 454.0
-        except:
+        except KeyError:
             pass
     elif include_ms:
         try:
             sel = combined_labels["eep"] <= 454.0
-        except:
+        except KeyError:
             pass
     else:
         raise RuntimeError("Something has gone horribly wrong!")
@@ -211,7 +210,7 @@ def load_models(
         try:
             sel *= combined_labels["smf"] == 0.0
             labels2 = [x for x in labels2 if x != "smf"]
-        except:
+        except KeyError:
             pass
 
     # Compile results.

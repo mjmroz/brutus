@@ -11,7 +11,7 @@ of the utils package initialization.
 import sys
 from unittest.mock import patch
 
-import pytest
+# pytest used by test framework
 
 
 class TestUtilsInit:

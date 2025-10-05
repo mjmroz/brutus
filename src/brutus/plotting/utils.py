@@ -122,7 +122,7 @@ def hist2d(
     for i, _ in enumerate(span):
         try:
             xmin, xmax = span[i]
-        except:
+        except (TypeError, ValueError):
             q = [0.5 - 0.5 * span[i], 0.5 + 0.5 * span[i]]
             span[i] = quantile(data[i], q, weights=weights)
 
@@ -144,8 +144,8 @@ def hist2d(
     # This "color map" is the list of colors for the contour levels if the
     # contours are filled.
     rgba_color = colorConverter.to_rgba(color)
-    contour_cmap = [list(rgba_color) for l in levels] + [rgba_color]
-    for i, l in enumerate(levels):
+    contour_cmap = [list(rgba_color) for level in levels] + [rgba_color]
+    for i, level in enumerate(levels):
         contour_cmap[i][-1] *= float(i) / (len(levels) + 1)
 
     # Initialize smoothing.
@@ -202,7 +202,7 @@ def hist2d(
         for i, v0 in enumerate(levels):
             try:
                 V[i] = Hflat[sm <= v0][-1]
-            except:
+            except IndexError:
                 V[i] = Hflat[0]
         V.sort()
         m = np.diff(V) == 0

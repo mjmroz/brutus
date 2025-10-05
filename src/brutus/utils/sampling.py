@@ -216,7 +216,7 @@ def draw_sar(
         try:
             # Attempt to use intel-specific version.
             rstate = np.random_intel
-        except:
+        except AttributeError:
             # Fall back to default if not present.
             rstate = np.random
 

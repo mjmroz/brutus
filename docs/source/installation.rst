@@ -53,7 +53,7 @@ Dependencies
 Core dependencies that will be automatically installed:
 
 - ``numpy`` (≥1.19) - Numerical computing
-- ``scipy`` (≥1.6) - Scientific computing  
+- ``scipy`` (≥1.6) - Scientific computing
 - ``matplotlib`` (≥3.3) - Plotting
 - ``h5py`` (≥3.0) - HDF5 file support
 - ``healpy`` (≥1.14) - HEALPix utilities for incorporating dust maps

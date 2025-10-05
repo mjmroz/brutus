@@ -103,14 +103,17 @@ class TestPhotometricOffsets:
                 return [15.0, 20.0]  # Default bounds
             return [np.min(x), np.max(x)]
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", side_effect=mock_phot_loglike_func
-        ), patch(
-            "brutus.plotting.offsets.logsumexp", side_effect=mock_logsumexp_func
-        ), patch(
-            "brutus.plotting.offsets.quantile", side_effect=mock_quantile_func
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch(
+                "brutus.plotting.offsets.phot_loglike",
+                side_effect=mock_phot_loglike_func,
+            ),
+            patch("brutus.plotting.offsets.logsumexp", side_effect=mock_logsumexp_func),
+            patch("brutus.plotting.offsets.quantile", side_effect=mock_quantile_func),
         ):
 
             fig, axes = photometric_offsets(
@@ -143,15 +146,17 @@ class TestPhotometricOffsets:
         )
         mock_loglike = np.random.uniform(-10, -1, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-5, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-5, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]),
         ):
 
             fig, axes = photometric_offsets(
@@ -176,13 +181,14 @@ class TestPhotometricOffsets:
         mock_seds = np.random.uniform(15, 20, (nobj * nsamps, nfilt))
         mock_loglike = np.random.uniform(-10, -1, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-5, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-5, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]),
         ):
 
             fig, axes = photometric_offsets(
@@ -219,15 +225,17 @@ class TestPhotometricOffsets:
         )
         mock_loglike = np.random.uniform(-10, -1, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-5, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-5, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]),
         ):
 
             fig, axes = photometric_offsets(
@@ -259,15 +267,17 @@ class TestPhotometricOffsets:
         )
         mock_loglike = np.random.uniform(-10, -1, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-5, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-5, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]),
         ):
 
             fig, axes = photometric_offsets(
@@ -311,15 +321,17 @@ class TestPhotometricOffsets:
         )
         mock_loglike = np.random.uniform(-10, -1, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-5, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-5, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]),
         ):
 
             fig, axes = photometric_offsets(
@@ -355,15 +367,17 @@ class TestPhotometricOffsets:
         )
         mock_loglike = np.random.uniform(-10, -1, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-5, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-5, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[15.0, 20.0]),
         ):
 
             result = photometric_offsets(
@@ -455,15 +469,17 @@ class TestPhotometricOffsets2D:
         )
         mock_loglike = np.random.uniform(-8, -2, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-4, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[0.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-4, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[0.0]),
         ):
 
             fig, axes = photometric_offsets_2d(
@@ -499,15 +515,17 @@ class TestPhotometricOffsets2D:
         )
         mock_loglike = np.random.uniform(-8, -2, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-4, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[0.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-4, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[0.0]),
         ):
 
             fig, axes = photometric_offsets_2d(
@@ -556,15 +574,17 @@ class TestPhotometricOffsets2D:
         )
         mock_loglike = np.random.uniform(-8, -2, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-4, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[0.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-4, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[0.0]),
         ):
 
             fig, axes = photometric_offsets_2d(
@@ -610,13 +630,14 @@ class TestPhotometricOffsets2D:
         mock_seds = np.random.uniform(15, 20, (nobj * nsamps, nfilt))
         mock_loglike = np.random.uniform(-8, -2, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-4, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[0.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-4, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[0.0]),
         ):
 
             fig, axes = photometric_offsets_2d(
@@ -656,15 +677,17 @@ class TestPhotometricOffsets2D:
         )
         mock_loglike = np.random.uniform(-8, -2, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-4, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[0.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-4, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[0.0]),
         ):
 
             result = photometric_offsets_2d(
@@ -731,14 +754,17 @@ class TestPhotometricOffsetsIntegration:
                 return [12.0, 19.0]
             return [np.min(x), np.max(x)]
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", side_effect=mock_phot_loglike_func
-        ), patch(
-            "brutus.plotting.offsets.logsumexp", side_effect=mock_logsumexp_func
-        ), patch(
-            "brutus.plotting.offsets.quantile", side_effect=mock_quantile_func
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch(
+                "brutus.plotting.offsets.phot_loglike",
+                side_effect=mock_phot_loglike_func,
+            ),
+            patch("brutus.plotting.offsets.logsumexp", side_effect=mock_logsumexp_func),
+            patch("brutus.plotting.offsets.quantile", side_effect=mock_quantile_func),
         ):
 
             fig, axes = photometric_offsets(
@@ -800,15 +826,17 @@ class TestPhotometricOffsetsIntegration:
         )
         mock_loglike = np.random.uniform(-12, -2, nsamps)
 
-        with patch("brutus.plotting.offsets.get_seds", return_value=mock_seds), patch(
-            "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-        ), patch(
-            "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-        ), patch(
-            "brutus.plotting.offsets.logsumexp",
-            return_value=np.random.uniform(-6, 0, nobj),
-        ), patch(
-            "brutus.plotting.offsets.quantile", return_value=[0.0]
+        with (
+            patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+            patch(
+                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
+            ),
+            patch("brutus.plotting.offsets.phot_loglike", return_value=mock_loglike),
+            patch(
+                "brutus.plotting.offsets.logsumexp",
+                return_value=np.random.uniform(-6, 0, nobj),
+            ),
+            patch("brutus.plotting.offsets.quantile", return_value=[0.0]),
         ):
 
             fig, axes = photometric_offsets_2d(
@@ -857,17 +885,20 @@ class TestPhotometricOffsetsIntegration:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # May produce warnings for small dataset
-            with patch(
-                "brutus.plotting.offsets.get_seds", return_value=mock_seds
-            ), patch(
-                "brutus.plotting.offsets.magnitude", return_value=mock_magnitude_result
-            ), patch(
-                "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
-            ), patch(
-                "brutus.plotting.offsets.logsumexp",
-                return_value=np.random.uniform(-5, 0, nobj),
-            ), patch(
-                "brutus.plotting.offsets.quantile", return_value=[15.0, 18.0]
+            with (
+                patch("brutus.plotting.offsets.get_seds", return_value=mock_seds),
+                patch(
+                    "brutus.plotting.offsets.magnitude",
+                    return_value=mock_magnitude_result,
+                ),
+                patch(
+                    "brutus.plotting.offsets.phot_loglike", return_value=mock_loglike
+                ),
+                patch(
+                    "brutus.plotting.offsets.logsumexp",
+                    return_value=np.random.uniform(-5, 0, nobj),
+                ),
+                patch("brutus.plotting.offsets.quantile", return_value=[15.0, 18.0]),
             ):
 
                 fig, axes = photometric_offsets(

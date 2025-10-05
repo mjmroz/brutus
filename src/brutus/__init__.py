@@ -44,18 +44,18 @@ __version__ = "1.0.0"
 # Core functionality imports
 try:
     # Import submodules to make them accessible as brutus.plotting, etc.
-    from . import analysis, core, data, dust, plotting, priors, utils
+    from . import analysis, core, data, dust, plotting, priors, utils  # noqa: F401
 
     # Core stellar evolution models (refactored)
     # Analysis and fitting
-    from .analysis import BruteForce
-    from .core import EEPTracks, Isochrone, StarGrid
+    from .analysis import BruteForce  # noqa: F401
+    from .core import EEPTracks, Isochrone, StarGrid  # noqa: F401
 
     # Data management (refactored)
-    from .data import fetch_dustmaps, fetch_grids, fetch_isos, load_models
+    from .data import fetch_dustmaps, fetch_grids, fetch_isos, load_models  # noqa: F401
 
     # Essential utilities (refactored)
-    from .utils import inv_magnitude, magnitude
+    from .utils import inv_magnitude, magnitude  # noqa: F401
 
     # Dust mapping (not yet refactored)
     # from .dust import Bayestar

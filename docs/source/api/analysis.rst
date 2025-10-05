@@ -155,4 +155,3 @@ Line-of-Sight Dust
 .. autofunction:: kernel_gauss
 
 .. autofunction:: kernel_lorentz
-

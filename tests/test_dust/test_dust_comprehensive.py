@@ -23,7 +23,7 @@ import pytest
 from conftest import find_brutus_data_file
 
 # Import what we're testing
-from brutus.dust import Bayestar, DustMap, lb2pix
+# Imports tested dynamically in test_dust_module_imports
 
 # Path to real Bayestar data
 BAYESTAR_FILE = find_brutus_data_file("bayestar2019_v1.h5")

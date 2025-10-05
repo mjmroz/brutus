@@ -20,7 +20,7 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10", 
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Operating System :: POSIX :: Linux",
@@ -37,7 +37,7 @@ keywords = [
 requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.19",
-    "scipy>=1.6.0", 
+    "scipy>=1.6.0",
     "matplotlib>=3.3.0",
     "h5py>=3.0.0",
     "healpy>=1.14.0",
@@ -66,7 +66,7 @@ test = [
     "pytest>=6.0",
     "pytest-cov>=2.10",
     "numpy",
-    "scipy", 
+    "scipy",
     "matplotlib",
 ]
 

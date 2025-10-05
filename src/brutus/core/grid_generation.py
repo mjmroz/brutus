@@ -84,7 +84,6 @@ References
 
 import sys
 import time
-import warnings
 from datetime import datetime
 from itertools import product
 from pathlib import Path
@@ -93,22 +92,13 @@ import h5py
 import numpy as np
 
 try:
-    from numpy.polynomial import Polynomial
-
-    _use_new_polyfit = True
-except ImportError:
-    _use_new_polyfit = False
-
-try:
     from scipy import polyfit as scipy_polyfit
 except ImportError:
     from numpy import polyfit as scipy_polyfit
 
 # Import brutus components
 from ..data.filters import FILTERS
-from ..utils.photometry import add_mag
-from .individual import EEPTracks, StarEvolTrack
-from .neural_nets import FastNNPredictor
+from .individual import StarEvolTrack
 
 __all__ = ["GridGenerator"]
 
@@ -645,7 +635,7 @@ class GridGenerator:
                 import brutus
 
                 f.attrs["brutus_version"] = brutus.__version__
-            except:
+            except (ImportError, AttributeError):
                 f.attrs["brutus_version"] = "unknown"
             f.attrs["creation_date"] = datetime.now().isoformat()
             f.attrs["n_models_total"] = len(self.grid_labels)

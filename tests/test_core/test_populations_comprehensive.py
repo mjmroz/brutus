@@ -327,9 +327,10 @@ class TestPopulationsIntegration:
     def integrated_system(self):
         """Create integrated Isochrone + StellarPop system."""
         # Mock the file loading and neural network for integration testing
-        with patch("h5py.File") as mock_file, patch(
-            "brutus.core.neural_nets.FastNNPredictor"
-        ) as mock_nn:
+        with (
+            patch("h5py.File") as mock_file,
+            patch("brutus.core.neural_nets.FastNNPredictor") as mock_nn,
+        ):
 
             # Mock isochrone data
             mock_context = MagicMock()
@@ -606,9 +607,10 @@ class TestPopulationsPerformance:
     @pytest.fixture
     def performance_setup(self):
         """Setup for performance testing."""
-        with patch("h5py.File") as mock_file, patch(
-            "brutus.core.neural_nets.FastNNPredictor"
-        ) as mock_nn:
+        with (
+            patch("h5py.File") as mock_file,
+            patch("brutus.core.neural_nets.FastNNPredictor") as mock_nn,
+        ):
 
             # Large mock data for performance testing
             mock_context = MagicMock()

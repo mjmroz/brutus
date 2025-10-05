@@ -74,10 +74,11 @@ class TestEEPTracksInitialization:
 
     def test_eep_tracks_default_initialization(self):
         """Test EEPTracks initialization with default parameters."""
-        with patch("h5py.File") as mock_file, patch(
-            "pickle.load"
-        ) as mock_pickle, patch("os.path.exists", return_value=True), patch(
-            "os.path.getmtime", return_value=1000
+        with (
+            patch("h5py.File") as mock_file,
+            patch("pickle.load") as mock_pickle,
+            patch("os.path.exists", return_value=True),
+            patch("os.path.getmtime", return_value=1000),
         ):
 
             # Mock cached data loading
@@ -107,9 +108,10 @@ class TestEEPTracksInitialization:
 
         from unittest.mock import mock_open
 
-        with patch("builtins.open", mock_open()) as mock_file, patch(
-            "pickle.load"
-        ) as mock_pickle:
+        with (
+            patch("builtins.open", mock_open()) as mock_file,
+            patch("pickle.load") as mock_pickle,
+        ):
 
             # Create a mock Path object that returns proper stat info
             mock_cache_file = MagicMock()
@@ -161,15 +163,13 @@ class TestEEPTracksInitialization:
 
     def test_eep_tracks_h5_loading_path(self):
         """Test H5 file loading path (no cache) to improve coverage."""
-        with patch("pathlib.Path.exists", return_value=False), patch(
-            "h5py.File"
-        ) as mock_h5_file, patch.object(
-            EEPTracks, "_lib_as_grid"
-        ) as mock_lib_as_grid, patch.object(
-            EEPTracks, "_add_age_weights"
-        ) as mock_add_age_weights, patch.object(
-            EEPTracks, "_build_interpolator"
-        ) as mock_build_interpolator:
+        with (
+            patch("pathlib.Path.exists", return_value=False),
+            patch("h5py.File") as mock_h5_file,
+            patch.object(EEPTracks, "_lib_as_grid") as mock_lib_as_grid,
+            patch.object(EEPTracks, "_add_age_weights") as mock_add_age_weights,
+            patch.object(EEPTracks, "_build_interpolator") as mock_build_interpolator,
+        ):
 
             # Mock H5 file structure
             mock_h5 = MagicMock()
@@ -201,18 +201,14 @@ class TestEEPTracksInitialization:
 
     def test_eep_tracks_cache_loading_failure(self):
         """Test cache loading failure fallback to H5 (lines 251-253)."""
-        with patch("pathlib.Path.exists", return_value=True), patch(
-            "pathlib.Path.stat"
-        ) as mock_stat, patch(
-            "pickle.load", side_effect=Exception("Cache corrupted")
-        ), patch(
-            "h5py.File"
-        ) as mock_h5_file, patch.object(
-            EEPTracks, "_lib_as_grid"
-        ), patch.object(
-            EEPTracks, "_add_age_weights"
-        ), patch.object(
-            EEPTracks, "_build_interpolator"
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.stat") as mock_stat,
+            patch("pickle.load", side_effect=Exception("Cache corrupted")),
+            patch("h5py.File") as mock_h5_file,
+            patch.object(EEPTracks, "_lib_as_grid"),
+            patch.object(EEPTracks, "_add_age_weights"),
+            patch.object(EEPTracks, "_build_interpolator"),
         ):
 
             # Mock stats to make cache appear newer
@@ -243,9 +239,11 @@ class TestEEPTracksInitialization:
 
     def test_eep_tracks_verbose_output(self, capsys):
         """Test that verbose output is produced when requested."""
-        with patch("pickle.load") as mock_pickle, patch(
-            "os.path.exists", return_value=True
-        ), patch("os.path.getmtime", return_value=1000):
+        with (
+            patch("pickle.load") as mock_pickle,
+            patch("os.path.exists", return_value=True),
+            patch("os.path.getmtime", return_value=1000),
+        ):
 
             mock_cache_data = {
                 "fehs": np.array([0.0]),
@@ -265,8 +263,9 @@ class TestEEPTracksInitialization:
 
     def test_eep_tracks_file_not_found_error(self):
         """Test EEPTracks initialization with non-existent file."""
-        with patch("os.path.exists", return_value=False), patch(
-            "h5py.File", side_effect=FileNotFoundError("File not found")
+        with (
+            patch("os.path.exists", return_value=False),
+            patch("h5py.File", side_effect=FileNotFoundError("File not found")),
         ):
             with pytest.raises(RuntimeError):
                 EEPTracks(mistfile="nonexistent.h5", verbose=False)
@@ -280,9 +279,10 @@ class TestEEPTracksMethods:
         """Create a mock EEPTracks for testing."""
         from unittest.mock import mock_open
 
-        with patch("builtins.open", mock_open()) as mock_file, patch(
-            "pickle.load"
-        ) as mock_pickle:
+        with (
+            patch("builtins.open", mock_open()) as mock_file,
+            patch("pickle.load") as mock_pickle,
+        ):
 
             # Create mock Path objects with newer cache
             mock_cache_file = MagicMock()
@@ -765,9 +765,10 @@ class TestStarEvolTrackMethods:
 
     def test_eep_tracks_full_h5_loading_integration(self):
         """Integration test of full H5 loading path (lines 317-486)."""
-        with patch("pathlib.Path.exists", return_value=False), patch(
-            "h5py.File"
-        ) as mock_h5_file:
+        with (
+            patch("pathlib.Path.exists", return_value=False),
+            patch("h5py.File") as mock_h5_file,
+        ):
 
             # Create comprehensive H5 mock
             mock_h5 = MagicMock()
@@ -812,8 +813,9 @@ class TestIndividualStarsEdgeCases:
     def test_eep_tracks_extreme_parameters(self):
         """Test EEPTracks core methods with mock H5 data."""
         # Test the actual _make_lib and _lib_as_grid methods instead of bypassing them
-        with patch("h5py.File") as mock_h5_file, patch(
-            "os.path.exists", return_value=False
+        with (
+            patch("h5py.File") as mock_h5_file,
+            patch("os.path.exists", return_value=False),
         ):  # Force H5 loading path
 
             # Create comprehensive H5 mock data
@@ -828,8 +830,9 @@ class TestIndividualStarsEdgeCases:
             }[key]
 
             # Mock the core methods to test them individually
-            with patch.object(EEPTracks, "_build_interpolator"), patch.object(
-                EEPTracks, "_add_age_weights"
+            with (
+                patch.object(EEPTracks, "_build_interpolator"),
+                patch.object(EEPTracks, "_add_age_weights"),
             ):
 
                 tracks = EEPTracks(verbose=True)  # Test verbose path

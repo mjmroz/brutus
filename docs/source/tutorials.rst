@@ -158,7 +158,7 @@ Advanced Topics
 The tutorials cover both basic usage and advanced topics including:
 
 - Custom prior specification
-- Multi-object fitting workflows  
+- Multi-object fitting workflows
 - Performance optimization
 - Integration with other astronomical tools
 - Custom visualization and analysis

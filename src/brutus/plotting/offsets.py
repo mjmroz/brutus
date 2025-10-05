@@ -160,9 +160,8 @@ def photometric_offsets(
             bins = [b for b in bins]
         else:
             bins = [bins for i in range(nfilt)]
-    except:
+    except TypeError:
         bins = [bins for i in range(nfilt)]
-        pass
     if titles is None:
         titles = ["Band {0}".format(i) for i in range(nfilt)]
     if xlabel is None:
@@ -419,9 +418,8 @@ def photometric_offsets_2d(
             bins = [b for b in bins]
         else:
             bins = [bins for i in range(nfilt)]
-    except:
+    except TypeError:
         bins = [bins for i in range(nfilt)]
-        pass
     if titles is None:
         titles = ["Band {0}".format(i) for i in range(nfilt)]
     if show_off and offset is not None:

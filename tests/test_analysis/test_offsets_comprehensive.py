@@ -158,12 +158,12 @@ class TestPhotometricOffsetsCore:
         """Test basic function execution."""
         mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        with patch(
-            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
-        ), patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch(
-            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        with (
+            patch("brutus.analysis.offsets.get_seds", side_effect=mock_get_seds),
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
         ):
 
             from brutus.analysis.offsets import (
@@ -206,12 +206,12 @@ class TestPhotometricOffsetsCore:
         """Test different uncertainty estimation methods."""
         mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        with patch(
-            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
-        ), patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch(
-            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        with (
+            patch("brutus.analysis.offsets.get_seds", side_effect=mock_get_seds),
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
         ):
 
             from brutus.analysis.offsets import (
@@ -258,12 +258,12 @@ class TestPhotometricOffsetsCore:
         """Test vectorized vs loop bootstrap implementations."""
         mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        with patch(
-            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
-        ), patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch(
-            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        with (
+            patch("brutus.analysis.offsets.get_seds", side_effect=mock_get_seds),
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
         ):
 
             from brutus.analysis.offsets import (
@@ -300,12 +300,12 @@ class TestPhotometricOffsetsCore:
         """Test optional parameter handling."""
         mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        with patch(
-            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
-        ), patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch(
-            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        with (
+            patch("brutus.analysis.offsets.get_seds", side_effect=mock_get_seds),
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
         ):
 
             from brutus.analysis.offsets import (
@@ -351,12 +351,12 @@ class TestPhotometricOffsetsCore:
         """Test Gaussian prior application."""
         mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        with patch(
-            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
-        ), patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch(
-            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        with (
+            patch("brutus.analysis.offsets.get_seds", side_effect=mock_get_seds),
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
         ):
 
             from brutus.analysis.offsets import (
@@ -598,9 +598,12 @@ class TestParameterRecovery:
                 return 0.0
 
         # Run the algorithm
-        with patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp):
+        with (
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
+        ):
 
             config = PhotometricOffsetsConfig(
                 n_bootstrap=20,
@@ -715,9 +718,12 @@ class TestParameterRecovery:
                 return 0.0
 
         # Run algorithm
-        with patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp):
+        with (
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
+        ):
 
             config = PhotometricOffsetsConfig(
                 n_bootstrap=25,
@@ -762,12 +768,12 @@ class TestEdgeCases:
         """Test behavior when no objects meet selection criteria."""
         mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        with patch(
-            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
-        ), patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch(
-            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        with (
+            patch("brutus.analysis.offsets.get_seds", side_effect=mock_get_seds),
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
         ):
 
             from brutus.analysis.offsets import (
@@ -821,12 +827,12 @@ class TestPerformance:
         """Test performance with larger datasets."""
         mock_get_seds, mock_phot_loglike, mock_logsumexp = simple_mocks
 
-        with patch(
-            "brutus.analysis.offsets.get_seds", side_effect=mock_get_seds
-        ), patch(
-            "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
-        ), patch(
-            "brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp
+        with (
+            patch("brutus.analysis.offsets.get_seds", side_effect=mock_get_seds),
+            patch(
+                "brutus.analysis.offsets.phot_loglike", side_effect=mock_phot_loglike
+            ),
+            patch("brutus.analysis.offsets.logsumexp", side_effect=mock_logsumexp),
         ):
 
             from brutus.analysis.offsets import (

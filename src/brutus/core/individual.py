@@ -515,7 +515,7 @@ class EEPTracks(object):
                         try:
                             agewts = np.gradient(10 ** self.output[inds, age_ind])
                             ageweights[inds] = agewts
-                        except:
+                        except (ValueError, IndexError):
                             pass
 
         # Append to outputs
@@ -543,7 +543,7 @@ class EEPTracks(object):
         self.grid_dims = np.append(
             [len(self.gridpoints[p]) for p in self.labels], self.output.shape[-1]
         )
-        self.xgrid = tuple([self.gridpoints[l] for l in self.labels])
+        self.xgrid = tuple([self.gridpoints[lbl] for lbl in self.labels])
 
         # Initialize output grid
         self.ygrid = np.zeros(self.grid_dims) + np.nan
@@ -976,7 +976,7 @@ class StarEvolTrack(object):
 
         # Grab input labels
         labels = {"mini": mini, "eep": eep, "feh": feh, "afe": afe}
-        labels = np.array([labels[l] for l in self.tracks.labels])
+        labels = np.array([labels[lbl] for lbl in self.tracks.labels])
 
         # Generate primary component predictions
         try:
@@ -1022,7 +1022,7 @@ class StarEvolTrack(object):
                     )
 
                 labels2 = {"mini": mini * smf, "eep": eep2, "feh": feh, "afe": afe}
-                labels2 = np.array([labels2[l] for l in self.tracks.labels])
+                labels2 = np.array([labels2[lbl] for lbl in self.tracks.labels])
 
                 try:
                     params_arr2 = self.tracks.get_predictions(
@@ -1116,7 +1116,7 @@ class StarEvolTrack(object):
             try:
                 loga_pred = self.tracks.get_predictions([mini * smf, x, feh, 0.0])[aidx]
                 return (loga_pred - loga) ** 2
-            except:
+            except Exception:
                 # Return large loss if prediction fails
                 return 1e6
 
@@ -1358,7 +1358,9 @@ class StarGrid(object):
         if not active_labels:
             # Use all available labels
             active_labels = [
-                l for l in ["mini", "eep", "feh", "afe", "smf"] if l in self.label_names
+                lbl
+                for lbl in ["mini", "eep", "feh", "afe", "smf"]
+                if lbl in self.label_names
             ]
 
         # Build normalized coordinates for KD-tree

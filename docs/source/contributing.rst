@@ -48,7 +48,7 @@ Code Style
 We use several tools to maintain code quality:
 
 - **black**: Code formatting
-- **isort**: Import sorting  
+- **isort**: Import sorting
 - **flake8**: Linting
 - **mypy**: Type checking
 
@@ -79,7 +79,7 @@ Submitting Changes
 1. Commit your changes with a descriptive message
 2. Push to your fork on GitHub
 3. Create a pull request with:
-   
+
    - Clear description of changes
    - Tests for new functionality
    - Updated documentation as needed
