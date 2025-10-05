@@ -8,15 +8,16 @@ This module provides functions to bin posterior samples of distance and
 reddening for visualization purposes.
 """
 
+import copy
 import sys
 import warnings
+
 import numpy as np
-import copy
-
-from ..priors import logp_galactic_structure as gal_lnprior, logp_parallax
-
-from ..utils.sampling import draw_sar
 from scipy.ndimage import gaussian_filter as norm_kde
+
+from ..priors import logp_galactic_structure as gal_lnprior
+from ..priors import logp_parallax
+from ..utils.sampling import draw_sar
 
 try:
     from scipy.special import logsumexp

@@ -10,10 +10,11 @@ This test suite covers the core package initialization, including:
 3. Integration with core submodules (sed_utils, neural_nets, etc.)
 """
 
-import pytest
+import importlib
 import sys
 from unittest.mock import patch
-import importlib
+
+import pytest
 
 
 class TestCorePackageInit:

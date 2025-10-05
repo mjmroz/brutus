@@ -77,22 +77,21 @@ References
        Models", ApJS, 222, 8
 """
 
+import pickle
 import sys
 import warnings
-import pickle
 from pathlib import Path
 
-import numpy as np
 import h5py
+import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from scipy.optimize import minimize
-
-# Import neural network predictor
-from .neural_nets import FastNNPredictor
 
 # Import filter definitions
 from ..data.filters import FILTERS
 
+# Import neural network predictor
+from .neural_nets import FastNNPredictor
 
 __all__ = ["EEPTracks", "StarEvolTrack"]
 

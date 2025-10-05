@@ -10,6 +10,7 @@ stellar fitting and analysis.
 """
 
 import sys
+
 import h5py
 import numpy as np
 

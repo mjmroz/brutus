@@ -10,11 +10,11 @@ SEDs, photometric offsets, and other analysis results from brutus.
 
 # Import available functions
 from .binning import bin_pdfs_distred
-from .utils import hist2d
-from .distance import dist_vs_red
 from .corner import cornerplot
-from .sed import posterior_predictive
+from .distance import dist_vs_red
 from .offsets import photometric_offsets, photometric_offsets_2d
+from .sed import posterior_predictive
+from .utils import hist2d
 
 __all__ = [
     # Data preparation utilities

@@ -12,11 +12,12 @@ This test suite includes:
 5. Integration tests with other brutus components
 """
 
-import numpy as np
-import pytest
-import numpy.testing as npt
-from unittest.mock import patch
 import os
+from unittest.mock import patch
+
+import numpy as np
+import numpy.testing as npt
+import pytest
 
 
 class TestSedUtilsCoverage:
@@ -700,7 +701,7 @@ class TestSedIntegration:
         """Test integration with photometry utilities."""
         try:
             from brutus.core.sed_utils import get_seds
-            from brutus.utils.photometry import magnitude, inv_magnitude
+            from brutus.utils.photometry import inv_magnitude, magnitude
 
             # Create mock SED data
             mag_coeffs = np.ones((2, 3, 3))

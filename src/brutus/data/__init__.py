@@ -10,12 +10,12 @@ models, isochrones, dust maps, and other data files required by brutus.
 
 # Import data downloading functions
 from .download import (
-    fetch_isos,
-    fetch_tracks,
     fetch_dustmaps,
     fetch_grids,
-    fetch_offsets,
+    fetch_isos,
     fetch_nns,
+    fetch_offsets,
+    fetch_tracks,
 )
 
 # Import data loading functions

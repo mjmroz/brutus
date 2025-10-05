@@ -8,22 +8,22 @@ These tests cover the photometric conversion functions that are
 core to the brutus functionality.
 """
 
-import pytest
 import numpy as np
 import numpy.testing as npt
+import pytest
 
 # Try importing from the reorganized structure first, fall back to original
 try:
     from brutus.utils.photometry import (
-        magnitude,
+        inv_luptitude,
         inv_magnitude,
         luptitude,
-        inv_luptitude,
+        magnitude,
     )
 except ImportError:
     # Fall back to original structure during transition
     try:
-        from brutus.utils import magnitude, inv_magnitude, luptitude, inv_luptitude
+        from brutus.utils import inv_luptitude, inv_magnitude, luptitude, magnitude
     except ImportError:
         pytest.skip(
             "brutus utils not available - skipping tests", allow_module_level=True

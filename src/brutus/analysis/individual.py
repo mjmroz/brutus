@@ -65,10 +65,11 @@ Basic usage with grid-based fitting:
 """
 
 import warnings
-import numpy as np
-import h5py
-from numba import jit
 from math import log
+
+import h5py
+import numpy as np
+from numba import jit
 
 try:
     from scipy.special import logsumexp
@@ -78,15 +79,15 @@ except ImportError:
 # Import StarGrid and SED utilities
 from ..core import StarGrid
 from ..core.sed_utils import _get_seds
-
-# Import refactored prior functions
-from ..priors.stellar import logp_imf, logp_ps1_luminosity_function
 from ..priors.astrometric import (
     logp_parallax,
     logp_parallax_scale,
 )
-from ..priors.galactic import logp_galactic_structure
 from ..priors.extinction import logp_extinction
+from ..priors.galactic import logp_galactic_structure
+
+# Import refactored prior functions
+from ..priors.stellar import logp_imf, logp_ps1_luminosity_function
 
 # Import utility functions
 from ..utils.math import inverse3 as _inverse3

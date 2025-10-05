@@ -334,8 +334,9 @@ class TestMathEdgeCases:
 
     def test_inverse3_regularization(self):
         """Test matrix regularization functionality."""
-        from brutus.utils.math import inverse3, isPSD
         import numpy as np
+
+        from brutus.utils.math import inverse3, isPSD
 
         # Create a matrix with small negative eigenvalues
         eigenvals = np.array([1.0, -1e-15, 0.5])  # One tiny negative eigenvalue
@@ -353,8 +354,9 @@ class TestMathEdgeCases:
 
     def test_inverse3_batch_regularization(self):
         """Test batch matrix regularization with arrays."""
-        from brutus.utils.math import inverse3, isPSD
         import numpy as np
+
+        from brutus.utils.math import inverse3, isPSD
 
         # Create batch of matrices with regularization needs
         n_matrices = 3
@@ -447,7 +449,7 @@ class TestMathIntegration:
 
     def test_statistical_consistency(self):
         """Test statistical properties of distribution functions."""
-        from brutus.utils.math import truncnorm_pdf, chisquare_logpdf
+        from brutus.utils.math import chisquare_logpdf, truncnorm_pdf
 
         # Test that truncated normal PDF integrates to 1 (approximately)
         a, b = -2.0, 2.0
@@ -475,12 +477,13 @@ class TestInternalFunctions:
 
     def test_internal_helper_functions(self):
         """Test internal helper functions to improve coverage."""
+        import numpy as np
+
         from brutus.utils.math import (
-            _min_eigenval_3x3_symmetric,
             _invert_3x3_analytical,
             _matrix_det_3x3,
+            _min_eigenval_3x3_symmetric,
         )
-        import numpy as np
 
         # Test _min_eigenval_3x3_symmetric
         A = np.array(
@@ -511,8 +514,9 @@ class TestInternalFunctions:
 
     def test_batch_operations_coverage(self):
         """Test batch matrix operations to hit remaining coverage."""
-        from brutus.utils.math import inverse3, _batch_invert_3x3
         import numpy as np
+
+        from brutus.utils.math import _batch_invert_3x3, inverse3
 
         # Create batch of matrices that require different code paths
         batch = np.array(

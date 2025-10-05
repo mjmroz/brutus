@@ -9,17 +9,18 @@ stellar posterior samples to ensure correct behavior of the multi-cloud
 extinction model.
 """
 
-import pytest
-import numpy as np
 import warnings
 from unittest.mock import patch
 
+import numpy as np
+import pytest
+
 from brutus.analysis.los_dust import (
-    los_clouds_priortransform,
-    los_clouds_loglike_samples,
-    kernel_tophat,
     kernel_gauss,
     kernel_lorentz,
+    kernel_tophat,
+    los_clouds_loglike_samples,
+    los_clouds_priortransform,
 )
 
 

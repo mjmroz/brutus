@@ -8,9 +8,10 @@ This module tests the import behavior and __all__ definitions
 of the utils package initialization.
 """
 
-import pytest
-from unittest.mock import patch
 import sys
+from unittest.mock import patch
+
+import pytest
 
 
 class TestUtilsInit:

@@ -8,32 +8,32 @@ This module contains utility functions that were previously scattered
 throughout the codebase, now organized by functionality.
 """
 
-# Import from reorganized modules
-# Photometry functions
-from .photometry import (
-    magnitude,
-    inv_magnitude,
-    luptitude,
-    inv_luptitude,
-    add_mag,
-    phot_loglike,
-)
-
 # Mathematical functions
 from .math import (
     _function_wrapper,
+    chisquare_logpdf,
     inverse3,
     isPSD,
-    chisquare_logpdf,
-    truncnorm_pdf,
     truncnorm_logpdf,
+    truncnorm_pdf,
+)
+
+# Import from reorganized modules
+# Photometry functions
+from .photometry import (
+    add_mag,
+    inv_luptitude,
+    inv_magnitude,
+    luptitude,
+    magnitude,
+    phot_loglike,
 )
 
 # Sampling utilities
 from .sampling import (
+    draw_sar,
     quantile,
     sample_multivariate_normal,
-    draw_sar,
 )
 
 __all__ = [

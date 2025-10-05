@@ -8,14 +8,16 @@ This test suite provides comprehensive coverage for the photometric_offsets
 and photometric_offsets_2d functions.
 """
 
+import warnings
+
+import matplotlib
 import numpy as np
 import pytest
-import warnings
-import matplotlib
 
 matplotlib.use("Agg")  # Use non-interactive backend for testing
-import matplotlib.pyplot as plt
 from unittest.mock import patch
+
+import matplotlib.pyplot as plt
 
 from brutus.plotting.offsets import photometric_offsets, photometric_offsets_2d
 

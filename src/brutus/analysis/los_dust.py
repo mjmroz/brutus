@@ -99,6 +99,7 @@ Setting up nested sampling for 2-cloud model:
 """
 
 import warnings
+
 import numpy as np
 from scipy.stats import truncnorm
 

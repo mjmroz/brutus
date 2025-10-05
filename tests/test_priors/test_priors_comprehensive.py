@@ -8,24 +8,25 @@ Tests all prior probability functions using simulated stellar data
 to validate mathematical correctness and numerical stability.
 """
 
-import numpy as np
-import pytest
-from scipy import stats
-from astropy.coordinates import SkyCoord
 from unittest.mock import Mock
 
+import numpy as np
+import pytest
+from astropy.coordinates import SkyCoord
+from scipy import stats
+
 from brutus.priors import (
-    logp_imf,
-    logp_ps1_luminosity_function,
-    logp_parallax,
-    logp_parallax_scale,
     convert_parallax_to_scale,
-    logp_galactic_structure,
     logn_disk,
     logn_halo,
-    logp_feh,
     logp_age_from_feh,
     logp_extinction,
+    logp_feh,
+    logp_galactic_structure,
+    logp_imf,
+    logp_parallax,
+    logp_parallax_scale,
+    logp_ps1_luminosity_function,
 )
 
 

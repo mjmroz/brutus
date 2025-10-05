@@ -8,10 +8,11 @@ This test suite provides comprehensive coverage for the cornerplot function
 and related corner plot visualization functionality.
 """
 
+import warnings
+
+import matplotlib
 import numpy as np
 import pytest
-import warnings
-import matplotlib
 
 matplotlib.use("Agg")  # Use non-interactive backend for testing
 import matplotlib.pyplot as plt

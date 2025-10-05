@@ -22,13 +22,13 @@ For actual functionality testing, see:
 - tests/test_data/test_data_comprehensive.py (real MIST data tests)
 """
 
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 from brutus.data.loader import load_models, load_offsets
-
 
 # All test classes removed - see test_data_comprehensive.py for real data tests
 # that provide superior functional coverage with actual MIST data files.

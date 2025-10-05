@@ -3,10 +3,11 @@
 Quick coverage test for key refactored functionality.
 """
 
-import pytest
-import numpy as np
 import os
+
 import h5py
+import numpy as np
+import pytest
 
 
 def test_stargrid_core_functions():
@@ -111,8 +112,8 @@ def test_stargrid_core_functions():
 
 def test_bruteforce_core_functions():
     """Test core BruteForce functions to ensure coverage."""
-    from src.brutus.core.individual import StarGrid
     from src.brutus.analysis.individual import BruteForce
+    from src.brutus.core.individual import StarGrid
     from src.brutus.data import load_models
 
     # Load small subset

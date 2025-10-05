@@ -8,9 +8,9 @@ This test suite verifies that the refactored dist_vs_red function
 works correctly and maintains backward compatibility.
 """
 
+import matplotlib
 import numpy as np
 import pytest
-import matplotlib
 
 matplotlib.use("Agg")  # Use non-interactive backend for testing
 import matplotlib.pyplot as plt

@@ -8,14 +8,15 @@ This module tests the GridGenerator class that creates pre-computed
 stellar model grids with reddening coefficients.
 """
 
-import pytest
-import numpy as np
-import h5py
 import tempfile
 from pathlib import Path
 
-from brutus.core.individual import EEPTracks, StarEvolTrack, StarGrid
+import h5py
+import numpy as np
+import pytest
+
 from brutus.core.grid_generation import GridGenerator
+from brutus.core.individual import EEPTracks, StarEvolTrack, StarGrid
 from brutus.data.loader import load_models
 
 

@@ -55,7 +55,7 @@ class TestPhotometryFunctions:
 
     def test_magnitude_inverse_roundtrip(self):
         """Test that magnitude <-> flux conversion is invertible."""
-        from brutus.utils.photometry import magnitude, inv_magnitude
+        from brutus.utils.photometry import inv_magnitude, magnitude
 
         # Start with some flux values
         original_flux = np.array([[1.0, 5.0, 0.1, 100.0]])
@@ -92,7 +92,7 @@ class TestPhotometryFunctions:
 
     def test_luptitude_inverse_roundtrip(self):
         """Test that luptitude <-> flux conversion is invertible."""
-        from brutus.utils.photometry import luptitude, inv_luptitude
+        from brutus.utils.photometry import inv_luptitude, luptitude
 
         # Start with some flux values
         original_flux = np.array([[1.0, 5.0, 0.1, 100.0]])
@@ -171,7 +171,7 @@ class TestPhotometryFunctions:
 
     def test_zeropoints_effect(self):
         """Test that zeropoints work correctly."""
-        from brutus.utils.photometry import magnitude, inv_magnitude
+        from brutus.utils.photometry import inv_magnitude, magnitude
 
         flux = np.array([[1.0, 1.0]])
         flux_err = np.array([[0.1, 0.1]])
@@ -387,7 +387,7 @@ class TestPhotometryIntegration:
 
     def test_realistic_photometry_pipeline(self):
         """Test a realistic photometry processing pipeline."""
-        from brutus.utils.photometry import magnitude, inv_magnitude, add_mag
+        from brutus.utils.photometry import add_mag, inv_magnitude, magnitude
 
         # Simulate realistic survey data
         np.random.seed(42)
@@ -455,8 +455,9 @@ class TestPhotometryIntegration:
 
     def test_phot_loglike_dim_prior(self):
         """Test photometric likelihood with dimensionality prior."""
-        from brutus.utils.photometry import phot_loglike
         import numpy as np
+
+        from brutus.utils.photometry import phot_loglike
 
         # Simple test case with dimensionality prior
         nobjs = 5

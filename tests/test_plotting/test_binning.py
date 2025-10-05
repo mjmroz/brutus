@@ -8,9 +8,10 @@ This test suite provides thorough coverage of bin_pdfs_distred, which
 was previously untested but is crucial for distance/reddening visualization.
 """
 
+from unittest.mock import patch
+
 import numpy as np
 import pytest
-from unittest.mock import patch
 
 # Import the function to test
 from brutus.plotting.binning import bin_pdfs_distred

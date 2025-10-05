@@ -11,10 +11,11 @@ This test suite includes:
 4. Mock tests that don't require actual downloads
 """
 
-import numpy as np
-import pytest
 from pathlib import Path
 from unittest.mock import patch
+
+import numpy as np
+import pytest
 
 
 class TestDataDownloadFunctions:
@@ -23,12 +24,12 @@ class TestDataDownloadFunctions:
     def test_download_imports(self):
         """Test that download functions can be imported."""
         from brutus.data.download import (
-            fetch_isos,
-            fetch_tracks,
             fetch_dustmaps,
             fetch_grids,
-            fetch_offsets,
+            fetch_isos,
             fetch_nns,
+            fetch_offsets,
+            fetch_tracks,
         )
 
         # Check that all functions are callable
@@ -196,9 +197,10 @@ class TestDataLoaderFunctions:
 
     def test_load_models_comprehensive_real_data(self):
         """Comprehensive test of load_models with real MIST v9 data (single load for efficiency)."""
-        from brutus.data.loader import load_models
-        from conftest import find_brutus_data_file
         import pytest
+        from conftest import find_brutus_data_file
+
+        from brutus.data.loader import load_models
 
         # Check if the MIST v9 grid file exists
         data_file = find_brutus_data_file("grid_mist_v9.h5")
@@ -242,10 +244,11 @@ class TestDataLoaderFunctions:
 
     def test_load_models_filtering_options_fast(self):
         """Test load_models filtering options with minimal I/O."""
-        from brutus.data.loader import load_models
         import os
 
         from conftest import find_brutus_data_file
+
+        from brutus.data.loader import load_models
 
         data_file = find_brutus_data_file("grid_mist_v9.h5")
         if data_file is None:
@@ -280,10 +283,11 @@ class TestDataLoaderFunctions:
 
     def test_load_models_performance_no_scaling(self):
         """Test that load_models has minimal performance scaling with filter count."""
-        from brutus.data.loader import load_models
         import os
 
         from conftest import find_brutus_data_file
+
+        from brutus.data.loader import load_models
 
         data_file = find_brutus_data_file("grid_mist_v9.h5")
         if data_file is None:
@@ -310,10 +314,11 @@ class TestDataLoaderFunctions:
 
     def test_load_models_with_custom_labels(self):
         """Test load_models with custom label selection (fast version)."""
-        from brutus.data.loader import load_models
         import os
 
         from conftest import find_brutus_data_file
+
+        from brutus.data.loader import load_models
 
         data_file = find_brutus_data_file("grid_mist_v9.h5")
         if data_file is None:
@@ -340,10 +345,11 @@ class TestDataLoaderFunctions:
 
     def test_load_models_error_conditions_with_real_data(self):
         """Test load_models error conditions with real data."""
-        from brutus.data.loader import load_models
         import os
 
         from conftest import find_brutus_data_file
+
+        from brutus.data.loader import load_models
 
         data_file = find_brutus_data_file("grid_mist_v9.h5")
         if data_file is None:
@@ -365,10 +371,11 @@ class TestDataLoaderFunctions:
 
     def test_load_offsets_with_real_mist_v9_data(self):
         """Test load_offsets with real MIST v9 offset data."""
-        from brutus.data.loader import load_offsets
         import os
 
         from conftest import find_brutus_data_file
+
+        from brutus.data.loader import load_offsets
 
         offset_file = find_brutus_data_file("offsets_mist_v9.txt")
         if offset_file is None:
@@ -559,12 +566,12 @@ class TestDataImportStructure:
     def test_data_module_imports(self):
         """Test that data functions can be imported from data module."""
         from brutus.data import (
-            fetch_isos,
-            fetch_tracks,
             fetch_dustmaps,
             fetch_grids,
-            fetch_offsets,
+            fetch_isos,
             fetch_nns,
+            fetch_offsets,
+            fetch_tracks,
             load_models,
             load_offsets,
         )

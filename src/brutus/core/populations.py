@@ -80,22 +80,21 @@ References
 
 import sys
 import warnings
-from pathlib import Path
 from copy import deepcopy
+from pathlib import Path
 
-import numpy as np
 import h5py
+import numpy as np
 from scipy.interpolate import RegularGridInterpolator
+
+# Import filter definitions
+from ..data.filters import FILTERS
 
 # Import from utils (to be reorganized)
 from ..utils.photometry import add_mag
 
 # Import neural network predictor
 from .neural_nets import FastNNPredictor
-
-# Import filter definitions
-from ..data.filters import FILTERS
-
 
 __all__ = ["Isochrone", "StellarPop"]
 

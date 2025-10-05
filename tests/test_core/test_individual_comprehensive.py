@@ -12,14 +12,15 @@ This test suite covers:
 5. Integration between EEPTracks and StarEvolTrack
 """
 
-import pytest
-from conftest import find_brutus_data_file
+import os
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock, call, patch
+
 import numpy as np
 import numpy.testing as npt
-from unittest.mock import patch, MagicMock, call
-from pathlib import Path
-import tempfile
-import os
+import pytest
+from conftest import find_brutus_data_file
 
 # Try importing from the reorganized structure first, fall back to original
 try:

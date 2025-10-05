@@ -7,9 +7,10 @@ Tests for BruteForce class.
 Tests the BruteForce class for grid-based Bayesian stellar parameter estimation.
 """
 
-import pytest
-import numpy as np
 import time
+
+import numpy as np
+import pytest
 
 try:
     import h5py
@@ -18,12 +19,12 @@ try:
 except ImportError:
     HAS_H5PY = False
 
+from brutus.analysis.individual import BruteForce
+
 # Import classes to test
 from brutus.core.individual import StarGrid
-from brutus.analysis.individual import BruteForce
 from brutus.data import load_models
 from brutus.data.filters import ps
-
 
 # ============================================================================
 # Module-level fixtures
@@ -34,6 +35,7 @@ from brutus.data.filters import ps
 def real_mist_setup():
     """Load real MIST grid once and create both full grid and subset for all tests."""
     import os
+
     import h5py
 
     # Try to load real MIST grid

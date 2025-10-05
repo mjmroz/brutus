@@ -6,26 +6,27 @@ Tests for isochrone-based population analysis with mixture-before-marginalizatio
 Uses real MIST isochrone data for authentic testing.
 """
 
-import pytest
-import numpy as np
-import warnings
 import os
+import warnings
+
+import numpy as np
+import pytest
+
+# Test population analysis functions
+from brutus.analysis.populations import (
+    apply_isochrone_mixture_model,
+    compute_isochrone_cluster_loglike,
+    compute_isochrone_outlier_loglike,
+    generate_isochrone_population_grid,
+    isochrone_population_loglike,
+    marginalize_isochrone_grid,
+)
 
 # Import required classes
 from brutus.core.populations import Isochrone, StellarPop
 
 # Test outlier model functions
 from brutus.utils.photometry import chisquare_outlier_loglike, uniform_outlier_loglike
-
-# Test population analysis functions
-from brutus.analysis.populations import (
-    generate_isochrone_population_grid,
-    compute_isochrone_cluster_loglike,
-    compute_isochrone_outlier_loglike,
-    apply_isochrone_mixture_model,
-    marginalize_isochrone_grid,
-    isochrone_population_loglike,
-)
 
 
 @pytest.fixture(scope="module")
@@ -622,7 +623,7 @@ class TestPhotometryUtilityFunctions:
 
     def test_magnitude_conversion(self):
         """Test magnitude and inverse magnitude conversion functions."""
-        from brutus.utils.photometry import magnitude, inv_magnitude
+        from brutus.utils.photometry import inv_magnitude, magnitude
 
         # Test data
         phot = np.array([[1.0, 2.0, 3.0], [0.5, 1.5, 2.5]])
@@ -649,7 +650,7 @@ class TestPhotometryUtilityFunctions:
 
     def test_luptitude_conversion(self):
         """Test luptitude and inverse luptitude conversion functions."""
-        from brutus.utils.photometry import luptitude, inv_luptitude
+        from brutus.utils.photometry import inv_luptitude, luptitude
 
         # Test data
         phot = np.array([[1.0, 2.0, 0.1], [0.5, 1.5, 0.05]])  # Include faint source

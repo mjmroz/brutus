@@ -9,10 +9,11 @@ when explicitly requested. They test the full pipeline including
 EEPTracks loading which takes significant time.
 """
 
-import pytest
-import numpy as np
 import os
 from pathlib import Path
+
+import numpy as np
+import pytest
 
 
 # Global session-scoped fixtures - loaded once for all slow tests

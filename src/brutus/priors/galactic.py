@@ -77,8 +77,8 @@ Combined Galactic structure prior:
 
 import numpy as np
 from astropy import units
-from astropy.coordinates import SkyCoord
 from astropy.coordinates import CylindricalRepresentation as CylRep
+from astropy.coordinates import SkyCoord
 
 # Import utility function from brutus.utils
 from brutus.utils import truncnorm_logpdf

@@ -12,11 +12,12 @@ This test suite covers:
 5. Integration between Isochrone and StellarPop
 """
 
-import pytest
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import numpy.testing as npt
-from unittest.mock import patch, MagicMock
-from pathlib import Path
+import pytest
 
 # Try importing from the reorganized structure first, fall back to original
 try:

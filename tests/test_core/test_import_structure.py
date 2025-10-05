@@ -8,8 +8,9 @@ These tests verify that the new modular structure works correctly
 and that key classes can be imported as expected.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 class TestModuleStructure:
@@ -84,7 +85,7 @@ class TestBackwardCompatibility:
         """Test that core classes are available through new structure."""
         try:
             # These might not work initially but should work after reorganization
-            from brutus.core import Isochrone, EEPTracks
+            from brutus.core import EEPTracks, Isochrone
 
             # Just test that they're classes
             assert callable(Isochrone)

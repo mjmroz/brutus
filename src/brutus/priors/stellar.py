@@ -248,6 +248,7 @@ def logp_ps1_luminosity_function(Mr):
     # Load data file on first use
     if _ps1_lf_interpolator is None:
         import os
+
         from scipy.interpolate import interp1d
 
         # Get path to data file

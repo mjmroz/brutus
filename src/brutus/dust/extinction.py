@@ -8,8 +8,8 @@ This module provides utilities for coordinate transformations and
 extinction calculations used in 3D dust mapping.
 """
 
-import numpy as np
 import healpy as hp  # type: ignore
+import numpy as np
 
 __all__ = ["lb2pix"]
 

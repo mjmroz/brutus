@@ -83,14 +83,14 @@ References
 """
 
 import sys
-import warnings
 import time
-from pathlib import Path
+import warnings
 from datetime import datetime
 from itertools import product
+from pathlib import Path
 
-import numpy as np
 import h5py
+import numpy as np
 
 try:
     from numpy.polynomial import Polynomial
@@ -105,10 +105,10 @@ except ImportError:
     from numpy import polyfit as scipy_polyfit
 
 # Import brutus components
+from ..data.filters import FILTERS
+from ..utils.photometry import add_mag
 from .individual import EEPTracks, StarEvolTrack
 from .neural_nets import FastNNPredictor
-from ..utils.photometry import add_mag
-from ..data.filters import FILTERS
 
 __all__ = ["GridGenerator"]
 

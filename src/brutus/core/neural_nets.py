@@ -46,9 +46,10 @@ and are automatically downloaded when needed.
 """
 
 import sys
-import numpy as np
-import h5py
 from pathlib import Path
+
+import h5py
+import numpy as np
 
 # Import filter definitions from parent module
 from ..data.filters import FILTERS

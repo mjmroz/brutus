@@ -55,10 +55,11 @@ Examples
 >>> icov = inverse3(cov, reg_val=1e-10)
 """
 
-import numpy as np
 from math import gamma, log
-from scipy.special import erf
+
+import numpy as np
 from numba import jit
+from scipy.special import erf
 
 __all__ = [
     "_function_wrapper",

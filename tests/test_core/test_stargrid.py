@@ -7,15 +7,15 @@ Tests for StarGrid class.
 Tests the StarGrid class for stellar model grid management and SED generation.
 """
 
+import warnings
+
+import numpy as np
 import pytest
 from conftest import find_brutus_data_file
-import numpy as np
-import warnings
 
 # Import the class to test
 from brutus.core.individual import StarGrid
 from brutus.data import load_models
-
 
 # ============================================================================
 # Module-level fixtures

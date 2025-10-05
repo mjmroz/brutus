@@ -12,9 +12,10 @@ This test suite includes:
 5. Integration tests with other brutus components
 """
 
+from unittest.mock import patch
+
 import numpy as np
 import pytest
-from unittest.mock import patch
 
 
 @pytest.fixture
@@ -166,8 +167,8 @@ class TestPhotometricOffsetsCore:
         ):
 
             from brutus.analysis.offsets import (
-                photometric_offsets,
                 PhotometricOffsetsConfig,
+                photometric_offsets,
             )
 
             config = PhotometricOffsetsConfig(
@@ -214,8 +215,8 @@ class TestPhotometricOffsetsCore:
         ):
 
             from brutus.analysis.offsets import (
-                photometric_offsets,
                 PhotometricOffsetsConfig,
+                photometric_offsets,
             )
 
             methods = ["bootstrap_std", "bootstrap_iqr"]
@@ -266,8 +267,8 @@ class TestPhotometricOffsetsCore:
         ):
 
             from brutus.analysis.offsets import (
-                photometric_offsets,
                 PhotometricOffsetsConfig,
+                photometric_offsets,
             )
 
             for use_vectorized in [True, False]:
@@ -308,8 +309,8 @@ class TestPhotometricOffsetsCore:
         ):
 
             from brutus.analysis.offsets import (
-                photometric_offsets,
                 PhotometricOffsetsConfig,
+                photometric_offsets,
             )
 
             config = PhotometricOffsetsConfig(
@@ -359,8 +360,8 @@ class TestPhotometricOffsetsCore:
         ):
 
             from brutus.analysis.offsets import (
-                photometric_offsets,
                 PhotometricOffsetsConfig,
+                photometric_offsets,
             )
 
             config = PhotometricOffsetsConfig(
@@ -526,9 +527,9 @@ class TestParameterRecovery:
         pytest.importorskip("brutus.analysis.offsets", reason="brutus not available")
 
         from brutus.analysis.offsets import (
+            PhotometricOffsetsConfig,
             get_seds,
             photometric_offsets,
-            PhotometricOffsetsConfig,
         )
 
         n_obj, n_filt = 60, 5
@@ -638,9 +639,9 @@ class TestParameterRecovery:
         pytest.importorskip("brutus.analysis.offsets", reason="brutus not available")
 
         from brutus.analysis.offsets import (
+            PhotometricOffsetsConfig,
             get_seds,
             photometric_offsets,
-            PhotometricOffsetsConfig,
         )
 
         # Apply known systematic offsets
@@ -770,8 +771,8 @@ class TestEdgeCases:
         ):
 
             from brutus.analysis.offsets import (
-                photometric_offsets,
                 PhotometricOffsetsConfig,
+                photometric_offsets,
             )
 
             # Create data where no objects meet minimum band requirements
@@ -829,8 +830,8 @@ class TestPerformance:
         ):
 
             from brutus.analysis.offsets import (
-                photometric_offsets,
                 PhotometricOffsetsConfig,
+                photometric_offsets,
             )
 
             # Create larger dataset

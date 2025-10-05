@@ -447,7 +447,7 @@ class TestSamplingIntegration:
 
     def test_sampling_workflow_integration(self):
         """Test a realistic sampling workflow."""
-        from brutus.utils.sampling import sample_multivariate_normal, quantile, draw_sar
+        from brutus.utils.sampling import draw_sar, quantile, sample_multivariate_normal
 
         np.random.seed(42)
 
@@ -491,7 +491,7 @@ class TestSamplingIntegration:
 
     def test_mcmc_like_workflow(self):
         """Test an MCMC-like workflow using sampling utilities."""
-        from brutus.utils.sampling import sample_multivariate_normal, quantile
+        from brutus.utils.sampling import quantile, sample_multivariate_normal
 
         np.random.seed(42)
 

@@ -7,19 +7,20 @@ Comprehensive integration tests for StarGrid and BruteForce classes.
 Tests the complete workflow from grid creation to stellar parameter estimation.
 """
 
+import os
+import tempfile
+import warnings
+
+import numpy as np
 import pytest
 from conftest import find_brutus_data_file
-import numpy as np
-import warnings
-import tempfile
-import os
+
+from brutus.analysis.individual import BruteForce
 
 # Import the classes to test
 from brutus.core.individual import StarGrid
-from brutus.analysis.individual import BruteForce
 from brutus.data import load_models
 from brutus.data.filters import ps
-
 
 # ============================================================================
 # Module-level fixtures

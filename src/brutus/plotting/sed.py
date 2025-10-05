@@ -8,8 +8,8 @@ This module contains functions for visualizing stellar SEDs and related
 posterior predictive distributions.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from ..core.sed_utils import get_seds
 from ..utils.photometry import magnitude

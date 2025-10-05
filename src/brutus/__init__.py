@@ -44,20 +44,18 @@ __version__ = "1.0.0"
 # Core functionality imports
 try:
     # Core stellar evolution models (refactored)
-    from .core import Isochrone, EEPTracks, StarGrid
-
-    # Data management (refactored)
-    from .data import fetch_grids, fetch_isos, fetch_dustmaps, load_models
-
-    # Essential utilities (refactored)
-    from .utils import magnitude, inv_magnitude
-
     # Analysis and fitting
     from .analysis import BruteForce
+    from .core import EEPTracks, Isochrone, StarGrid
+
+    # Data management (refactored)
+    from .data import fetch_dustmaps, fetch_grids, fetch_isos, load_models
+
+    # Essential utilities (refactored)
+    from .utils import inv_magnitude, magnitude
 
     # Dust mapping (not yet refactored)
     # from .dust import Bayestar
-
     # Make key classes easily accessible
     __all__ = [
         # Version

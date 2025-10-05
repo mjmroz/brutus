@@ -8,14 +8,16 @@ This test suite provides comprehensive coverage for the posterior_predictive fun
 and related SED visualization functionality.
 """
 
+import warnings
+
+import matplotlib
 import numpy as np
 import pytest
-import warnings
-import matplotlib
 
 matplotlib.use("Agg")  # Use non-interactive backend for testing
-import matplotlib.pyplot as plt
 from unittest.mock import patch
+
+import matplotlib.pyplot as plt
 
 from brutus.plotting.sed import posterior_predictive
 

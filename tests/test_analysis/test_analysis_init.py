@@ -10,10 +10,11 @@ This test suite covers the analysis package initialization, including:
 3. Integration with submodules
 """
 
-import pytest
+import importlib
 import sys
 from unittest.mock import patch
-import importlib
+
+import pytest
 
 # Import everything from analysis module at module level for testing
 try:

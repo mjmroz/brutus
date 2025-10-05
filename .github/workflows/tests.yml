@@ -56,11 +56,13 @@ jobs:
         # MIST grids: ~2-4 GB, Isochrones: ~100 MB
         python -c "
         try:
-            from brutus.data import fetch_grids, fetch_isos
+            from brutus.data import fetch_grids, fetch_isos, fetch_tracks
             print('Downloading MIST grids for testing...')
             fetch_grids(grid='mist_v9')  # Default grid, ~2-3 GB
             print('Downloading isochrones...')
             fetch_isos()  # ~100 MB
+            print('Downloading EEP tracks...')
+            fetch_tracks()  # Required for some tests
             print('Data files downloaded and cached')
         except Exception as e:
             print(f'Warning: Could not download data files: {e}')

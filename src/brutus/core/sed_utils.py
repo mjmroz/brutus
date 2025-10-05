@@ -8,9 +8,10 @@ This module contains functions for computing reddened spectral energy
 distributions (SEDs) from magnitude coefficients and dust parameters.
 """
 
+from math import log
+
 import numpy as np
 from numba import jit
-from math import log
 
 __all__ = ["_get_seds", "get_seds"]
 

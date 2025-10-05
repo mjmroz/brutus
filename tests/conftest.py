@@ -8,13 +8,13 @@ This module provides common test fixtures, utilities, and configuration
 for all brutus tests.
 """
 
-import pytest
-import numpy as np
-import numpy.testing as npt
-import tempfile
 import os
+import tempfile
 from pathlib import Path
 
+import numpy as np
+import numpy.testing as npt
+import pytest
 
 # Configure numba for testing
 # Use a writable cache directory, but keep JIT enabled due to scipy conflicts

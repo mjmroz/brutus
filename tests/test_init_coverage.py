@@ -8,10 +8,11 @@ These tests target the uncovered lines in the main __init__.py file
 to achieve >80% test coverage.
 """
 
-import pytest
-import warnings
 import sys
-from unittest.mock import patch, MagicMock
+import warnings
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def test_version_import():
@@ -20,7 +21,7 @@ def test_version_import():
 
     assert hasattr(brutus, "__version__")
     assert isinstance(brutus.__version__, str)
-    assert brutus.__version__ == "0.9.0"
+    assert brutus.__version__ == "1.0.0"
 
 
 def test_basic_imports():
@@ -127,7 +128,7 @@ def test_module_docstring():
 def test_backward_compatibility_imports():
     """Test that the main imports for backward compatibility work."""
     # Test that we can import the refactored modules
-    from brutus.core import Isochrone, EEPTracks
+    from brutus.core import EEPTracks, Isochrone
     from brutus.data import fetch_grids, load_models
     from brutus.utils import magnitude
 
@@ -163,7 +164,7 @@ def test_module_level_constants():
     import brutus
 
     # Check version is properly set
-    assert brutus.__version__ == "0.9.0"
+    assert brutus.__version__ == "1.0.0"
 
     # Check that the module has expected attributes
     expected_attrs = [

@@ -9,23 +9,24 @@ photometric offset computation, stellar parameter optimization, and
 statistical analysis tools.
 """
 
-# Import analysis utilities
-from .offsets import photometric_offsets, PhotometricOffsetsConfig
 from .individual import BruteForce
-from .populations import (
-    isochrone_population_loglike,
-    generate_isochrone_population_grid,
-    compute_isochrone_cluster_loglike,
-    compute_isochrone_outlier_loglike,
-    apply_isochrone_mixture_model,
-    marginalize_isochrone_grid,
-)
 from .los_dust import (
-    los_clouds_priortransform,
-    los_clouds_loglike_samples,
-    kernel_tophat,
     kernel_gauss,
     kernel_lorentz,
+    kernel_tophat,
+    los_clouds_loglike_samples,
+    los_clouds_priortransform,
+)
+
+# Import analysis utilities
+from .offsets import PhotometricOffsetsConfig, photometric_offsets
+from .populations import (
+    apply_isochrone_mixture_model,
+    compute_isochrone_cluster_loglike,
+    compute_isochrone_outlier_loglike,
+    generate_isochrone_population_grid,
+    isochrone_population_loglike,
+    marginalize_isochrone_grid,
 )
 
 __all__ = [

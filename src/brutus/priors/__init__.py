@@ -10,23 +10,23 @@ All functions follow the naming convention logp_* for log-probability densities
 and logn_* for log-number densities.
 """
 
-# Stellar priors
-from .stellar import logp_imf, logp_ps1_luminosity_function
-
 # Astrometric priors
-from .astrometric import logp_parallax, logp_parallax_scale, convert_parallax_to_scale
-
-# Galactic structure priors
-from .galactic import (
-    logp_galactic_structure,
-    logn_disk,
-    logn_halo,
-    logp_feh,
-    logp_age_from_feh,
-)
+from .astrometric import convert_parallax_to_scale, logp_parallax, logp_parallax_scale
 
 # Extinction priors
 from .extinction import logp_extinction
+
+# Galactic structure priors
+from .galactic import (
+    logn_disk,
+    logn_halo,
+    logp_age_from_feh,
+    logp_feh,
+    logp_galactic_structure,
+)
+
+# Stellar priors
+from .stellar import logp_imf, logp_ps1_luminosity_function
 
 __all__ = [
     # Stellar priors

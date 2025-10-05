@@ -8,16 +8,17 @@ This module provides functions for creating corner plots of multi-dimensional
 posterior distributions.
 """
 
-import warnings
-import numpy as np
 import copy
+import warnings
+
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator, NullLocator, ScalarFormatter
 from scipy.ndimage import gaussian_filter as norm_kde
 
-from ..priors import logp_galactic_structure as gal_lnprior, logp_parallax
-
-from ..utils.sampling import quantile, draw_sar
+from ..priors import logp_galactic_structure as gal_lnprior
+from ..priors import logp_parallax
+from ..utils.sampling import draw_sar, quantile
 from .utils import hist2d
 
 try:

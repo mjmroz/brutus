@@ -9,12 +9,13 @@ including isochrones, tracks, SED computation, neural network utilities,
 and grid generation.
 """
 
+from .grid_generation import GridGenerator
+from .individual import EEPTracks, StarGrid
+from .neural_nets import FastNN, FastNNPredictor
+from .populations import Isochrone
+
 # Import core components
 from .sed_utils import _get_seds, get_seds
-from .neural_nets import FastNN, FastNNPredictor
-from .individual import EEPTracks, StarGrid
-from .populations import Isochrone
-from .grid_generation import GridGenerator
 
 __all__ = [
     "_get_seds",

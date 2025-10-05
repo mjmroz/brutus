@@ -8,10 +8,10 @@ This module provides classes for querying 3D dust maps, particularly the
 Bayestar maps from Green et al. (2015, 2018).
 """
 
-import numpy as np
-import h5py
 import astropy.coordinates as coordinates
 import astropy.units as units
+import h5py
+import numpy as np
 
 from .extinction import lb2pix
 

@@ -74,16 +74,17 @@ Basic usage with emcee:
 >>> sampler.run_mcmc(initial_pos, nsteps)
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import warnings
+
 import numpy as np
 from scipy.special import logsumexp
 
 # Import photometry utilities
 from ..utils.photometry import (
-    phot_loglike,
     chisquare_outlier_loglike,
+    phot_loglike,
     uniform_outlier_loglike,
 )
 

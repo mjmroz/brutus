@@ -13,16 +13,17 @@ This test suite covers all functionality in the refactored dust module:
 Tests use real Bayestar data from DATAFILES for authentic validation.
 """
 
-import numpy as np
-import pytest
 import os
 from unittest.mock import MagicMock
+
 import astropy.coordinates as coord
 import astropy.units as u
+import numpy as np
+import pytest
+from conftest import find_brutus_data_file
 
 # Import what we're testing
-from brutus.dust import lb2pix, DustMap, Bayestar
-from conftest import find_brutus_data_file
+from brutus.dust import Bayestar, DustMap, lb2pix
 
 # Path to real Bayestar data
 BAYESTAR_FILE = find_brutus_data_file("bayestar2019_v1.h5")
@@ -348,8 +349,7 @@ class TestDustModuleIntegration:
 
     def test_module_imports(self):
         """Test that all module imports work correctly."""
-        from brutus.dust import lb2pix, DustMap, Bayestar
-        from brutus.dust import __all__
+        from brutus.dust import Bayestar, DustMap, __all__, lb2pix
 
         # Check that __all__ contains expected items
         expected_items = {"lb2pix", "DustMap", "Bayestar"}

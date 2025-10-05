@@ -7,16 +7,18 @@ Clean integration tests for StarGrid and BruteForce classes.
 Tests the essential workflow from grid creation to stellar parameter estimation.
 """
 
+import os
+import time
+
+import h5py
+import numpy as np
 import pytest
 from conftest import find_brutus_data_file
-import numpy as np
-import time
-import os
-import h5py
+
+from brutus.analysis.individual import BruteForce
 
 # Import the classes to test
 from brutus.core.individual import StarGrid
-from brutus.analysis.individual import BruteForce
 from brutus.data import load_models
 
 

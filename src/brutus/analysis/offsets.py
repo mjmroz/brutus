@@ -94,14 +94,16 @@ Advanced usage with configuration:
 """
 
 import warnings
-import numpy as np
 from typing import Optional, Tuple
+
+import numpy as np
 
 # Import utilities (will need to be updated based on final module structure)
 try:
+    from scipy.special import logsumexp
+
     from ..core.sed_utils import get_seds
     from ..utils.photometry import phot_loglike
-    from scipy.special import logsumexp
 except ImportError:
     # Fallback for development/testing
     warnings.warn("Could not import brutus utilities, using placeholder imports")
