@@ -23,7 +23,7 @@ import pytest
 from conftest import find_brutus_data_file
 
 # Import what we're testing
-# Imports tested dynamically in test_dust_module_imports
+from brutus.dust import Bayestar, DustMap, lb2pix
 
 # Path to real Bayestar data
 BAYESTAR_FILE = find_brutus_data_file("bayestar2019_v1.h5")
@@ -349,7 +349,7 @@ class TestDustModuleIntegration:
 
     def test_module_imports(self):
         """Test that all module imports work correctly."""
-        from brutus.dust import Bayestar, DustMap, __all__, lb2pix
+        from brutus.dust import __all__
 
         # Check that __all__ contains expected items
         expected_items = {"lb2pix", "DustMap", "Bayestar"}

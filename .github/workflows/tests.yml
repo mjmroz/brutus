@@ -86,11 +86,10 @@ jobs:
             print('!' * 60)
             print(f'Error: {e}')
             traceback.print_exc()
-            print('\nTests requiring data files will be skipped.')
+            print('\nData files are required for tests.')
             print('!' * 60)
-            sys.exit(0)  # Don't fail the workflow
+            sys.exit(1)  # Fail the workflow if data download fails
         "
-      continue-on-error: true
 
     - name: Lint with flake8
       run: |

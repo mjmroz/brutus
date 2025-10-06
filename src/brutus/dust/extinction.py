@@ -14,7 +14,7 @@ import numpy as np
 __all__ = ["lb2pix"]
 
 
-def lb2pix(nside, gal_l, b, nest=True):
+def lb2pix(nside, l, b, nest=True):  # noqa: E741
     """
     Convert Galactic (l, b) coordinates to HEALPix pixel indices.
 
@@ -22,7 +22,7 @@ def lb2pix(nside, gal_l, b, nest=True):
     ----------
     nside : int
         The HEALPix nside parameter. Must be a power of 2.
-    gal_l : float or array_like
+    l : float or array_like
         Galactic longitude in degrees.
     b : float or array_like
         Galactic latitude in degrees.
@@ -39,22 +39,25 @@ def lb2pix(nside, gal_l, b, nest=True):
     Examples
     --------
     >>> # Single coordinate
-    >>> pix = lb2pix(nside=64, gal_l=0.0, b=0.0)
+    >>> pix = lb2pix(nside=64, l=0.0, b=0.0)
     >>> isinstance(pix, int)
     True
 
     >>> # Multiple coordinates
     >>> l_arr = np.array([0.0, 90.0, 180.0])
     >>> b_arr = np.array([0.0, 30.0, -30.0])
-    >>> pix_arr = lb2pix(nside=64, gal_l=l_arr, b=b_arr)
+    >>> pix_arr = lb2pix(nside=64, l=l_arr, b=b_arr)
     >>> len(pix_arr) == 3
     True
 
     >>> # Invalid coordinate
-    >>> invalid_pix = lb2pix(nside=64, gal_l=0.0, b=95.0)
+    >>> invalid_pix = lb2pix(nside=64, l=0.0, b=95.0)
     >>> invalid_pix == -1
     True
     """
+    # Rename to avoid E741 (ambiguous variable 'l')
+    gal_l = l
+
     # Convert angles to spherical coordinates
     theta = np.radians(90.0 - b)
     phi = np.radians(gal_l)

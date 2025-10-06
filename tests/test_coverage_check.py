@@ -12,13 +12,24 @@ import pytest
 
 def test_stargrid_core_functions():
     """Test core StarGrid functions to ensure coverage."""
-    from src.brutus.core.individual import StarGrid
-    from src.brutus.data import load_models
+    # Import pooch to get cache directory
+    import pooch
+
+    from brutus.core.individual import StarGrid
+    from brutus.data import load_models
+
+    cache_dir = pooch.os_cache("astro-brutus")
 
     # Load a small subset for coverage testing
+    # Try multiple possible locations:
+    # 1. Local development paths (WSL mounts - both home /mnt/d/ and work /mnt/c/)
+    # 2. Relative path from repo root
+    # 3. Pooch cache directory (used by CI and fetch_grids())
     grid_paths = [
         "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5",
+        "/mnt/c/Users/joshs/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5",
         "./data/DATAFILES/grid_mist_v9.h5",
+        os.path.join(cache_dir, "grid_mist_v9.h5"),
     ]
 
     for path in grid_paths:
@@ -112,14 +123,25 @@ def test_stargrid_core_functions():
 
 def test_bruteforce_core_functions():
     """Test core BruteForce functions to ensure coverage."""
-    from src.brutus.analysis.individual import BruteForce
-    from src.brutus.core.individual import StarGrid
-    from src.brutus.data import load_models
+    # Import pooch to get cache directory
+    import pooch
+
+    from brutus.analysis.individual import BruteForce
+    from brutus.core.individual import StarGrid
+    from brutus.data import load_models
+
+    cache_dir = pooch.os_cache("astro-brutus")
 
     # Load small subset
+    # Try multiple possible locations:
+    # 1. Local development paths (WSL mounts - both home /mnt/d/ and work /mnt/c/)
+    # 2. Relative path from repo root
+    # 3. Pooch cache directory (used by CI and fetch_grids())
     grid_paths = [
         "/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5",
+        "/mnt/c/Users/joshs/Dropbox/GitHub/brutus/data/DATAFILES/grid_mist_v9.h5",
         "./data/DATAFILES/grid_mist_v9.h5",
+        os.path.join(cache_dir, "grid_mist_v9.h5"),
     ]
 
     for path in grid_paths:
