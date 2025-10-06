@@ -26,9 +26,7 @@ from conftest import find_brutus_data_file
 try:
     from brutus.core.individual import EEPTracks, StarEvolTrack
 except ImportError:
-    pytest.skip(
-        "brutus individual not available - skipping tests", allow_module_level=True
-    )
+    raise  # Module should be available
 
 
 class TestEEPTracksInitialization:
@@ -40,9 +38,9 @@ class TestEEPTracksInitialization:
 
         v12_file = find_brutus_data_file("MIST_1.2_EEPtrk.h5")
         if v12_file is None or not os.path.exists(v12_file):
-            import pytest
-
-            pytest.skip("v1.2 EEP track file not found in any standard location")
+            raise FileNotFoundError(
+                "v1.2 EEP track file not found in any standard location"
+            )
 
         try:
             # Should load from cache instantly
@@ -68,9 +66,7 @@ class TestEEPTracksInitialization:
                         pass  # Skip prediction test if it fails
 
         except Exception as e:
-            import pytest
-
-            pytest.skip(f"Could not test with real cached data: {e}")
+            raise AssertionError(f"Could not test with real cached data: {e}")
 
     def test_eep_tracks_default_initialization(self):
         """Test EEPTracks initialization with default parameters."""

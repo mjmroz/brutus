@@ -31,7 +31,7 @@ _dois = {
     "grid_mist_v9.h5": "10.7910/DVN/7BA4ZG/Z7MGA7",
     "grid_mist_v8.h5": "10.7910/DVN/7BA4ZG/NKVZFT",
     "grid_bayestar_v5.h5": "10.7910/DVN/7BA4ZG/LLZP0B",
-    # "offsets_mist_v9.txt": "DOI_PENDING",  # DOI not yet assigned
+    "offsets_mist_v9.txt": "10.7910/DVN/L7D1FY/ASPSUR",
     "offsets_mist_v8.txt": "10.7910/DVN/L7D1FY/QTNKKN",
     "offsets_bs_v9.txt": "10.7910/DVN/L7D1FY/W4O6NJ",
     "nn_c3k.h5": "10.7910/DVN/MSCY2O/XHU1VJ",
@@ -50,7 +50,7 @@ strato = pooch.create(
         "grid_mist_v9.h5": "7d128a5caded78ca9d1788a8e6551b4329aeed9ca74e7a265e531352ecb75288",
         "grid_mist_v8.h5": "b07d9c19e7ff5e475b1b061af6d1bb4ebd13e0e894fd0703160206964f1084e0",
         "grid_bayestar_v5.h5": "c5d195430393ebd6c8865a9352c8b0906b2c43ec56d3645bb9d5b80e6739fd0c",
-        # "offsets_mist_v9.txt": None,
+        "offsets_mist_v9.txt": "e2c33ee4669ff4da67bcdd6e2d7551fbe4d4b3a6f95d29bb220da622304af468",
         "offsets_mist_v8.txt": "35425281b5d828431ca5ef93262cb7c6f406814b649d7e7ca4866b8203408e5f",
         "offsets_bs_v9.txt": "b5449c08eb7b894b6d9aa1449a351851ca800ef4ed461c987434a0c250cba386",
         "nn_c3k.h5": "bc86d4bf55b2173b97435d24337579a2f337e80ed050c73f1e31abcd04163259",

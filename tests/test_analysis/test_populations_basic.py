@@ -37,10 +37,8 @@ def real_stellarpop():
     iso_file = find_brutus_data_file("MIST_1.2_iso_vvcrit0.0.h5")
     nn_file = find_brutus_data_file("nnMIST_BC.h5")
 
-    if iso_file is None:
-        pytest.skip("MIST isochrone file not found in any standard location")
-    if nn_file is None:
-        pytest.skip("Neural network file not found in any standard location")
+    assert iso_file is not None, "iso_file should be found after downloading all data"
+    assert nn_file is not None, "nn_file should be found after downloading all data"
 
     try:
         # Create the isochrone object
@@ -56,7 +54,7 @@ def real_stellarpop():
         return stellarpop
 
     except Exception as e:
-        pytest.skip(f"Failed to create StellarPop with neural network: {e}")
+        raise  # Should not fail with all data available
 
 
 @pytest.fixture(scope="module")
@@ -86,7 +84,7 @@ def real_isochrone_grid(real_stellarpop):
         )
         return grid
     except Exception as e:
-        pytest.skip(f"Failed to generate isochrone grid: {e}")
+        raise  # Should not fail with all data available
 
 
 @pytest.fixture

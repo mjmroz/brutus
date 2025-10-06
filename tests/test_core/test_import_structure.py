@@ -24,7 +24,7 @@ class TestModuleStructure:
             assert hasattr(brutus, "__version__")
             assert isinstance(brutus.__version__, str)
         except ImportError as e:
-            pytest.skip(f"brutus module not available: {e}")
+            raise  # Import should always work
 
     def test_core_module_import(self):
         """Test that core module can be imported."""
@@ -34,7 +34,7 @@ class TestModuleStructure:
             # Should have __all__ defined
             assert hasattr(brutus.core, "__all__")
         except ImportError as e:
-            pytest.skip(f"brutus.core module not available: {e}")
+            raise  # Import should always work
 
     def test_analysis_module_import(self):
         """Test that analysis module can be imported."""
@@ -43,7 +43,7 @@ class TestModuleStructure:
 
             assert hasattr(brutus.analysis, "__all__")
         except ImportError as e:
-            pytest.skip(f"brutus.analysis module not available: {e}")
+            raise  # Import should always work
 
     def test_utils_module_import(self):
         """Test that utils module can be imported."""
@@ -52,7 +52,7 @@ class TestModuleStructure:
 
             assert hasattr(brutus.utils, "__all__")
         except ImportError as e:
-            pytest.skip(f"brutus.utils module not available: {e}")
+            raise  # Import should always work
 
     def test_data_module_import(self):
         """Test that data module can be imported."""
@@ -61,7 +61,7 @@ class TestModuleStructure:
 
             assert hasattr(brutus.data, "__all__")
         except ImportError as e:
-            pytest.skip(f"brutus.data module not available: {e}")
+            raise  # Import should always work
 
 
 class TestBackwardCompatibility:
@@ -79,7 +79,7 @@ class TestBackwardCompatibility:
             assert isinstance(__version__, str)
 
         except ImportError as e:
-            pytest.skip(f"Legacy imports not available: {e}")
+            raise  # Import should always work
 
     def test_core_classes_available(self):
         """Test that core classes are available through new structure."""
@@ -92,7 +92,7 @@ class TestBackwardCompatibility:
             assert callable(EEPTracks)
 
         except ImportError as e:
-            pytest.skip(f"Core classes not yet reorganized: {e}")
+            raise  # Import should always work
 
 
 class TestProjectStructure:
@@ -107,8 +107,7 @@ class TestProjectStructure:
         ).parent.parent.parent  # Go up from tests/test_core to root
         src_dir = project_root / "src" / "brutus"
 
-        if not src_dir.exists():
-            pytest.skip("src/brutus directory not yet created")
+        # Directory/file should exist
 
         # Check that key subdirectories exist
         expected_dirs = ["core", "analysis", "utils", "data", "dust"]
@@ -127,8 +126,7 @@ class TestProjectStructure:
         ).parent.parent.parent  # Go up from tests/test_core to root
         pyproject_path = project_root / "pyproject.toml"
 
-        if not pyproject_path.exists():
-            pytest.skip("pyproject.toml not yet created")
+        # Directory/file should exist
 
         # Basic validation - can be read as text
         content = pyproject_path.read_text()
@@ -154,8 +152,8 @@ class TestVersionManagement:
             parts = version.split(".")
             assert len(parts) >= 2  # At least major.minor
 
-        except ImportError:
-            pytest.skip("brutus module not available")
+        except ImportError as e:
+            raise AssertionError(f"brutus module not available: {e}")
 
     def test_version_consistency(self):
         """Test that version is consistent across files."""
@@ -167,5 +165,5 @@ class TestVersionManagement:
             assert hasattr(brutus, "__version__")
             assert isinstance(brutus.__version__, str)
 
-        except ImportError:
-            pytest.skip("brutus module not available")
+        except ImportError as e:
+            raise AssertionError(f"brutus module not available: {e}")

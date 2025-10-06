@@ -118,7 +118,7 @@ def test_stargrid_core_functions():
 
             return  # Success
 
-    pytest.skip("MIST grid not available")
+    raise AssertionError("MIST grid should be available after downloading")
 
 
 def test_bruteforce_core_functions():
@@ -224,7 +224,7 @@ def test_bruteforce_core_functions():
 
             return  # Success
 
-    pytest.skip("MIST grid not available")
+    raise AssertionError("MIST grid should be available after downloading")
 
 
 if __name__ == "__main__":

@@ -204,8 +204,9 @@ class TestDataLoaderFunctions:
 
         # Check if the MIST v9 grid file exists
         data_file = find_brutus_data_file("grid_mist_v9.h5")
-        if data_file is None:
-            pytest.skip("MIST v9 grid file not found in any standard location")
+        assert (
+            data_file is not None
+        ), "data_file should be found after downloading all data"
 
         # Single load with reasonable filter set - this covers most functionality
         test_filters = [
@@ -251,10 +252,9 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_models
 
         data_file = find_brutus_data_file("grid_mist_v9.h5")
-        if data_file is None:
-            import pytest
-
-            pytest.skip("MIST v9 grid file not found in any standard location")
+        assert (
+            data_file is not None
+        ), "data_file should be found after downloading all data"
 
         # Get baseline with fast filter set
         fast_filters = ["SDSS_g", "SDSS_r"]  # Just 2 filters for speed
@@ -290,10 +290,9 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_models
 
         data_file = find_brutus_data_file("grid_mist_v9.h5")
-        if data_file is None:
-            import pytest
-
-            pytest.skip("MIST v9 grid file not found in any standard location")
+        assert (
+            data_file is not None
+        ), "data_file should be found after downloading all data"
 
         # Test with small and large filter sets (just validate shapes, not timing)
         models_small, _, _ = load_models(
@@ -321,10 +320,9 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_models
 
         data_file = find_brutus_data_file("grid_mist_v9.h5")
-        if data_file is None:
-            import pytest
-
-            pytest.skip("MIST v9 grid file not found in any standard location")
+        assert (
+            data_file is not None
+        ), "data_file should be found after downloading all data"
 
         # Test with specific labels (minimal filters for speed)
         custom_labels = ["mini", "feh", "eep", "loga"]
@@ -352,10 +350,9 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_models
 
         data_file = find_brutus_data_file("grid_mist_v9.h5")
-        if data_file is None:
-            import pytest
-
-            pytest.skip("MIST v9 grid file not found in any standard location")
+        assert (
+            data_file is not None
+        ), "data_file should be found after downloading all data"
 
         # Test invalid include_ms/include_postms combination
         import pytest
@@ -378,10 +375,9 @@ class TestDataLoaderFunctions:
         from brutus.data.loader import load_offsets
 
         offset_file = find_brutus_data_file("offsets_mist_v9.txt")
-        if offset_file is None:
-            import pytest
-
-            pytest.skip("MIST v9 offset file not found in any standard location")
+        assert (
+            offset_file is not None
+        ), "offset_file should be found after downloading all data"
 
         # Test loading all offsets
         offsets = load_offsets(offset_file, verbose=False)
@@ -509,60 +505,7 @@ class TestDataComparison:
     """
 
     @patch("brutus.data.download._fetch")
-    def test_fetch_isos_vs_original(self, mock_fetch):
-        """Compare new fetch_isos with original."""
-        try:
-            # NOTE: Legacy comparison test - remove after refactor complete
-            from brutus.data.download import fetch_isos as orig_fetch_isos
-        except ImportError:
-            pytest.skip("Original utilities.py not available for comparison")
-
-        from brutus.data.download import fetch_isos as new_fetch_isos
-
-        # Mock both implementations to return same path
-        mock_path = Path("/fake/path/MIST_1.2_iso_vvcrit0.0.h5")
-        mock_fetch.return_value = mock_path
-
-        with patch("brutus.data.download.strato.fetch", return_value=mock_path):
-            orig_result = orig_fetch_isos(target_dir="/tmp")
-            new_result = new_fetch_isos(target_dir="/tmp")
-
-            assert orig_result == new_result
-
     @patch("numpy.loadtxt")
-    def test_load_offsets_vs_original(self, mock_loadtxt):
-        """Compare new load_offsets with original."""
-        try:
-            # NOTE: Legacy comparison test - remove after refactor complete
-            from brutus.data.loader import load_offsets as orig_load_offsets
-        except ImportError:
-            pytest.skip("Original utilities.py not available for comparison")
-
-        from brutus.data.loader import load_offsets as new_load_offsets
-
-        # Mock file content
-        mock_loadtxt.return_value = (
-            np.array(["g", "r", "i"], dtype="str"),
-            np.array(["1.02", "0.98", "1.01"], dtype="str"),
-        )
-
-        filters = ["g", "r", "i"]
-
-        with patch("brutus.data.loader.sys.stderr"):
-            with patch("brutus.data.loader.sys.stderr"):
-                orig_result = orig_load_offsets(
-                    "/fake/path.txt", filters=filters, verbose=False
-                )
-                new_result = new_load_offsets(
-                    "/fake/path.txt", filters=filters, verbose=False
-                )
-
-        np.testing.assert_array_almost_equal(new_result, orig_result, decimal=12)
-
-
-class TestDataImportStructure:
-    """Test import structure for data module."""
-
     def test_data_module_imports(self):
         """Test that data functions can be imported from data module."""
         from brutus.data import (

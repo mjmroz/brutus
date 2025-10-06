@@ -29,7 +29,7 @@ def shared_eep_tracks():
         return tracks
 
     except (ImportError, FileNotFoundError) as e:
-        pytest.skip(f"EEPTracks not available: {e}")
+        raise  # Should not fail with all data available
 
 
 @pytest.fixture(scope="session")
@@ -44,7 +44,7 @@ def shared_star_track(shared_eep_tracks):
         return star_track
 
     except (ImportError, FileNotFoundError) as e:
-        pytest.skip(f"StarEvolTrack not available: {e}")
+        raise  # Should not fail with all data available
 
 
 class TestEEPTracksIntegration:
@@ -68,7 +68,7 @@ class TestEEPTracksIntegration:
             assert np.all(np.isfinite(params))
 
         except Exception as e:
-            pytest.skip(f"EEPTracks.get_predictions failed: {e}")
+            raise  # Should not fail with all data available
 
     def test_eep_tracks_mass_range(self, shared_eep_tracks):
         """Test EEPTracks over a range of stellar masses."""
@@ -82,7 +82,7 @@ class TestEEPTracksIntegration:
                 params = shared_eep_tracks.get_predictions([mini, eep, feh, afe])
                 results.append(params)
             except Exception as e:
-                pytest.skip(f"EEPTracks failed for mass {mini}: {e}")
+                raise  # Should not fail with all data available
 
         # Should have results for all masses
         assert len(results) == len(masses)
@@ -128,7 +128,7 @@ class TestStarEvolTrackIntegration:
             print(f"✅ Generated SED with {len(sed)} photometric bands")
 
         except Exception as e:
-            pytest.skip(f"StarEvolTrack.get_seds failed: {e}")
+            raise  # Should not fail with all data available
 
     def test_star_track_multiple_seds(self, shared_star_track):
         """Test multiple SED generations using same StarEvolTrack."""
@@ -184,7 +184,7 @@ class TestStarEvolTrackIntegration:
                 )
 
             except Exception as e:
-                pytest.skip(f"StarEvolTrack failed for test case {i}: {e}")
+                raise  # Should not fail with all data available
 
         # Should have processed all test cases
         assert len(results) == len(test_cases)
@@ -216,7 +216,7 @@ class TestNeuralNetworkIntegration:
             assert callable(FastNNPredictor)
 
         except ImportError as e:
-            pytest.skip(f"Neural network classes not available: {e}")
+            raise  # Should not fail with all data available
 
     @pytest.mark.skipif(
         not os.path.exists("data/DATAFILES/nnMIST_BC.h5"),
@@ -241,7 +241,7 @@ class TestNeuralNetworkIntegration:
             )
 
         except Exception as e:
-            pytest.skip(f"FastNNPredictor initialization failed: {e}")
+            raise  # Should not fail with all data available
 
 
 class TestFullPipeline:
@@ -303,7 +303,7 @@ class TestFullPipeline:
             )
 
         except Exception as e:
-            pytest.skip(f"End-to-end test failed: {e}")
+            raise  # Should not fail with all data available
 
 
 if __name__ == "__main__":

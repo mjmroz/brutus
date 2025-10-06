@@ -42,7 +42,9 @@ jobs:
       uses: actions/cache@v3
       id: cache-data
       with:
-        path: ~/.astro-brutus/
+        path: |
+          ~/.cache/astro-brutus/
+          ~/Library/Caches/astro-brutus/
         key: brutus-data-v1-${{ runner.os }}
         restore-keys: |
           brutus-data-v1-
@@ -58,7 +60,10 @@ jobs:
         import traceback
 
         try:
-            from brutus.data import fetch_grids, fetch_isos, fetch_tracks
+            from brutus.data import (
+                fetch_grids, fetch_isos, fetch_tracks, fetch_nns,
+                fetch_dustmaps, fetch_offsets
+            )
 
             print('=' * 60)
             print('Downloading MIST data files for testing...')
@@ -75,6 +80,24 @@ jobs:
             print('\n3. Downloading EEP tracks (~200 MB)...')
             fetch_tracks()
             print('   ✓ EEP tracks downloaded')
+
+            print('\n4. Downloading neural network (~1 MB)...')
+            fetch_nns()
+            print('   ✓ Neural network downloaded')
+
+            print('\n5. Downloading dust maps (~100 MB)...')
+            try:
+                fetch_dustmaps()
+                print('   ✓ Dust maps downloaded')
+            except Exception as e:
+                print(f'   ⚠ Dust maps download failed (optional): {e}')
+
+            print('\n6. Downloading photometric offsets...')
+            try:
+                fetch_offsets(grid='mist_v9')
+                print('   ✓ Offsets downloaded (v9)')
+            except Exception as e:
+                print(f'   ⚠ Offsets download failed (optional): {e}')
 
             print('\n' + '=' * 60)
             print('All data files downloaded successfully!')

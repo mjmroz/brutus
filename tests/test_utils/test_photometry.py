@@ -25,9 +25,7 @@ except ImportError:
     try:
         from brutus.utils import inv_luptitude, inv_magnitude, luptitude, magnitude
     except ImportError:
-        pytest.skip(
-            "brutus utils not available - skipping tests", allow_module_level=True
-        )
+        raise  # Module should be available
 
 
 class TestMagnitudeConversions:

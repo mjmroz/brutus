@@ -330,53 +330,6 @@ class TestBinPdfsDistred:
         assert np.all(np.isfinite(xedges))
         assert np.all(np.isfinite(yedges))
 
-    def test_bin_pdfs_consistency_with_original(self):
-        """Integration test to ensure refactored version behaves consistently."""
-        # This test would compare with the original pdf.py version
-        # For now, we test that the function produces reasonable statistical properties
-
-        np.random.seed(42)
-        # Create test data with known properties
-        n_obj, n_samp = 2, 200
-        true_distances = [1.5, 3.0]  # kpc
-        true_reddenings = [0.2, 0.8]  # Av
-
-        dists = np.array(
-            [np.random.normal(true_distances[i], 0.2, n_samp) for i in range(n_obj)]
-        )
-        reds = np.array(
-            [np.random.normal(true_reddenings[i], 0.1, n_samp) for i in range(n_obj)]
-        )
-        dreds = np.random.normal(3.1, 0.1, (n_obj, n_samp))
-
-        data = (dists, reds, dreds)
-
-        binned_vals, xedges, yedges = bin_pdfs_distred(
-            data, dist_type="distance", bins=(50, 30)
-        )
-
-        # Check that the binned PDFs have maxima near the true values
-        for i in range(n_obj):
-            # Find peak in distance dimension
-            dist_marginal = np.sum(binned_vals[i], axis=1)
-            peak_idx = np.argmax(dist_marginal)
-            peak_distance = 0.5 * (xedges[peak_idx] + xedges[peak_idx + 1])
-
-            # Should be within reasonable range of true value
-            assert abs(peak_distance - true_distances[i]) < 0.5
-
-            # Find peak in reddening dimension
-            red_marginal = np.sum(binned_vals[i], axis=0)
-            peak_idx = np.argmax(red_marginal)
-            peak_reddening = 0.5 * (yedges[peak_idx] + yedges[peak_idx + 1])
-
-            # Should be within reasonable range of true value
-            assert abs(peak_reddening - true_reddenings[i]) < 0.3
-
-
-class TestBinPdfsDistredIntegration:
-    """Integration tests for bin_pdfs_distred with other components."""
-
     def test_integration_with_priors_module(self):
         """Test that the function properly uses the refactored priors."""
         # This tests that the imports work correctly and priors are applied

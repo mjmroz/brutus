@@ -82,7 +82,7 @@ def mist_integration_setup():
             except Exception as e:
                 continue
 
-    pytest.skip("Real MIST grid not available for integration tests")
+    raise AssertionError("Grid should be available after downloading")
 
 
 class TestCoreIntegration:

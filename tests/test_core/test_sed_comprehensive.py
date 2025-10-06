@@ -722,8 +722,8 @@ class TestSedIntegration:
             # Should recover original fluxes
             npt.assert_array_almost_equal(seds_flux, flux_recovered, decimal=10)
 
-        except ImportError:
-            pytest.skip("Photometry utilities not available")
+        except ImportError as e:
+            raise AssertionError(f"Photometry utilities not available: {e}")
 
     def test_expected_magnitude_ranges(self):
         """Test that computed magnitudes are in expected ranges."""

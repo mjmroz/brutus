@@ -23,9 +23,7 @@ import pytest
 try:
     from brutus.core.populations import Isochrone, StellarPop
 except ImportError:
-    pytest.skip(
-        "brutus populations not available - skipping tests", allow_module_level=True
-    )
+    raise  # Module should be available
 
 
 @pytest.fixture(scope="module")
@@ -35,8 +33,7 @@ def real_isochrone():
 
     iso_file = find_brutus_data_file("MIST_1.2_iso_vvcrit0.0.h5")
 
-    if iso_file is None:
-        pytest.skip("MIST isochrone file not found in any standard location")
+    assert iso_file is not None, "iso_file should be found after downloading all data"
 
     return Isochrone(mistfile=iso_file, verbose=False)
 
@@ -51,8 +48,9 @@ class TestIsochroneInitialization:
         # Try to find the real MIST isochrone file
         iso_file = find_brutus_data_file("MIST_1.2_iso_vvcrit0.0.h5")
 
-        if iso_file is None:
-            pytest.skip("MIST isochrone file not found in any standard location")
+        assert (
+            iso_file is not None
+        ), "iso_file should be found after downloading all data"
 
         # Test with real MIST data
         iso = Isochrone(mistfile=iso_file, verbose=False)
@@ -83,8 +81,9 @@ class TestIsochroneInitialization:
         custom_preds = ["mini", "mass", "logt", "logg"]
         iso_file = find_brutus_data_file("MIST_1.2_iso_vvcrit0.0.h5")
 
-        if iso_file is None:
-            pytest.skip("MIST isochrone file not found in any standard location")
+        assert (
+            iso_file is not None
+        ), "iso_file should be found after downloading all data"
 
         iso = Isochrone(mistfile=iso_file, predictions=custom_preds, verbose=False)
         assert iso.predictions == custom_preds

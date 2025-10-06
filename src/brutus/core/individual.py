@@ -221,13 +221,13 @@ class EEPTracks(object):
             mistfile = package_root / "data" / "DATAFILES" / "MIST_1.2_EEPtrk.h5"
 
             # If default path doesn't exist, try pooch cache directory
-            # Use os.path.exists() instead of Path.exists() for mock compatibility
-            if not os.path.exists(mistfile):
+            # Convert to string for os.path.exists() - helps with mock compatibility
+            if not os.path.exists(str(mistfile)):
                 import pooch
 
                 cache_dir = Path(pooch.os_cache("astro-brutus"))
                 cache_path = cache_dir / "MIST_1.2_EEPtrk.h5"
-                if os.path.exists(cache_path):
+                if os.path.exists(str(cache_path)):
                     mistfile = cache_path
 
         self.mistfile = Path(mistfile)
@@ -844,7 +844,25 @@ class StarEvolTrack(object):
         # Set default neural network file
         if nnfile is None:
             package_root = Path(__file__).parent.parent.parent.parent
-            nnfile = package_root / "data" / "DATAFILES" / "nnMIST_BC.h5"
+
+            # Try multiple possible names (nn_c3k.h5 is downloaded by pooch,
+            # nnMIST_BC.h5 is legacy name - they are the same file)
+            possible_names = ["nn_c3k.h5", "nnMIST_BC.h5"]
+
+            for nn_name in possible_names:
+                # Check local data directory first
+                nnfile = package_root / "data" / "DATAFILES" / nn_name
+                if os.path.exists(str(nnfile)):
+                    break
+
+                # If not found locally, try pooch cache directory
+                import pooch
+
+                cache_dir = Path(pooch.os_cache("astro-brutus"))
+                cache_path = cache_dir / nn_name
+                if os.path.exists(str(cache_path)):
+                    nnfile = cache_path
+                    break
 
         # Initialize neural network predictor
         try:

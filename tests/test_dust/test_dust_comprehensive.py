@@ -193,7 +193,7 @@ class TestDustMapBase:
 def bayestar_map():
     """Load real Bayestar map once for all tests."""
     if BAYESTAR_FILE is None:
-        pytest.skip("Bayestar data file not found in any standard location")
+        raise FileNotFoundError("Bayestar data file not found in any standard location")
 
     return Bayestar(dustfile=BAYESTAR_FILE)
 

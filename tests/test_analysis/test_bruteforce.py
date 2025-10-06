@@ -96,7 +96,7 @@ def real_mist_setup():
                 continue
 
     # If real grid unavailable, skip tests that require it
-    pytest.skip("MIST grid file not found in expected locations")
+    raise AssertionError("Grid should be available after downloading")
 
 
 @pytest.fixture(scope="module")
