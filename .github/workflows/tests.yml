@@ -45,14 +45,16 @@ jobs:
         path: |
           ~/.cache/astro-brutus/
           ~/Library/Caches/astro-brutus/
-        key: brutus-data-v1-${{ runner.os }}
+        key: brutus-data-v2-${{ runner.os }}
         restore-keys: |
-          brutus-data-v1-
+          brutus-data-v2-
 
-    - name: Download test data files
-      if: steps.cache-data.outputs.cache-hit != 'true'
+    - name: Download/Verify test data files
+      # IMPORTANT: Always run verification, even if cache hit
+      # This ensures files actually exist and weren't corrupted/partially cached
+      # The fetch_* functions are smart - they only download if files are missing
       run: |
-        # Download essential data files for testing
+        # Download essential data files for testing (or verify they exist)
         # GitHub Actions cache limit: 10 GB per repo
         # MIST grids: ~2-4 GB, Isochrones: ~100 MB, Tracks: ~200 MB
         python -c "
@@ -64,43 +66,99 @@ jobs:
                 fetch_grids, fetch_isos, fetch_tracks, fetch_nns,
                 fetch_dustmaps, fetch_offsets
             )
+            import os
+            import pooch
 
             print('=' * 60)
-            print('Downloading MIST data files for testing...')
+            print('Verifying/Downloading MIST data files for testing...')
             print('=' * 60)
 
-            print('\n1. Downloading MIST grids (~2-3 GB)...')
-            fetch_grids(grid='mist_v9')
-            print('   ✓ MIST grids downloaded')
+            # Show cache directory
+            cache_dir = pooch.os_cache('astro-brutus')
+            print(f'Cache directory: {cache_dir}')
+            if os.path.exists(cache_dir):
+                files = os.listdir(cache_dir)
+                print(f'Existing files in cache: {len(files)} files')
+                if files:
+                    for f in sorted(files)[:10]:  # Show first 10
+                        size = os.path.getsize(os.path.join(cache_dir, f)) / (1024*1024)
+                        print(f'  - {f} ({size:.1f} MB)')
 
-            print('\n2. Downloading isochrones (~100 MB)...')
-            fetch_isos()
-            print('   ✓ Isochrones downloaded')
+            # Create data directory for symlinks
+            data_dir = 'data/DATAFILES'
+            os.makedirs(data_dir, exist_ok=True)
+            print(f'Created/verified directory: {data_dir}')
 
-            print('\n3. Downloading EEP tracks (~200 MB)...')
-            fetch_tracks()
-            print('   ✓ EEP tracks downloaded')
+            print('\n1. Verifying/Downloading MIST grids (~2-3 GB)...')
+            path = fetch_grids(grid='mist_v9', target_dir=data_dir)
+            print(f'   ✓ MIST grids available at: {path}')
+            # Verify the file/symlink exists
+            if os.path.exists(path):
+                if os.path.islink(path):
+                    target = os.readlink(path)
+                    print(f'   → Symlink points to: {target}')
+                    print(f'   → Target exists: {os.path.exists(target)}')
+                else:
+                    size_gb = os.path.getsize(path) / (1024*1024*1024)
+                    print(f'   → Direct file, size: {size_gb:.2f} GB')
+            else:
+                print(f'   ⚠ WARNING: File not found at {path}!')
 
-            print('\n4. Downloading neural network (~1 MB)...')
-            fetch_nns()
-            print('   ✓ Neural network downloaded')
+            print('\n2. Verifying/Downloading isochrones (~100 MB)...')
+            path = fetch_isos(target_dir=data_dir)
+            print(f'   ✓ Isochrones available at: {path}')
 
-            print('\n5. Downloading dust maps (~100 MB)...')
+            print('\n3. Verifying/Downloading EEP tracks (~200 MB)...')
+            path = fetch_tracks(target_dir=data_dir)
+            print(f'   ✓ EEP tracks available at: {path}')
+
+            print('\n4. Verifying/Downloading neural network (~1 MB)...')
+            path = fetch_nns(target_dir=data_dir)
+            print(f'   ✓ Neural network available at: {path}')
+
+            print('\n5. Verifying/Downloading dust maps (~100 MB)...')
             try:
-                fetch_dustmaps()
-                print('   ✓ Dust maps downloaded')
+                path = fetch_dustmaps(target_dir=data_dir)
+                print(f'   ✓ Dust maps available at: {path}')
             except Exception as e:
                 print(f'   ⚠ Dust maps download failed (optional): {e}')
 
-            print('\n6. Downloading photometric offsets...')
+            print('\n6. Verifying/Downloading photometric offsets...')
             try:
-                fetch_offsets(grid='mist_v9')
-                print('   ✓ Offsets downloaded (v9)')
+                path = fetch_offsets(grid='mist_v9', target_dir=data_dir)
+                print(f'   ✓ Offsets available (v9) at: {path}')
             except Exception as e:
                 print(f'   ⚠ Offsets download failed (optional): {e}')
 
             print('\n' + '=' * 60)
-            print('All data files downloaded successfully!')
+            print('All data files verified/downloaded successfully!')
+
+            # Final cache status
+            print('\nFinal cache status:')
+            if os.path.exists(cache_dir):
+                files = os.listdir(cache_dir)
+                total_size = sum(os.path.getsize(os.path.join(cache_dir, f))
+                                for f in files) / (1024*1024*1024)
+                print(f'Total files in cache: {len(files)}')
+                print(f'Total cache size: {total_size:.2f} GB')
+
+            # Show what's actually in data/DATAFILES
+            print('\nFiles in data/DATAFILES:')
+            if os.path.exists(data_dir):
+                data_files = os.listdir(data_dir)
+                print(f'Total files: {len(data_files)}')
+                for f in sorted(data_files):
+                    fpath = os.path.join(data_dir, f)
+                    if os.path.islink(fpath):
+                        target = os.readlink(fpath)
+                        exists = 'OK' if os.path.exists(fpath) else 'BROKEN'
+                        print(f'  - {f} -> {os.path.basename(target)} [{exists}]')
+                    else:
+                        size_mb = os.path.getsize(fpath) / (1024*1024)
+                        print(f'  - {f} ({size_mb:.1f} MB)')
+            else:
+                print(f'WARNING: {data_dir} does not exist!')
+
             print('=' * 60)
 
         except Exception as e:

@@ -137,19 +137,36 @@ def find_brutus_data_file(filename):
     possible_paths = [
         # Pooch cache (used by CI and fetch_* functions)
         os.path.join(cache_dir, filename),
+        # Also check if it's a symlink in data/DATAFILES (CI creates these)
+        f"data/DATAFILES/{filename}",
+        f"./data/DATAFILES/{filename}",
+        # Check absolute path from root
+        os.path.join(os.getcwd(), "data/DATAFILES", filename),
         # Local development paths (WSL)
         f"/mnt/c/Users/joshs/Dropbox/GitHub/brutus/data/DATAFILES/{filename}",
         f"/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/{filename}",
         # Windows paths
         f"C:\\Users\\joshs\\Dropbox\\GitHub\\brutus\\data\\DATAFILES\\{filename}",
-        # Relative paths
-        f"data/DATAFILES/{filename}",
-        f"./data/DATAFILES/{filename}",
     ]
 
     for path in possible_paths:
+        # Check if file exists (os.path.exists returns False for broken symlinks)
         if os.path.exists(path):
             return path
+        # Also check if it's a symlink that exists but might be broken
+        elif os.path.islink(path):
+            # Try to resolve the symlink
+            try:
+                target = os.readlink(path)
+                # If target is relative, make it absolute based on symlink location
+                if not os.path.isabs(target):
+                    target = os.path.join(os.path.dirname(path), target)
+                if os.path.exists(target):
+                    return target
+                else:
+                    print(f"Warning: Found broken symlink {path} -> {target}")
+            except:
+                pass
 
     return None
 

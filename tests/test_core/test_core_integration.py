@@ -27,60 +27,72 @@ def mist_integration_setup():
     """Load real MIST grid and create test setup for integration tests."""
 
     # Try to load real grid
-    grid_paths = [
-        find_brutus_data_file("grid_mist_v9.h5"),
-        "./data/DATAFILES/grid_mist_v9.h5",
-        "data/DATAFILES/grid_mist_v9.h5",
-    ]
+    grid_path = find_brutus_data_file("grid_mist_v9.h5")
 
-    for path in grid_paths:
-        if path and os.path.exists(path):
-            try:
-                # Load subset for reasonable test times
-                models, combined_labels, label_mask = load_models(path, verbose=False)
+    # If not found via helper, check multiple fallback locations
+    if grid_path is None:
+        import pooch
 
-                # Get filter names and find PanSTARRS indices
-                with h5py.File(path, "r") as f:
-                    filter_names = list(f["mag_coeffs"].dtype.names)
-                ps_indices = [
-                    i for i, name in enumerate(filter_names) if name.startswith("PS_")
-                ][:5]
+        fallback_paths = [
+            # Direct pooch cache
+            os.path.join(pooch.os_cache("astro-brutus"), "grid_mist_v9.h5"),
+            # CI data directory
+            "data/DATAFILES/grid_mist_v9.h5",
+            "./data/DATAFILES/grid_mist_v9.h5",
+        ]
+        for path in fallback_paths:
+            if os.path.exists(path):
+                grid_path = path
+                print(f"Found grid at fallback path: {path}")
+                break
 
-                # Create manageable subset (every 1000th model)
-                subset_indices = np.arange(0, len(models), 1000)[:100]
-                models_subset = models[subset_indices]
-                labels_subset = combined_labels[subset_indices]
+    if grid_path and os.path.exists(grid_path):
+        try:
+            # Load subset for reasonable test times
+            models, combined_labels, label_mask = load_models(grid_path, verbose=False)
 
-                # Separate grid parameters from predictions
-                grid_names = [
-                    name
-                    for name, is_grid in zip(combined_labels.dtype.names, label_mask[0])
-                    if is_grid
-                ]
-                pred_names = [
-                    name
-                    for name, is_grid in zip(combined_labels.dtype.names, label_mask[0])
-                    if not is_grid
-                ]
+            # Get filter names and find PanSTARRS indices
+            with h5py.File(grid_path, "r") as f:
+                filter_names = list(f["mag_coeffs"].dtype.names)
+            ps_indices = [
+                i for i, name in enumerate(filter_names) if name.startswith("PS_")
+            ][:5]
 
-                labels = labels_subset[grid_names]
-                params = labels_subset[pred_names] if pred_names else None
+            # Create manageable subset (every 1000th model)
+            subset_indices = np.arange(0, len(models), 1000)[:100]
+            models_subset = models[subset_indices]
+            labels_subset = combined_labels[subset_indices]
 
-                # Create StarGrid and BruteForce
-                grid = StarGrid(models_subset, labels, params, filters=filter_names)
-                fitter = BruteForce(grid, verbose=False)
+            # Separate grid parameters from predictions
+            grid_names = [
+                name
+                for name, is_grid in zip(combined_labels.dtype.names, label_mask[0])
+                if is_grid
+            ]
+            pred_names = [
+                name
+                for name, is_grid in zip(combined_labels.dtype.names, label_mask[0])
+                if not is_grid
+            ]
 
-                return {
-                    "grid": grid,
-                    "fitter": fitter,
-                    "ps_indices": ps_indices,
-                    "labels": labels,
-                    "params": params,
-                    "filter_names": filter_names,
-                }
+            labels = labels_subset[grid_names]
+            params = labels_subset[pred_names] if pred_names else None
 
-            except Exception as e:
-                continue
+            # Create StarGrid and BruteForce
+            grid = StarGrid(models_subset, labels, params, filters=filter_names)
+            fitter = BruteForce(grid, verbose=False)
+
+            return {
+                "grid": grid,
+                "fitter": fitter,
+                "ps_indices": ps_indices,
+                "labels": labels,
+                "params": params,
+                "filter_names": filter_names,
+            }
+
+        except Exception as e:
+            raise AssertionError(f"Failed to load grid from {grid_path}: {e}")
 
     raise AssertionError("Grid should be available after downloading")
 

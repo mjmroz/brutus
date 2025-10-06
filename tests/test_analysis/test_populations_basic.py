@@ -35,10 +35,15 @@ def real_stellarpop():
     from conftest import find_brutus_data_file
 
     iso_file = find_brutus_data_file("MIST_1.2_iso_vvcrit0.0.h5")
+    # Try both possible neural network file names (they are the same file)
     nn_file = find_brutus_data_file("nnMIST_BC.h5")
+    if nn_file is None:
+        nn_file = find_brutus_data_file("nn_c3k.h5")
 
     assert iso_file is not None, "iso_file should be found after downloading all data"
-    assert nn_file is not None, "nn_file should be found after downloading all data"
+    assert (
+        nn_file is not None
+    ), "nn_file (nnMIST_BC.h5 or nn_c3k.h5) should be found after downloading all data"
 
     try:
         # Create the isochrone object

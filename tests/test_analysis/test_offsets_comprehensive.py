@@ -524,8 +524,7 @@ class TestParameterRecovery:
 
     def test_unity_recovery_real_get_seds(self):
         """Test unity recovery using real get_seds function."""
-        pytest.importorskip("brutus.analysis.offsets", reason="brutus not available")
-
+        # Import should always work
         from brutus.analysis.offsets import (
             PhotometricOffsetsConfig,
             get_seds,
@@ -639,8 +638,7 @@ class TestParameterRecovery:
 
     def test_systematic_offset_recovery(self):
         """Test recovery of known systematic offsets."""
-        pytest.importorskip("brutus.analysis.offsets", reason="brutus not available")
-
+        # Import should always work
         from brutus.analysis.offsets import (
             PhotometricOffsetsConfig,
             get_seds,

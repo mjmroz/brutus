@@ -218,12 +218,24 @@ class TestNeuralNetworkIntegration:
         except ImportError as e:
             raise  # Should not fail with all data available
 
-    @pytest.mark.skipif(
-        not os.path.exists("data/DATAFILES/nnMIST_BC.h5"),
-        reason="Neural network data file not available",
-    )
     def test_neural_network_predictor_creation(self):
         """Test creating FastNNPredictor with data file."""
+        # Check for neural network file (both possible names)
+        nn_file = None
+        if os.path.exists("data/DATAFILES/nnMIST_BC.h5"):
+            nn_file = "data/DATAFILES/nnMIST_BC.h5"
+        elif os.path.exists("data/DATAFILES/nn_c3k.h5"):
+            nn_file = "data/DATAFILES/nn_c3k.h5"
+        else:
+            # Try to find it using the helper
+            from conftest import find_brutus_data_file
+
+            nn_file = find_brutus_data_file("nn_c3k.h5")
+            if nn_file is None:
+                nn_file = find_brutus_data_file("nnMIST_BC.h5")
+
+        assert nn_file is not None, "Neural network data file not available"
+
         try:
             from brutus.core.neural_nets import FastNNPredictor
 
