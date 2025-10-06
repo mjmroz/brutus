@@ -84,8 +84,27 @@ def _fetch(name, symlink_dir):
     target_path : pathlib.Path
         Path to the symlinked file in the target directory.
     """
-    fpath = strato.fetch(name, progressbar=True)
-    fpath = pathlib.Path(fpath)
+    import os
+
+    # In CI, try to use cached file directly if it exists to avoid re-downloads
+    if os.environ.get("CI") == "true":
+        cache_path = pathlib.Path(strato.path) / name
+        if cache_path.exists():
+            # File exists in cache, use it directly without SHA verification
+            size_mb = cache_path.stat().st_size / (1024 * 1024)
+            print(
+                f"    Using cached {name} ({size_mb:.1f} MB) - skipping SHA verification"
+            )
+            fpath = cache_path
+        else:
+            # File doesn't exist, download it
+            print(f"    {name} not in cache - downloading...")
+            fpath = strato.fetch(name, progressbar=True)
+            fpath = pathlib.Path(fpath)
+    else:
+        # Normal behavior with SHA256 verification
+        fpath = strato.fetch(name, progressbar=True)
+        fpath = pathlib.Path(fpath)
 
     target_path = pathlib.Path(symlink_dir).resolve() / name
     target_path.parent.mkdir(parents=True, exist_ok=True)

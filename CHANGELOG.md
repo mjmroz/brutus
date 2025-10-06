@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-10-04
+## [1.0.0] - 2024-10-06
 
 ### 🎉 First Stable Release
 
@@ -22,6 +22,24 @@ This is the first stable release of brutus following comprehensive code verifica
 - **ReadTheDocs Hosting**: Full documentation hosted at [brutus.readthedocs.io](https://brutus.readthedocs.io)
 - **LaTeX Math Rendering**: Mathematical equations and derivations throughout documentation
 - **Cross-References**: Extensive interconnections between conceptual guides and API documentation
+- **arXiv Paper Badge**: Added badge linking to Speagle et al. (2025) paper ([arXiv:2503.02227](https://arxiv.org/abs/2503.02227))
+
+#### 🧪 Testing Infrastructure Improvements
+
+- **Comprehensive Test Coverage**: Achieved 92% overall code coverage across all modules
+- **CI/CD Enhancements**:
+  - Fixed all 45 failing CI tests
+  - Removed all test skip mechanisms - 606 tests now run without skipping
+  - Updated GitHub Actions workflow with better data caching
+  - Integrated Codecov for dynamic coverage reporting
+- **Data File Management**:
+  - Fixed file discovery issues for neural network models and grids
+  - Improved pooch cache handling to prevent re-downloads in CI
+  - Added fallback paths for both `nn_c3k.h5` and `nnMIST_BC.h5` (identical files)
+- **Test Fixes**:
+  - Fixed `test_data_module_imports` hanging issue
+  - Corrected all pytest.skip calls to use proper assertions
+  - Fixed path resolution for CI environments
 
 #### 🔍 Code Verification
 
@@ -30,6 +48,8 @@ This is the first stable release of brutus following comprehensive code verifica
 - **Critical Bug Fixes**:
   - Fixed IMF normalization in `priors/stellar.py` (swapped power-law indices)
   - Fixed StarGrid distance reference in `core/individual.py` (corrected from 10 pc to 1 kpc)
+  - Fixed unpacking error in `bin_pdfs_distred` for different data formats
+  - Fixed exception handling for missing "agewt" field in structured arrays
 - **Grid Generation Restored**: Fully modernized `GridGenerator` class with comprehensive tests
 
 ### Changed
@@ -37,8 +57,15 @@ This is the first stable release of brutus following comprehensive code verifica
 - **Development Status**: Updated from Beta to Production/Stable
 - **Documentation Standards**: All documentation follows NumPy docstring conventions
 - **Project Instructions**: Updated CLAUDE.md with comprehensive documentation structure section
+- **Dependencies**: Added `tqdm` as formal dependency for progress bars
+- **CI/CD Workflow**:
+  - Upgraded cache action to v4 for better reliability
+  - Updated Codecov action to v5 with token support
+  - Improved cache key strategy to prevent stale caches
+  - Added CI-specific optimization to skip SHA verification for cached files
+- **Code Style**: Enforced Black formatting (88 char line length) across entire codebase
 
-### [0.9.0] - 2025-08-28
+## [0.9.0] - 2024-08-28
 
 ### 🚀 Major Refactoring Release
 

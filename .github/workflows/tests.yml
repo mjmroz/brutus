@@ -39,15 +39,22 @@ jobs:
         pip install --no-build-isolation -e ".[test]"
 
     - name: Cache test data files
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: cache-data
       with:
         path: |
           ~/.cache/astro-brutus/
           ~/Library/Caches/astro-brutus/
-        key: brutus-data-v2-${{ runner.os }}
+        key: brutus-data-v3-${{ runner.os }}-${{ hashFiles('src/brutus/data/download.py') }}
         restore-keys: |
-          brutus-data-v2-
+          brutus-data-v3-${{ runner.os }}-
+          brutus-data-v3-
+
+    - name: Check cache status
+      run: |
+        echo "Cache hit: ${{ steps.cache-data.outputs.cache-hit }}"
+        echo "Cache key: ${{ steps.cache-data.outputs.cache-primary-key }}"
+        echo "Restored key: ${{ steps.cache-data.outputs.cache-matched-key }}"
 
     - name: Download/Verify test data files
       # IMPORTANT: Always run verification, even if cache hit
@@ -73,23 +80,31 @@ jobs:
             print('Verifying/Downloading MIST data files for testing...')
             print('=' * 60)
 
-            # Show cache directory
+            # Show cache directory and what's already cached
             cache_dir = pooch.os_cache('astro-brutus')
             print(f'Cache directory: {cache_dir}')
+            print(f'Cache exists: {os.path.exists(cache_dir)}')
+
             if os.path.exists(cache_dir):
                 files = os.listdir(cache_dir)
-                print(f'Existing files in cache: {len(files)} files')
-                if files:
-                    for f in sorted(files)[:10]:  # Show first 10
-                        size = os.path.getsize(os.path.join(cache_dir, f)) / (1024*1024)
-                        print(f'  - {f} ({size:.1f} MB)')
+                print(f'\\nExisting files in cache: {len(files)} files')
+                total_cache_size = 0
+                for f in sorted(files):
+                    fpath = os.path.join(cache_dir, f)
+                    size = os.path.getsize(fpath) / (1024*1024)
+                    total_cache_size += size
+                    # Show all files with sizes
+                    print(f'  - {f}: {size:.1f} MB')
+                print(f'Total cache size: {total_cache_size/1024:.2f} GB')
+            else:
+                print('Cache directory does not exist - will download all files')
 
             # Create data directory for symlinks
             data_dir = 'data/DATAFILES'
             os.makedirs(data_dir, exist_ok=True)
             print(f'Created/verified directory: {data_dir}')
 
-            print('\n1. Verifying/Downloading MIST grids (~2-3 GB)...')
+            print('\n1. Verifying/Downloading MIST grids (~780 MB)...')
             path = fetch_grids(grid='mist_v9', target_dir=data_dir)
             print(f'   ✓ MIST grids available at: {path}')
             # Verify the file/symlink exists
