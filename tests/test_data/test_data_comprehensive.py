@@ -504,35 +504,29 @@ class TestDataComparison:
     They exist to ensure consistency during the transition period.
     """
 
-    @patch("brutus.data.download._fetch")
-    @patch("numpy.loadtxt")
     def test_data_module_imports(self):
         """Test that data functions can be imported from data module."""
-        from brutus.data import (
-            fetch_dustmaps,
-            fetch_grids,
-            fetch_isos,
-            fetch_nns,
-            fetch_offsets,
-            fetch_tracks,
-            load_models,
-            load_offsets,
-        )
+        # The imports were causing hangs with patches, so test differently
+        import brutus.data
 
-        # All should be callable
-        funcs = [
-            fetch_isos,
-            fetch_tracks,
-            fetch_dustmaps,
-            fetch_grids,
-            fetch_offsets,
-            fetch_nns,
-            load_models,
-            load_offsets,
+        # Test that the expected functions exist
+        expected_funcs = [
+            "fetch_dustmaps",
+            "fetch_grids",
+            "fetch_isos",
+            "fetch_nns",
+            "fetch_offsets",
+            "fetch_tracks",
+            "load_models",
+            "load_offsets",
         ]
 
-        for func in funcs:
-            assert callable(func)
+        for func_name in expected_funcs:
+            assert hasattr(
+                brutus.data, func_name
+            ), f"{func_name} not found in brutus.data"
+            func = getattr(brutus.data, func_name)
+            assert callable(func), f"{func_name} is not callable"
 
     def test_data_module_all(self):
         """Test that __all__ is properly defined."""

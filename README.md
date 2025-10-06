@@ -9,6 +9,7 @@
 [![Documentation Status](https://readthedocs.org/projects/brutus/badge/?version=latest)](https://brutus.readthedocs.io/en/latest/?badge=latest)
 [![PyPI](https://img.shields.io/pypi/v/astro-brutus.svg)](https://pypi.org/project/astro-brutus/)
 [![Python](https://img.shields.io/pypi/pyversions/astro-brutus.svg)](https://pypi.org/project/astro-brutus/)
+[![arXiv](https://img.shields.io/badge/arXiv-2101.09374-b31b1b.svg)](https://arxiv.org/abs/2101.09374)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Note on CI/CD**: GitHub Actions tests download and cache essential data files (MIST grids ~2-3 GB, isochrones ~100 MB) for comprehensive testing. First-time CI runs take longer due to data downloads (~10-15 minutes), but subsequent runs use cached data. Tests requiring very large optional files (Bayestar maps ~1 GB) may skip in CI. See [TESTING_COVERAGE_NOTES.md](TESTING_COVERAGE_NOTES.md) for details.
