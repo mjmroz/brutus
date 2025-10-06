@@ -77,6 +77,7 @@ References
        Models", ApJS, 222, 8
 """
 
+import os
 import pickle
 import sys
 import warnings
@@ -218,6 +219,17 @@ class EEPTracks(object):
         if mistfile is None:
             package_root = Path(__file__).parent.parent.parent.parent
             mistfile = package_root / "data" / "DATAFILES" / "MIST_1.2_EEPtrk.h5"
+
+            # If default path doesn't exist, try pooch cache directory
+            # Use os.path.exists() instead of Path.exists() for mock compatibility
+            if not os.path.exists(mistfile):
+                import pooch
+
+                cache_dir = Path(pooch.os_cache("astro-brutus"))
+                cache_path = cache_dir / "MIST_1.2_EEPtrk.h5"
+                if os.path.exists(cache_path):
+                    mistfile = cache_path
+
         self.mistfile = Path(mistfile)
 
         # Generate cache file path based on original file and configuration

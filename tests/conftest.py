@@ -113,9 +113,11 @@ def find_brutus_data_file(filename):
     Find a brutus data file across multiple possible locations.
 
     Checks common paths where brutus data files might be located:
+    - Pooch cache directory (~/.cache/astro-brutus/ or ~/Library/Caches/astro-brutus/)
     - /mnt/c/Users/joshs/Dropbox/GitHub/brutus/data/DATAFILES/ (WSL work laptop)
     - /mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/ (WSL home desktop)
     - C:\\Users\\joshs\\Dropbox\\GitHub\\brutus\\data\\DATAFILES\\ (Windows)
+    - Relative paths from repo root
 
     Parameters
     ----------
@@ -127,11 +129,22 @@ def find_brutus_data_file(filename):
     path : str or None
         Full path to the file if found, None otherwise
     """
+    # Import pooch to get cache directory
+    import pooch
+
+    cache_dir = pooch.os_cache("astro-brutus")
+
     possible_paths = [
+        # Pooch cache (used by CI and fetch_* functions)
+        os.path.join(cache_dir, filename),
+        # Local development paths (WSL)
         f"/mnt/c/Users/joshs/Dropbox/GitHub/brutus/data/DATAFILES/{filename}",
         f"/mnt/d/Dropbox/GitHub/brutus/data/DATAFILES/{filename}",
+        # Windows paths
         f"C:\\Users\\joshs\\Dropbox\\GitHub\\brutus\\data\\DATAFILES\\{filename}",
-        f"data/DATAFILES/{filename}",  # Relative path
+        # Relative paths
+        f"data/DATAFILES/{filename}",
+        f"./data/DATAFILES/{filename}",
     ]
 
     for path in possible_paths:

@@ -194,7 +194,12 @@ def bin_pdfs_distred(
     binned_vals = np.zeros((nobjs, xbin, ybin), dtype="float32")
     try:
         # Grab (distance, reddening (Av), differential reddening (Rv)) samples.
-        ddraws, adraws, rdraws = copy.deepcopy(data)
+        # Check if data is in direct format (3 values) vs SAR format (4 values)
+        if len(data) == 3:
+            ddraws, adraws, rdraws = copy.deepcopy(data)
+        else:
+            # Data is in SAR format - raise to trigger except block
+            raise AttributeError("Data is in SAR format")
         pdraws = 1.0 / ddraws
         sdraws = pdraws**2
         dmdraws = 5.0 * np.log10(ddraws) + 10.0

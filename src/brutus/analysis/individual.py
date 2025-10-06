@@ -1004,7 +1004,7 @@ class BruteForce:
         if apply_agewt:
             try:
                 lnprior += np.log(np.abs(self.models_labels["agewt"]))
-            except KeyError:
+            except (KeyError, ValueError):
                 pass
 
         # Reweight based on grid spacing
