@@ -10,7 +10,7 @@ and grid generation.
 """
 
 from .grid_generation import GridGenerator
-from .individual import EEPTracks, StarGrid
+from .individual import EEPTracks, StarGrid, StarEvolTrack
 from .neural_nets import FastNN, FastNNPredictor
 from .populations import Isochrone
 
@@ -25,5 +25,6 @@ __all__ = [
     "EEPTracks",
     "StarGrid",
     "Isochrone",
-    "GridGenerator",
+    "GridGenerator", 
+    "StarEvolTrack"
 ]

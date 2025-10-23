@@ -894,6 +894,7 @@ class StarEvolTrack(object):
         corr_params=None,
         return_eep2=False,
         return_dict=True,
+        sum_mags=True,
         tol=1e-6,
         **kwargs,
     ):
@@ -953,6 +954,9 @@ class StarEvolTrack(object):
         tol : float, optional
             Tolerance for binary EEP calculation. Default is 1e-6.
 
+        sum_mags : bool , optional
+            Whether to sum magnitudes for binary components. Default is True.
+            if False it will return `sed` as two elemenst list. 
         Returns
         -------
         sed : numpy.ndarray of shape (Nfilters,)
@@ -1071,12 +1075,12 @@ class StarEvolTrack(object):
                         rv=rv,
                         dist=dist,
                     )
+                    if sum_mags:
+                        # Combine SEDs (magnitude addition)
+                        from ..utils.photometry import add_mag
 
-                    # Combine SEDs (magnitude addition)
-                    from ..utils.photometry import add_mag
-
-                    sed = add_mag(sed, sed2)
-
+                        sed = add_mag(sed, sed2)
+                    else: sed = [sed, sed2]
                 except Exception:
                     pass
 
