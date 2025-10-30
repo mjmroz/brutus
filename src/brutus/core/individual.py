@@ -1023,7 +1023,7 @@ class StarEvolTrack(object):
         # Convert to dictionary format
         params = dict(zip(self.tracks.predictions, params_arr))
         sed = np.full(self.predictor.NFILT, np.nan)
-
+        sed2 = np.full(self.predictor.NFILT, np.nan)
         # Initialize secondary parameters
         params_arr2 = np.full_like(params_arr, np.nan)
         params2 = dict(zip(self.tracks.predictions, params_arr2))
@@ -1078,17 +1078,17 @@ class StarEvolTrack(object):
                     if sum_mags:
                         # Combine SEDs (magnitude addition)
                         from ..utils.photometry import add_mag
-
                         sed = add_mag(sed, sed2)
-                    else: sed = [sed, sed2]
                 except Exception:
                     pass
-
+                    
         # Format output
         if not return_dict:
             params = params_arr
             params2 = params_arr2
-
+            
+        if not sum_mags:
+            sed = [sed, sed2]
         if return_eep2:
             return sed, params, params2, eep2
         else:
