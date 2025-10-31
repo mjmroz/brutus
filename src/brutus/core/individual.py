@@ -1086,8 +1086,8 @@ class StarEvolTrack(object):
         if not return_dict:
             params = params_arr
             params2 = params_arr2
-            
-        if not sum_mags:
+
+        if not sum_mags and smf > 0.0:
             sed = [sed, sed2]
         if return_eep2:
             return sed, params, params2, eep2
